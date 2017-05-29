@@ -3,7 +3,7 @@
 #include <libswscale/swscale.h>
 
 
-/*AVFormatContext Fields description at https://ffmpeg.org/doxygen/2.7/structAVFormatContext.html
+/*AVFormatContext Fields description at https://ffmpeg.org/doxygen/3.2/structAVFormatContext.html
  */
 
 static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
@@ -47,6 +47,98 @@ static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 	return 0;
 }
 
+/* opening output file is something like:
+ * - create output context
+ * - populate context with streams you want to put into file
+ * - of course set stream properties (codec, height, width, aspect)
+ * - open file to write
+ * - init muxer, and write file header
+*/
+
+static int create_output_context(AVFormatContext **pFormatCtx, const char *filename) {
+	*pFormatCtx = NULL;
+    avformat_alloc_output_context2(pFormatCtx, NULL, NULL, filename);
+    if (!*pFormatCtx) {
+        av_log(NULL, AV_LOG_ERROR, "Could not create output context\n");
+        return AVERROR_UNKNOWN;
+    }
+    return 0;
+}
+
+static int put_stream_into_context(AVFormatContext *pFormatCtx, AVStream *in_stream) {
+	AVCodecContext *dec_ctx, *enc_ctx;
+    AVCodec *encoder;
+    int ret;	
+	
+	AVStream *out_stream = avformat_new_stream(pFormatCtx, NULL);
+	if (!out_stream) {
+		av_log(NULL, AV_LOG_ERROR, "Failed allocating output stream\n");
+		return AVERROR_UNKNOWN;
+	}
+	dec_ctx = in_stream->codec;
+	enc_ctx = out_stream->codec;
+	if (dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO || dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
+		/* in this example, we choose transcoding to same codec */
+		encoder = avcodec_find_encoder(dec_ctx->codec_id);
+		if (!encoder) {
+			av_log(NULL, AV_LOG_FATAL, "Necessary encoder not found\n");
+			return AVERROR_INVALIDDATA;
+		}
+		/* In this example, we transcode to same properties (picture size,
+		 * sample rate etc.). These properties can be changed for output
+		 * streams easily using filters */
+		if (dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO) {
+			enc_ctx->height = dec_ctx->height;
+			enc_ctx->width = dec_ctx->width;
+			enc_ctx->sample_aspect_ratio = dec_ctx->sample_aspect_ratio;
+			/* take first format from list of supported formats */
+			if (encoder->pix_fmts)
+				enc_ctx->pix_fmt = encoder->pix_fmts[0];
+			else
+				enc_ctx->pix_fmt = dec_ctx->pix_fmt;
+			/* video time_base can be set to whatever is handy and supported by encoder */
+			enc_ctx->time_base = dec_ctx->time_base;
+		} else {
+			enc_ctx->sample_rate = dec_ctx->sample_rate;
+			enc_ctx->channel_layout = dec_ctx->channel_layout;
+			enc_ctx->channels = av_get_channel_layout_nb_channels(enc_ctx->channel_layout);
+			/* take first format from list of supported formats */
+			enc_ctx->sample_fmt = encoder->sample_fmts[0];
+			enc_ctx->time_base = (AVRational){1, enc_ctx->sample_rate};
+		}
+		/* Third parameter can be used to pass settings to encoder */
+		ret = avcodec_open2(enc_ctx, encoder, NULL);
+		if (ret < 0) {
+			av_log(NULL, AV_LOG_ERROR, "Cannot open video encoder for stream\n");
+			return ret;
+		}
+	} else if (dec_ctx->codec_type == AVMEDIA_TYPE_UNKNOWN) {
+		av_log(NULL, AV_LOG_FATAL, "Elementary stream is of unknown type, cannot proceed\n");
+		return AVERROR_INVALIDDATA;
+	}
+	if (pFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
+		enc_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+	return 0;
+}
+
+/* Helpful when you simply want to copy stream */
+static int remux_stream(AVFormatContext *pFormatCtx, AVStream *in_stream) {
+	int ret;
+	
+	AVStream *out_stream = avformat_new_stream(pFormatCtx, NULL);
+	if (!out_stream) {
+		av_log(NULL, AV_LOG_ERROR, "Failed allocating output stream\n");
+		return AVERROR_UNKNOWN;
+	}
+	
+	ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
+	if (ret < 0) {
+		av_log(NULL, AV_LOG_ERROR, "Copying stream context failed\n");
+		return ret;
+	}
+	return 0;
+}
 
 
 int main(int argc, char *argv[]) {
