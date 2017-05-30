@@ -86,7 +86,7 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVStream *in_str
 		/* in this example, we choose transcoding to same codec */
 		encoder = avcodec_find_encoder(AV_CODEC_ID_VP8);
 		enc_ctx = avcodec_alloc_context3(encoder);
-		/*avcodec_parameters_to_context(enc_ctx, in_stream->codecpar);*/
+
 		if (!encoder) {
 			av_log(NULL, AV_LOG_FATAL, "Necessary encoder not found\n");
 			return AVERROR_INVALIDDATA;
@@ -113,6 +113,8 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVStream *in_str
 			enc_ctx->sample_fmt = encoder->sample_fmts[0];
 			enc_ctx->time_base = (AVRational){1, enc_ctx->sample_rate};
 		}
+		avcodec_parameters_from_context(out_stream->codecpar, enc_ctx);
+		
 		/* Third parameter can be used to pass settings to encoder */
 		ret = avcodec_open2(enc_ctx, encoder, NULL);
 		if (ret < 0) {
@@ -134,16 +136,18 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVStream *in_str
  */
 static int remux_stream(AVFormatContext *pFormatCtx, AVStream *in_stream) {
 	int ret;
-	AVCodecParameters parameters;
+	AVCodecContext *ctx;
 
 	AVStream *out_stream = avformat_new_stream(pFormatCtx, NULL);
 	if (!out_stream) {
 		av_log(NULL, AV_LOG_ERROR, "Failed allocating output stream\n");
 		return AVERROR_UNKNOWN;
 	}
-	ret = avcodec_parameters_from_context(&parameters, in_stream->codec);
+	
+	ctx = avcodec_alloc_context3(NULL);
+	ret = avcodec_parameters_to_context(ctx, in_stream->codecpar);
 	if(ret >= 0) {
-		ret = avcodec_parameters_to_context(out_stream->codec, &parameters);
+		ret = avcodec_parameters_from_context(out_stream->codecpar, ctx);
 	}
 	//ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
 	if (ret < 0) {
