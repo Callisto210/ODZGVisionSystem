@@ -70,7 +70,7 @@ static int create_output_context(AVFormatContext **pFormatCtx, const char *filen
 
 static int put_stream_into_context(AVFormatContext *pFormatCtx, AVStream *in_stream) {
 	AVCodecContext *dec_ctx, *enc_ctx;
-    AVCodec *encoder;
+    AVCodec *encoder, *decoder;
     int ret;	
 	
 	AVStream *out_stream = avformat_new_stream(pFormatCtx, NULL);
@@ -78,11 +78,15 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVStream *in_str
 		av_log(NULL, AV_LOG_ERROR, "Failed allocating output stream\n");
 		return AVERROR_UNKNOWN;
 	}
-	dec_ctx = in_stream->codec;
-	enc_ctx = out_stream->codec;
+	decoder = avcodec_find_decoder(in_stream->codecpar->codec_id);
+	dec_ctx = avcodec_alloc_context3(decoder);
+	avcodec_parameters_to_context(dec_ctx, in_stream->codecpar);
+	
 	if (dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO || dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
 		/* in this example, we choose transcoding to same codec */
 		encoder = avcodec_find_encoder(dec_ctx->codec_id);
+		enc_ctx = avcodec_alloc_context3(encoder);
+		/*avcodec_parameters_to_context(enc_ctx, in_stream->codecpar);*/
 		if (!encoder) {
 			av_log(NULL, AV_LOG_FATAL, "Necessary encoder not found\n");
 			return AVERROR_INVALIDDATA;
