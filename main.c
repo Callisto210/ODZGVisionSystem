@@ -128,14 +128,18 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVStream *in_str
 /* Helpful when you simply want to copy stream */
 static int remux_stream(AVFormatContext *pFormatCtx, AVStream *in_stream) {
 	int ret;
-	
+	AVCodecParameters parameters;
+
 	AVStream *out_stream = avformat_new_stream(pFormatCtx, NULL);
 	if (!out_stream) {
 		av_log(NULL, AV_LOG_ERROR, "Failed allocating output stream\n");
 		return AVERROR_UNKNOWN;
 	}
-	
-	ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
+	ret = avcodec_parameters_from_context(&parameters, in_stream->codec);
+	if(ret >= 0) {
+		ret = avcodec_parameters_to_context(out_stream->codec, &parameters);
+	}
+	//ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
 	if (ret < 0) {
 		av_log(NULL, AV_LOG_ERROR, "Copying stream context failed\n");
 		return ret;
@@ -152,9 +156,4 @@ int main(int argc, char *argv[]) {
 	
 	AVFormatContext *pFormatCtx;
 	open_input_file(&pFormatCtx, argv[1]);
-	
-	
-	
-	
-
 }
