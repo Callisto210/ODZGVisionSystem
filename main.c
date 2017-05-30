@@ -40,10 +40,13 @@ static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 			ret = avcodec_open2(pCodec_ctx, pCodec, NULL);
 			if (ret < 0) {
 				av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
+				avcodec_free_context(&pCodec_ctx);
 				return ret;
 			}
 		}
 	}
+	
+	avcodec_free_context(&pCodec_ctx);
 	return 0;
 }
 
