@@ -84,7 +84,7 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVStream *in_str
 	
 	if (dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO || dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
 		/* in this example, we choose transcoding to same codec */
-		encoder = avcodec_find_encoder(dec_ctx->codec_id);
+		encoder = avcodec_find_encoder(AV_CODEC_ID_VP8);
 		enc_ctx = avcodec_alloc_context3(encoder);
 		/*avcodec_parameters_to_context(enc_ctx, in_stream->codecpar);*/
 		if (!encoder) {
@@ -129,7 +129,9 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVStream *in_str
 	return 0;
 }
 
-/* Helpful when you simply want to copy stream */
+/* Helpful when you simply want to copy stream 
+ * Adds input stream into output file context
+ */
 static int remux_stream(AVFormatContext *pFormatCtx, AVStream *in_stream) {
 	int ret;
 	AVCodecParameters parameters;
