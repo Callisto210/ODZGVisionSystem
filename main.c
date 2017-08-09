@@ -2,9 +2,13 @@
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libavutil/avconfig.h>
+#include <libavutil/pixdesc.h>
+#include <libavfilter/avfiltergraph.h>
 
 
-/*AVFormatContext Fields description at https://ffmpeg.org/doxygen/3.2/structAVFormatContext.html
+
+/*
+ * AVFormatContext Fields description at https://ffmpeg.org/doxygen/3.2/structAVFormatContext.html
  */
 
 static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
@@ -103,23 +107,29 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVCodec *encoder
  * 
  */
 
-static void populate_codec_context_video(AVCodecContext *enc_ctx, AVCodecContext *dec_ctx, AVPixelFormat pix_fmt) {
+static void populate_codec_context_video(AVCodecContext *enc_ctx, AVCodecContext *dec_ctx, enum AVPixelFormat pix_fmt) {
 	enc_ctx->height = dec_ctx->height;
 	enc_ctx->width = dec_ctx->width;
 	enc_ctx->sample_aspect_ratio = dec_ctx->sample_aspect_ratio;
 	enc_ctx->pix_fmt = pix_fmt;
 	/* video time_base can be set to whatever is handy and supported by encoder */
-	enc_ctx->time_base = dec_ctx->time_base;
-	return
+	//enc_ctx->time_base = dec_ctx->time_base;
+	enc_ctx->time_base = (AVRational){1, 30};
+	
+#ifdef DEBUG
+	printf("timebase: %d %d\n", enc_ctx->time_base.num, enc_ctx->time_base.den);
+#endif
+	
+	return;
 }
 
-static void populate_codec_context_audio(AVCodecContext *enc_ctx, AVCodecContext *dec_ctx, AVSampleFormat sample_fmt) {
+static void populate_codec_context_audio(AVCodecContext *enc_ctx, AVCodecContext *dec_ctx, enum AVSampleFormat sample_fmt) {
 	enc_ctx->sample_rate = dec_ctx->sample_rate;
 	enc_ctx->channel_layout = dec_ctx->channel_layout;
 	enc_ctx->channels = av_get_channel_layout_nb_channels(enc_ctx->channel_layout);
 	enc_ctx->sample_fmt = sample_fmt;
 	enc_ctx->time_base = (AVRational){1, enc_ctx->sample_rate};
-	return
+	return;
 }
 
 
@@ -155,9 +165,21 @@ int main(int argc, char *argv[]) {
 		return 1;
 		
 	av_register_all();
+	avfilter_register_all();
 	
 	AVFormatContext *pFormatCtx;
+	AVCodec *decoder;
+	AVCodecContext *dec_ctx;
+	AVStream *in_stream;
+	
 	open_input_file(&pFormatCtx, argv[1]);
+	
+	/* Assume, we are touching 1st stream */
+	in_stream = pFormatCtx->streams[0];
+	
+	decoder = avcodec_find_decoder(in_stream->codecpar->codec_id);
+	dec_ctx = avcodec_alloc_context3(decoder);
+	avcodec_parameters_to_context(dec_ctx, in_stream->codecpar);
 	
 	/* opening output file is something like:
 	 * - create output context
@@ -168,10 +190,10 @@ int main(int argc, char *argv[]) {
 	*/
 	
 	AVFormatContext *out_ctx;
-	create_output_context(&out_ctx, "./transcoded.mkv")
+	create_output_context(&out_ctx, "./transcoded.mkv");
 	
-	AVCodec *encoder
-	AVCodecContext *enc_ctx
+	AVCodec *encoder;
+	AVCodecContext *enc_ctx;
 	
 	if(dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO) {
 		encoder = avcodec_find_encoder(AV_CODEC_ID_VP8);
@@ -187,27 +209,15 @@ int main(int argc, char *argv[]) {
 		av_log(NULL, AV_LOG_FATAL, "Elementary stream is of unknown type, cannot proceed\n");
 		return AVERROR_INVALIDDATA;
 	}
-		
-	put_stream_into_context(out_ctx,)
 	
-	if (dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO || ) {
-		/* in this example, we choose transcoding to same codec */
-		encoder = 
-		enc_ctx = 
-	if (dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO) {
-			
-	}
+	if (pFormatCtx->oformat != NULL)
+		if (pFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
+			enc_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	
-	decoder = avcodec_find_decoder(in_stream->codecpar->codec_id);
-	dec_ctx = avcodec_alloc_context3(decoder);
-	avcodec_parameters_to_context(dec_ctx, in_stream->codecpar);
+	put_stream_into_context(out_ctx, encoder, enc_ctx);
+	 
+	// Dump information about file onto standard error
+	av_dump_format(out_ctx, 0, "./transcoded.mkv", 1);
 	
-	} 
-	if (pFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
-		enc_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	
-	/* if (encoder->pix_fmts)
-			enc_ctx->pix_fmt = encoder->pix_fmts[0];
-		else
-		*/
 }
