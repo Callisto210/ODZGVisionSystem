@@ -5,11 +5,13 @@
 #include <libavutil/pixdesc.h>
 #include <libavfilter/avfiltergraph.h>
 
-
+#include "filter_graph.h"
 
 /*
  * AVFormatContext Fields description at https://ffmpeg.org/doxygen/3.2/structAVFormatContext.html
  */
+
+static FilteringContext *filter_ctx;
 
 static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 	int ret;
@@ -107,7 +109,8 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVCodec *encoder
  * 
  */
 
-static void populate_codec_context_video(AVCodecContext *enc_ctx, AVCodecContext *dec_ctx, enum AVPixelFormat pix_fmt) {
+static void populate_codec_context_video(AVCodecContext *enc_ctx,
+    AVCodecContext *dec_ctx, enum AVPixelFormat pix_fmt) {
 	enc_ctx->height = dec_ctx->height;
 	enc_ctx->width = dec_ctx->width;
 	enc_ctx->sample_aspect_ratio = dec_ctx->sample_aspect_ratio;
@@ -123,7 +126,8 @@ static void populate_codec_context_video(AVCodecContext *enc_ctx, AVCodecContext
 	return;
 }
 
-static void populate_codec_context_audio(AVCodecContext *enc_ctx, AVCodecContext *dec_ctx, enum AVSampleFormat sample_fmt) {
+static void populate_codec_context_audio(AVCodecContext *enc_ctx,
+    AVCodecContext *dec_ctx, enum AVSampleFormat sample_fmt) {
 	enc_ctx->sample_rate = dec_ctx->sample_rate;
 	enc_ctx->channel_layout = dec_ctx->channel_layout;
 	enc_ctx->channels = av_get_channel_layout_nb_channels(enc_ctx->channel_layout);
@@ -165,6 +169,7 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx, int stream)
 	AVCodec *decoder, *encoder;
 	AVCodecContext *dec_ctx, *enc_ctx;
 	AVStream *in_stream;
+	int ret;
 	
 	in_stream = in_ctx->streams[stream];
 	
@@ -179,6 +184,11 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx, int stream)
 		encoder = avcodec_find_encoder(AV_CODEC_ID_VP8);
 		enc_ctx = avcodec_alloc_context3(encoder);
 		populate_codec_context_video(enc_ctx, dec_ctx, encoder->pix_fmts[0]);
+		
+		/* Init filter graph for stream */
+		ret = init_filter_graph_video(&filter_ctx[stream], encoder->pix_fmts[0],
+            "null");
+		
 	}
 	else if (dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
 #ifdef DEBUG
@@ -187,6 +197,10 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx, int stream)
 		encoder = avcodec_find_encoder(AV_CODEC_ID_MP3);
 		enc_ctx = avcodec_alloc_context3(encoder);
 		populate_codec_context_audio(enc_ctx, dec_ctx, encoder->sample_fmts[0]);
+		
+		/*Init filter graph for stream */
+		ret = init_filter_graph_audio(&filter_ctx[stream], dec_ctx, enc_ctx,
+            "anull");
 	}
 	else if (dec_ctx->codec_type == AVMEDIA_TYPE_UNKNOWN) {
 		av_log(NULL, AV_LOG_FATAL, "Elementary stream is of unknown type, cannot proceed\n");
@@ -202,6 +216,71 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx, int stream)
 	return (0);
 }
 
+static int alloc_filtering_contexts(unsigned int nb_streams)
+{
+    unsigned int i;
+    filter_ctx = av_malloc_array(nb_streams, sizeof(*filter_ctx));
+    if (!filter_ctx)
+        return AVERROR(ENOMEM);
+    for (i = 0; i < nb_streams; i++) {
+        filter_ctx[i].buffersrc_ctx  = NULL;
+        filter_ctx[i].buffersink_ctx = NULL;
+        filter_ctx[i].filter_graph   = NULL;
+    }
+    return 0;
+}
+
+static int encode_write_frame(AVFormatContext *ofmt_ctx,
+    AVFrame *filt_frame, unsigned int stream_index, int *got_frame) {
+    int ret;
+    AVPacket enc_pkt;
+    int (*enc_func)(AVCodecContext *, AVPacket *, const AVFrame *, int *) =
+        (ofmt_ctx->streams[stream_index]->codec->codec_type ==
+         AVMEDIA_TYPE_VIDEO) ? avcodec_encode_video2 : avcodec_encode_audio2;
+
+    av_log(NULL, AV_LOG_INFO, "Encoding frame\n");
+    /* encode filtered frame */
+    enc_pkt.data = NULL;
+    enc_pkt.size = 0;
+    av_init_packet(&enc_pkt);
+    ret = enc_func(ofmt_ctx->streams[stream_index]->codec, &enc_pkt,
+        filt_frame, got_frame);
+    av_frame_free(&filt_frame);
+    if (ret < 0)
+        return ret;
+    if (!(*got_frame)) {
+		av_log(NULL, AV_LOG_DEBUG, "avcodec_encode got_frame set to 0!\n");
+        return AVERROR(EINVAL);
+	}
+    /* prepare packet for muxing */
+    enc_pkt.stream_index = stream_index;
+    av_packet_rescale_ts(&enc_pkt,
+                         ofmt_ctx->streams[stream_index]->codec->time_base,
+                         ofmt_ctx->streams[stream_index]->time_base);
+    av_log(NULL, AV_LOG_DEBUG, "Muxing frame\n");
+    /* mux encoded frame */
+    ret = av_interleaved_write_frame(ofmt_ctx, &enc_pkt);
+    return ret;
+}
+
+static int flush_encoder(AVFormatContext *ofmt_ctx,
+    unsigned int stream_index)
+{
+    int ret;
+    int got_frame;
+    if (!(ofmt_ctx->streams[stream_index]->codec->codec->capabilities &
+                AV_CODEC_CAP_DELAY))
+        return 0;
+    while (1) {
+        av_log(NULL, AV_LOG_INFO, "Flushing stream #%u encoder\n", stream_index);
+        ret = encode_write_frame(ofmt_ctx, NULL, stream_index, &got_frame);
+        if (ret < 0)
+            break;
+        if (!got_frame)
+            return 0;
+    }
+    return ret;
+}
 
 int main(int argc, char *argv[]) {
 	if (argc != 2)
@@ -226,6 +305,7 @@ int main(int argc, char *argv[]) {
 	
 	AVFormatContext *out_ctx;
 	create_output_context(&out_ctx, filename);
+	alloc_filtering_contexts(pFormatCtx->nb_streams);
 	
 	setup_stream(pFormatCtx, out_ctx, 0);
 	setup_stream(pFormatCtx, out_ctx, 1);

@@ -1,11 +1,13 @@
 CC=gcc
 LIBS=-lavcodec -lavformat -lswscale -lavutil -lavfilter
 CFLAGS=-Wall -Wextra -pedantic
+SRCS=$(wildcard *.c)
+OBJS=$(SRCS:.c=.o )
 
-all: main.o
-	$(CC) $< -o main $(LIBS)
+all: $(OBJS)
+	$(CC) $(OBJS) -o main $(LIBS)
 
-main.o: main.c
+%.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) -DDEBUG
 
 clean:
