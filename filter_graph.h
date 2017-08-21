@@ -9,7 +9,7 @@ typedef struct FilteringContext {
 } FilteringContext;
 
 int init_filter_graph_video(FilteringContext *, enum AVPixelFormat,
-    const char *);
+    const char *, AVCodecContext *);
 int init_filter_graph_audio(FilteringContext *, AVCodecContext *,
     AVCodecContext *, const char *);
 

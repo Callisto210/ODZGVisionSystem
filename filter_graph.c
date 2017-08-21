@@ -9,8 +9,11 @@
 
 #include "filter_graph.h"
 
+
+/* dec_ctx is used only for createing argument string to graph source */
 int init_filter_graph_video(FilteringContext* fctx,
-        enum AVPixelFormat pix_fmt, const char *filter_spec)
+        enum AVPixelFormat pix_fmt, const char *filter_spec,
+        AVCodecContext *dec_ctx)
 {
     char args[512];
     int ret = 0;
@@ -33,24 +36,44 @@ int init_filter_graph_video(FilteringContext* fctx,
 		goto end;
 	}
 
+	snprintf(args, sizeof(args),
+		"video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
+		dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt,
+//		dec_ctx->time_base.num, dec_ctx->time_base.den,
+		1, 30,
+		dec_ctx->sample_aspect_ratio.num,
+		dec_ctx->sample_aspect_ratio.den);
+		
+#ifdef DEBUG
+		printf("%s: Argument list for video graph filtering source\n%s\n", __func__, args);
+#endif
 	ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
 			args, NULL, filter_graph);
 	if (ret < 0) {
 		av_log(NULL, AV_LOG_ERROR, "Cannot create buffer source\n");
 		goto end;
 	}
+#ifdef DEBUG
+	printf("%s: Buffer source (video filtering graph in) created\n", __func__);
+#endif
 	ret = avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out",
 			NULL, NULL, filter_graph);
 	if (ret < 0) {
 		av_log(NULL, AV_LOG_ERROR, "Cannot create buffer sink\n");
 		goto end;
 	}
-	ret = av_opt_set_bin(buffersink_ctx, "pix_fmts", (uint8_t *)pix_fmt, sizeof(pix_fmt),
+#ifdef DEBUG
+	printf("%s: Buffer sink (video filtering graph out) created\n", __func__);
+#endif
+	ret = av_opt_set_bin(buffersink_ctx, "pix_fmts", (uint8_t *)&pix_fmt, sizeof(pix_fmt),
 	    AV_OPT_SEARCH_CHILDREN);
 	if (ret < 0) {
 		av_log(NULL, AV_LOG_ERROR, "Cannot set output pixel format\n");
 		goto end;
 	}
+#ifdef DEBUG
+	printf("%s: pix_fmt for video filtering graph output - set\n", __func__);
+#endif
     
     /* Endpoints for the filter graph. */
     outputs->name       = av_strdup("in");
@@ -106,6 +129,12 @@ int init_filter_graph_audio(FilteringContext* fctx, AVCodecContext *dec_ctx,
 	if (!dec_ctx->channel_layout)
 		dec_ctx->channel_layout =
 			av_get_default_channel_layout(dec_ctx->channels);
+			
+	snprintf(args, sizeof(args),
+		"time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=0x%"PRIx64,
+		dec_ctx->time_base.num, dec_ctx->time_base.den, dec_ctx->sample_rate,
+		av_get_sample_fmt_name(dec_ctx->sample_fmt),
+		dec_ctx->channel_layout);
 
 	ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
 			args, NULL, filter_graph);
