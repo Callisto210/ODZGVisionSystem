@@ -1,0 +1,9 @@
+[submodule "lib/pistache"]
+	path = lib/pistache
+	url = git@github.com:oktal/pistache.git
+[submodule "lib/spdlog"]
+	path = lib/spdlog
+	url = git@github.com:gabime/spdlog.git
+[submodule "lib/ffmpeg"]
+	path = lib/ffmpeg
+	url = https://git.ffmpeg.org/ffmpeg.git
