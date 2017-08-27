@@ -12,6 +12,7 @@
  */
 
 static FilteringContext *filter_ctx;
+static AVCodecContext **codec_ctx;
 
 static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 	int ret;
@@ -19,7 +20,6 @@ static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 	
 	AVStream *pStream;
 	AVCodec *pCodec;
-	AVCodecContext *pCodec_ctx;
 	
 	*pFormatCtx = NULL;
 	if((ret = avformat_open_input(pFormatCtx, filename, NULL, NULL))!=0) {
@@ -36,24 +36,25 @@ static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 	// Dump information about file onto standard error
 	av_dump_format(*pFormatCtx, 0, filename, 0);
 	
+	codec_ctx = malloc(sizeof(AVCodecContext *) * (*pFormatCtx)->nb_streams);
+	
 	for (i = 0; i < (*pFormatCtx)->nb_streams; i++) {
 		pStream = (*pFormatCtx)->streams[i];
 		pCodec = avcodec_find_decoder(pStream->codecpar->codec_id);
-		pCodec_ctx = avcodec_alloc_context3(pCodec);
-		avcodec_parameters_to_context(pCodec_ctx, pStream->codecpar);
+		codec_ctx[i] = avcodec_alloc_context3(pCodec);
+		avcodec_parameters_to_context(codec_ctx[i], pStream->codecpar);
 		/* Reencode video & audio and remux subtitles etc. */
-		if (pCodec_ctx->codec_type == AVMEDIA_TYPE_VIDEO || pCodec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
+		if (codec_ctx[i]->codec_type == AVMEDIA_TYPE_VIDEO || codec_ctx[i]->codec_type == AVMEDIA_TYPE_AUDIO) {
 			/* Open decoder */
-			ret = avcodec_open2(pCodec_ctx, pCodec, NULL);
+			ret = avcodec_open2(codec_ctx[i], pCodec, NULL);
 			if (ret < 0) {
 				av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
-				avcodec_free_context(&pCodec_ctx);
+				avcodec_free_context(&codec_ctx[i]);
 				return ret;
 			}
 		}
 	}
 	
-	avcodec_free_context(&pCodec_ctx);
 	return 0;
 }
 
@@ -169,7 +170,7 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx, int stream)
 	AVCodec *decoder, *encoder;
 	AVCodecContext *dec_ctx, *enc_ctx;
 	AVStream *in_stream;
-	int ret;
+	int ret = 0;
 	
 	in_stream = in_ctx->streams[stream];
 	
@@ -213,7 +214,7 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx, int stream)
 	
 	put_stream_into_context(out_ctx, encoder, enc_ctx);
 	
-	return (0);
+	return (ret);
 }
 
 static int alloc_filtering_contexts(unsigned int nb_streams)
@@ -275,7 +276,12 @@ static int flush_encoder(AVFormatContext *ofmt_ctx,
 {
     int ret;
     int got_frame;
-    if (!(ofmt_ctx->streams[stream_index]->codec->codec->capabilities &
+    AVCodecContext *codec_ctx;
+    codec_ctx = avcodec_alloc_context3(avcodec_find_decoder(
+            ofmt_ctx->streams[stream_index]->codecpar->codec_id));
+	avcodec_parameters_to_context(codec_ctx, ofmt_ctx->streams[stream_index]->codecpar);
+
+    if (!(codec_ctx->codec->capabilities &
                 AV_CODEC_CAP_DELAY))
         return 0;
     while (1) {
@@ -336,19 +342,19 @@ int main(int argc, char *argv[]) {
         return ret;
     }
 	
-#if 0
-	/* main loop */
 	
+	/* main loop */
 	AVPacket packet = { .data = NULL, .size = 0 };
 	int got_frame, i, stream_index;
-	
+	enum AVMediaType type;
+	AVFrame *frame;
 	
 	/* read all packets */
     while (1) {
         if ((ret = av_read_frame(pFormatCtx, &packet)) < 0)
             break;
         stream_index = packet.stream_index;
-        type = pFormatCtx->streams[packet.stream_index]->codec->codec_type;
+        type = codec_ctx[stream_index]->codec_type;
         av_log(NULL, AV_LOG_DEBUG, "Demuxer gave frame of stream_index %u\n",
                 stream_index);
         if (filter_ctx[stream_index].filter_graph) {
@@ -360,25 +366,35 @@ int main(int argc, char *argv[]) {
             }
             av_packet_rescale_ts(&packet,
                                  pFormatCtx->streams[stream_index]->time_base,
-                                 pFormatCtx->streams[stream_index]->codec->time_base);
+                                 codec_ctx[stream_index]->time_base);
+                                 
+            /*                     
             dec_func = (type == AVMEDIA_TYPE_VIDEO) ? avcodec_decode_video2 :
                 avcodec_decode_audio4;
             ret = dec_func(pFormatCtx->streams[stream_index]->codec, frame,
                     &got_frame, &packet);
+             */
+             
+			/* Send packet to decoder */
+			if ((ret = avcodec_send_packet(codec_ctx[stream_index], &packet)) != 0)
+				return ret;
+		
+			/* Receive frame from decoder */
+			if ((ret = avcodec_receive_frame(codec_ctx[stream_index], frame)) != 0)
+				return ret;
+				
             if (ret < 0) {
                 av_frame_free(&frame);
                 av_log(NULL, AV_LOG_ERROR, "Decoding failed\n");
                 break;
             }
-            if (got_frame) {
-                frame->pts = av_frame_get_best_effort_timestamp(frame);
-                ret = filter_encode_write_frame(frame, stream_index);
-                av_frame_free(&frame);
-                if (ret < 0)
-                    goto end;
-            } else {
-                av_frame_free(&frame);
-            }
+
+			frame->pts = av_frame_get_best_effort_timestamp(frame);
+			ret = filter_encode_write_frame(frame, stream_index);
+			av_frame_free(&frame);
+			if (ret < 0)
+				goto end;
+
         } else {
             /* remux this frame without reencoding */
             av_packet_rescale_ts(&packet,
@@ -426,7 +442,5 @@ end:
     if (ret < 0)
         av_log(NULL, AV_LOG_ERROR, "Error occurred: %s\n", av_err2str(ret));
     return ret ? 1 : 0;
-    
-#endif
-	
+
 }
