@@ -242,13 +242,6 @@ int filter_encode_write_frame(FilteringContext *filter_ctx,
             return i;
         }
         filt_frame[i]->pict_type = AV_PICTURE_TYPE_NONE;
-        /* Now we are not calling function here, but we are trying to
-         * to return frames which should be handled by main thread
-         * Kept here to not forget !!!
-        ret = encode_write_frame(filt_frame, stream_index, NULL);
-        if (ret < 0)
-            break;
-        */
     }
     return ret;
 }
