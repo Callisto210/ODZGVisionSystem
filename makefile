@@ -11,5 +11,5 @@ all: $(OBJS)
 	$(CC) -c $< -o $@ $(CFLAGS) -DDEBUG
 
 clean:
-	rm main
 	rm *.o
+	rm main

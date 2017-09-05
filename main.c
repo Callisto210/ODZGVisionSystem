@@ -8,6 +8,8 @@
 #include "filter_graph.h"
 #include "log_common.h"
 
+#define FABULOUS_CURRENT FABULOUS_INFO
+
 #define MAX_FILTERED_FRAMES 100
 /*
  * AVFormatContext Fields description at https://ffmpeg.org/doxygen/3.2/structAVFormatContext.html
@@ -49,6 +51,7 @@ static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 		if (codec_ctx[i]->codec_type == AVMEDIA_TYPE_VIDEO || codec_ctx[i]->codec_type == AVMEDIA_TYPE_AUDIO) {
 			/* Open decoder */
 			ret = avcodec_open2(codec_ctx[i], pCodec, NULL);
+			NSDI(avcodec_open2, ret);
 			if (ret < 0) {
 				av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
 				avcodec_free_context(&codec_ctx[i]);
@@ -198,8 +201,8 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 		encoder = avcodec_find_encoder(AV_CODEC_ID_VP8);
 		if (encoder == NULL)
 			av_log(NULL, AV_LOG_FATAL, "Can't find video encoder\n");
-	//	*enc_ctx = avcodec_alloc_context3(encoder);
-		NSDP(*enc_ctx = avcodec_alloc_context3, encoder);
+		*enc_ctx = avcodec_alloc_context3(encoder);
+	//	NSDP(*enc_ctx = avcodec_alloc_context3, encoder);
 		populate_codec_context_video(*enc_ctx, dec_ctx, encoder->pix_fmts[0], &options);
 		
 		/* Init filter graph for stream */
