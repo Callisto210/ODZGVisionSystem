@@ -6,6 +6,7 @@
 #include <libavfilter/avfiltergraph.h>
 
 #include "filter_graph.h"
+#include "log_common.h"
 
 #define MAX_FILTERED_FRAMES 100
 /*
@@ -75,8 +76,9 @@ static int create_output_context(AVFormatContext **pFormatCtx, const char *filen
  * - stream parameters AVCodecContext
  */
 
-static int put_stream_into_context(AVFormatContext *pFormatCtx, AVCodec *encoder, AVCodecContext *enc_ctx) {
-    int ret;	
+static int put_stream_into_context(AVFormatContext *pFormatCtx, AVCodec *encoder, AVCodecContext *enc_ctx,
+    AVDictionary **options) {
+	int ret;	
 	
 	AVStream *out_stream = avformat_new_stream(pFormatCtx, NULL);
 	if (!out_stream) {
@@ -96,9 +98,9 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVCodec *encoder
 	avcodec_parameters_from_context(out_stream->codecpar, enc_ctx);
 		
 	/* Third parameter can be used to pass settings to encoder */
-	ret = avcodec_open2(enc_ctx, encoder, NULL);
+	ret = avcodec_open2(enc_ctx, encoder, options);
 	if (ret < 0) {
-		av_log(NULL, AV_LOG_ERROR, "Cannot open video encoder for stream\n");
+		av_log(NULL, AV_LOG_ERROR, "Cannot open encoder for stream\n");
 		return ret;
 	}
 
@@ -112,7 +114,7 @@ static int put_stream_into_context(AVFormatContext *pFormatCtx, AVCodec *encoder
  */
 
 static void populate_codec_context_video(AVCodecContext *enc_ctx,
-    AVCodecContext *dec_ctx, enum AVPixelFormat pix_fmt) {
+    AVCodecContext *dec_ctx, enum AVPixelFormat pix_fmt, AVDictionary **d) {
 	enc_ctx->height = dec_ctx->height;
 	enc_ctx->width = dec_ctx->width;
 	enc_ctx->sample_aspect_ratio = dec_ctx->sample_aspect_ratio;
@@ -129,12 +131,19 @@ static void populate_codec_context_video(AVCodecContext *enc_ctx,
 }
 
 static void populate_codec_context_audio(AVCodecContext *enc_ctx,
-    AVCodecContext *dec_ctx, enum AVSampleFormat sample_fmt) {
+    AVCodecContext *dec_ctx, enum AVSampleFormat sample_fmt, AVDictionary **d) {
 	enc_ctx->sample_rate = dec_ctx->sample_rate;
 	enc_ctx->channel_layout = dec_ctx->channel_layout;
 	enc_ctx->channels = av_get_channel_layout_nb_channels(enc_ctx->channel_layout);
 	enc_ctx->sample_fmt = sample_fmt;
 	enc_ctx->time_base = (AVRational){1, enc_ctx->sample_rate};
+
+	av_dict_set_int(d, "frame_size", 50000, 0);
+
+#ifdef DEBUG
+	printf("AUDIO: samplerate %d\n", enc_ctx->sample_rate);
+#endif
+
 	return;
 }
 
@@ -172,6 +181,8 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 	AVCodec *decoder, *encoder;
 	AVCodecContext *dec_ctx;
 	AVStream *in_stream;
+	AVDictionary *options = NULL; /* New dictionary */
+	AVDictionaryEntry *t = NULL;
 	int ret = 0;
 	
 	in_stream = in_ctx->streams[stream];
@@ -185,8 +196,11 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 		printf("Stream: %d, VIDEO\n", stream);
 #endif
 		encoder = avcodec_find_encoder(AV_CODEC_ID_VP8);
-		*enc_ctx = avcodec_alloc_context3(encoder);
-		populate_codec_context_video(*enc_ctx, dec_ctx, encoder->pix_fmts[0]);
+		if (encoder == NULL)
+			av_log(NULL, AV_LOG_FATAL, "Can't find video encoder\n");
+	//	*enc_ctx = avcodec_alloc_context3(encoder);
+		NSDP(*enc_ctx = avcodec_alloc_context3, encoder);
+		populate_codec_context_video(*enc_ctx, dec_ctx, encoder->pix_fmts[0], &options);
 		
 		/* Init filter graph for stream */
 		ret = init_filter_graph_video(&filter_ctx[stream], encoder->pix_fmts[0],
@@ -197,9 +211,11 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 #ifdef DEBUG
 		printf("Stream: %d, AUDIO\n", stream);
 #endif
-		encoder = avcodec_find_encoder(AV_CODEC_ID_MP3);
+		encoder = avcodec_find_encoder(AV_CODEC_ID_VORBIS);
+		if (encoder == NULL)
+			av_log(NULL, AV_LOG_FATAL, "Can't find audio encoder\n");
 		*enc_ctx = avcodec_alloc_context3(encoder);
-		populate_codec_context_audio(*enc_ctx, dec_ctx, encoder->sample_fmts[0]);
+		populate_codec_context_audio(*enc_ctx, dec_ctx, encoder->sample_fmts[0], &options);
 		
 		/*Init filter graph for stream */
 		ret = init_filter_graph_audio(&filter_ctx[stream], dec_ctx, *enc_ctx,
@@ -214,8 +230,10 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 		if (in_ctx->oformat->flags & AVFMT_GLOBALHEADER)
 			(*enc_ctx)->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 	
-	put_stream_into_context(out_ctx, encoder, *enc_ctx);
-	
+	put_stream_into_context(out_ctx, encoder, *enc_ctx, &options);
+	while (t = av_dict_get(options, "", t, AV_DICT_IGNORE_SUFFIX)) {
+		av_log(NULL, AV_LOG_INFO, "Option %s not found\n", t->key);
+	}
 	return (ret);
 }
 
@@ -236,21 +254,22 @@ static int alloc_filtering_contexts(unsigned int nb_streams)
 static int encode_write_frame(AVFormatContext *ofmt_ctx,
     AVCodecContext *enc_ctx, AVFrame **filt_frame, unsigned int nframes,
     unsigned int stream_index) {
-    int ret;
-    unsigned int i;
-    AVPacket enc_pkt;
+	int ret;
+	unsigned int i;
+	AVPacket *enc_pkt;
 
+	enc_pkt = av_packet_alloc();
 	for (i = 0; i < nframes;) {
 		av_log(NULL, AV_LOG_INFO, "Encoding frame\n");
-		
+
 		/* Send frame to encoder */
 		if ((ret = avcodec_send_frame(enc_ctx, filt_frame[i])) != 0) {
 			av_log(NULL, AV_LOG_ERROR, "Send frame failed with error: %d\n", ret);
 			break;
 		}
-		
+
 		/* Receive packet from encoder */
-		if ((ret = avcodec_receive_packet(enc_ctx, &enc_pkt)) != 0) {
+		if ((ret = avcodec_receive_packet(enc_ctx, enc_pkt)) != 0) {
 			if (ret == AVERROR(EAGAIN)) {
 				/* Output not available, send more packets */
 				continue;
@@ -258,37 +277,40 @@ static int encode_write_frame(AVFormatContext *ofmt_ctx,
 			av_log(NULL, AV_LOG_ERROR, "Receive packet failed with error: %d\n", ret);
 			break;
 		}
-		
+
 		av_frame_free(&filt_frame[i++]);
-		
+
 		/* prepare packet for muxing */
-		enc_pkt.stream_index = stream_index;
-		av_packet_rescale_ts(&enc_pkt,
-							 enc_ctx->time_base,
-							 ofmt_ctx->streams[stream_index]->time_base);
+		enc_pkt->stream_index = stream_index;
+		av_packet_rescale_ts(enc_pkt, enc_ctx->time_base,
+		    ofmt_ctx->streams[stream_index]->time_base);
 		av_log(NULL, AV_LOG_DEBUG, "Muxing frame\n");
 		/* mux encoded frame */
-		ret = av_interleaved_write_frame(ofmt_ctx, &enc_pkt);
-    }
-    
-    /* free rest of not freed frames */
-    for (; i < nframes; i++)
+		ret = av_interleaved_write_frame(ofmt_ctx, enc_pkt);
+
+	}
+
+	av_packet_free(&enc_pkt);
+
+	/* free rest of not freed frames */
+	for (; i < nframes; i++)
 		av_frame_free(&filt_frame[i]);
-    
-    return ret;
+
+	return (ret);
 }
 
 static int flush_encoder(AVFormatContext *ofmt_ctx,
     AVCodecContext *codec_ctx, unsigned int stream_index)
 {
     int ret;
+    AVFrame *dummy_frame = NULL;
 
     if (!(codec_ctx->codec->capabilities &
                 AV_CODEC_CAP_DELAY))
         return 0;
     while (1) {
         av_log(NULL, AV_LOG_INFO, "Flushing stream #%u encoder\n", stream_index);
-        ret = encode_write_frame(ofmt_ctx, codec_ctx, NULL, 0,
+        ret = encode_write_frame(ofmt_ctx, codec_ctx, &dummy_frame, 1,
             stream_index);
         if (ret < 0)
             break;
@@ -347,7 +369,7 @@ int main(int argc, char *argv[]) {
 	enc_codec_ctx = malloc(sizeof(*enc_codec_ctx) * pFormatCtx->nb_streams);
 	
 	setup_stream(pFormatCtx, out_ctx, &enc_codec_ctx[0], 0);
-	setup_stream(pFormatCtx, out_ctx, &enc_codec_ctx[1], 1);
+	//setup_stream(pFormatCtx, out_ctx, &enc_codec_ctx[1], 1);
 	 
 	// Dump information about file onto standard error
 	av_dump_format(out_ctx, 0, filename, 1);
@@ -378,11 +400,18 @@ int main(int argc, char *argv[]) {
 	/* read all packets */
     while (1) {
         if ((ret = av_read_frame(pFormatCtx, &packet)) < 0) {
-			av_log(NULL, AV_LOG_ERROR, "av_read_frame: returned %d\n",
-			    ret);
-            break;
+		if (ret == AVERROR_EOF) {
+#ifdef DEBUG
+			av_log(NULL, AV_LOG_INFO, "End Of File\nᕕ(⌐■_■)ᕗ ♪♬\n");
+#endif
+			break;
 		}
+	    av_log(NULL, AV_LOG_ERROR, "av_read_frame: returned %d\n", ret);
+            break;
+	}
         stream_index = packet.stream_index;
+	if (stream_index == 1)
+		continue; /* "IF" for debugging purpose */
         type = codec_ctx[stream_index]->codec_type;
         av_log(NULL, AV_LOG_INFO, "Demuxer gave frame of stream_index %u\n",
                 stream_index);
@@ -450,10 +479,12 @@ int main(int argc, char *argv[]) {
         
         /* flush encoder */
         ret = flush_encoder(out_ctx, enc_codec_ctx[i], i);
-        if (ret < 0) {
+        if (ret == AVERROR_EOF) {
             av_log(NULL, AV_LOG_ERROR, "Flushing encoder failed\n");
             goto end;
-        }
+        } else {
+		av_log(NULL, AV_LOG_INFO, "Flushed...\n");
+	}
     }
     av_write_trailer(out_ctx);
     

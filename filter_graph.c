@@ -211,7 +211,7 @@ end:
 int filter_encode_write_frame(FilteringContext *filter_ctx,
     AVFrame *frame, AVFrame **filt_frame, unsigned int nframes)
 {
-    int ret;
+    int ret = 0;
     unsigned int i;
     av_log(NULL, AV_LOG_INFO, "Pushing decoded frame to filters\n");
     /* push the decoded frame into the filtergraph */
@@ -234,12 +234,11 @@ int filter_encode_write_frame(FilteringContext *filter_ctx,
         if (ret < 0) {
             /* if no more frames for output - returns AVERROR(EAGAIN)
              * if flushed and no more frames for output - returns AVERROR_EOF
-             * rewrite retcode to 0 to show it as normal procedure completion
              */
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
                 ret = 0;
             av_frame_free(&filt_frame[i]);
-            return i;
+            return (i);
         }
         filt_frame[i]->pict_type = AV_PICTURE_TYPE_NONE;
     }

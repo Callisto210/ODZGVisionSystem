@@ -1,6 +1,6 @@
 CC=gcc
 LIBS=-lavcodec -lavformat -lswscale -lavutil -lavfilter
-CFLAGS=-Wall -Wextra -pedantic
+CFLAGS=-Wall -Wextra -pedantic -g
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o )
 
