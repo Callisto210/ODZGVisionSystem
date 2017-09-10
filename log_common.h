@@ -11,6 +11,7 @@
 
 struct fabulous_debug_int_t {
 	int code;
+	int (*cmp)(int, int);
 	int level;
 	char *str;
 };
@@ -21,26 +22,48 @@ struct fabulous_debug_ptr_t {
 	char *str;
 };
 
-#define FABULOUS_DEBUG_INT(function, retval) do {			\
-	extern struct fabulous_debug_int_t * function_debug_t;		\
+#define FABULOUS_DEBUG_INT(F, R, U, ...) do {				\
+	extern struct fabulous_debug_int_t F##_debug_t;			\
 	struct fabulous_debug_int_t *s;					\
-	s = function_debug_t;						\
-	for (; s->str; s++)						\
-		if (s->code == retval)					\
-			if (s->level & FABULOUS_CURRENT)		\
-				printf("%s (%s @ %d): %s", "function",	\
-				    __FILE__, __LINE__, s->str);	\
+	const char *u = (U);						\
+	s = &F##_debug_t;						\
+	for (; s->cmp; s++)						\
+		if (s->cmp((R), s->code))				\
+			if (s->level & FABULOUS_CURRENT) {		\
+				if (u == NULL)				\
+					printf("[%s @ %d] %s: %s\n",	\
+					    __FILE__, __LINE__,		\
+					     #F, s->str);		\
+				else {					\
+					char tmp[100];			\
+					snprintf(tmp, 100, u, __VA_ARGS__);	\
+					printf("[%s @ %d] %s (%s): %s\n",	\
+					    __FILE__, __LINE__,		\
+					    #F, tmp, s->str);		\
+				}					\
+			}						\
 } while(0)
 
-#define FABULOUS_DEBUG_PTR(function, retval) do {			\
-	extern struct fabulous_debug_ptr_t *function_debug_t;		\
+#define FABULOUS_DEBUG_PTR(F, R, U, ...) do {				\
+	extern struct fabulous_debug_ptr_t F##_debug_t;			\
 	struct fabulous_debug_ptr_t *s;					\
-	s = function_debug_t;						\
+	s = &F##_debug_t;						\
+	const char *u = (U);						\
 	for (; s->str; s++)						\
-		if (s->code == retval)					\
-			if (s->level & FABULOUS_CURRENT)		\
-				printf("%s (%s @ %d): %s", "function",	\
-				    __FILE__, __LINE__, s->str);	\
+		if (s->code == (R))					\
+			if (s->level & FABULOUS_CURRENT) {		\
+				if (u == NULL)				\
+					printf("[%s @ %d] %s: %s\n",	\
+					    __FILE__, __LINE__,		\
+					     "#F", s->str);		\
+				else {					\
+					char tmp[100];			\
+					snprintf(tmp, 100, u, __VA_ARGS__);	\
+					printf("[%s @ %d] %s (%s): %s\n",	\
+					    __FILE__, __LINE__,		\
+					    "#F", u, s->str);		\
+				}					\
+			}						\
 } while(0)
 
 #define NSDI		FABULOUS_DEBUG_INT

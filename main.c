@@ -8,7 +8,7 @@
 #include "filter_graph.h"
 #include "log_common.h"
 
-#define FABULOUS_CURRENT FABULOUS_INFO
+#define FABULOUS_CURRENT FABULOUS_VERBOSE
 
 #define MAX_FILTERED_FRAMES 100
 /*
@@ -51,9 +51,8 @@ static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 		if (codec_ctx[i]->codec_type == AVMEDIA_TYPE_VIDEO || codec_ctx[i]->codec_type == AVMEDIA_TYPE_AUDIO) {
 			/* Open decoder */
 			ret = avcodec_open2(codec_ctx[i], pCodec, NULL);
-			NSDI(avcodec_open2, ret);
+			NSDI(avcodec_open2, ret, "decoder for stream: %d", i);
 			if (ret < 0) {
-				av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
 				avcodec_free_context(&codec_ctx[i]);
 				return ret;
 			}
