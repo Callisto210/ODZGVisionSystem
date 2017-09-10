@@ -2,10 +2,16 @@
 /* Modal Content */
 .modal-content {
     background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
+    padding: 10px;
     border: 1px solid #888;
     width: 80%;
+    margin: auto;
+}
+
+#configform {
+    border: 2px solid #888;
+    margin-top: 20px!important;
+    margin: auto;
 }
 
 /* The Close Button */

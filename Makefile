@@ -23,7 +23,7 @@ rest: prepare bin/libpistache.a $(REST)
 link: bin/libpistache.a $(OBJFILES)
 	$(info Linking...)
 	$(info )
-	$(CXX) $(CFLAGS) $(OBJFILES) -L bin -l pistache -o bin/rest
+	$(CXX) $(CFLAGS) $(OBJFILES) -L bin -L bin/lib/* -l pistache -o bin/rest
 
 
 pistache: prepare lib/pistache
@@ -42,6 +42,11 @@ ffmpeg: prepare lib/ffmpeg
 	--enable-shared --enable-avresample --enable-libx264 --enable-libx265
 	@cd ../../
 	$(MAKE) -C lib/ffmpeg all
+	$(info Copying libraries files)
+	# Copying .a library files
+	$(shell cp lib/ffmpeg/lib*/*.a bin/lib/ffmpeg)
+	$(shell cp lib/ffmpeg/lib*/*.so* bin/lib/ffmpeg)
+
 
 
 libs: pistache ffmpeg
