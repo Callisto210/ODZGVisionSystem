@@ -2,13 +2,24 @@
 #include "rest/endpoints.hh"
 #include <spdlog/spdlog.h>
 #include <thread>
+#include <vector>
+extern "C" {
+#include "codecs/main.h"
+}
 namespace spd = spdlog;
 using namespace Pistache;
 
 
-int main(void) {
+int main(int argc, char** argv) {
+    std::vector<spdlog::sink_ptr> sinks;
+    sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
+    sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>("logfile.txt", 15, 29));
+    auto main_log = std::make_shared<spdlog::logger>("main", sinks.begin(), sinks.end());
+    auto filter_log = std::make_shared<spdlog::logger>("filter", sinks.begin(), sinks.end());
 
-    auto main_log = spdlog::stdout_color_mt("main");
+    filter_log->set_level(spdlog::level::debug);
+    spdlog::register_logger(filter_log);
+    spdlog::register_logger(main_log);
     main_log->info("Starting...");
     Port port(8090);
     int threads = 1;
@@ -20,10 +31,12 @@ int main(void) {
         std::thread api_thread = std::thread(&Endpoints::start, api);
         main_log->debug("Noted start of server");
         char s;
+        std::thread back(_main, argc, argv);
         std::cin>>s;
         api.shutdown();
         main_log->info("called shutdown");
         api_thread.join();
+        back.join();
     } catch(...) {
         main_log->warn("Catched an exception.");
         
