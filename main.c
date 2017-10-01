@@ -123,7 +123,7 @@ static void populate_codec_context_video(AVCodecContext *enc_ctx,
 	enc_ctx->pix_fmt = pix_fmt;
 	/* video time_base can be set to whatever is handy and supported by encoder */
 	//enc_ctx->time_base = dec_ctx->time_base;
-	enc_ctx->time_base = (AVRational){1, 30};
+	enc_ctx->time_base = (AVRational){1, 25};
 	
 #ifdef DEBUG
 	printf("timebase: %d %d\n", enc_ctx->time_base.num, enc_ctx->time_base.den);
@@ -197,7 +197,7 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 #ifdef DEBUG
 		printf("Stream: %d, VIDEO\n", stream);
 #endif
-		encoder = avcodec_find_encoder(AV_CODEC_ID_VP8);
+		encoder = avcodec_find_encoder(AV_CODEC_ID_VP9);
 		if (encoder == NULL)
 			av_log(NULL, AV_LOG_FATAL, "Can't find video encoder\n");
 		*enc_ctx = avcodec_alloc_context3(encoder);
@@ -213,7 +213,7 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 #ifdef DEBUG
 		printf("Stream: %d, AUDIO\n", stream);
 #endif
-		encoder = avcodec_find_encoder(AV_CODEC_ID_VORBIS);
+		encoder = avcodec_find_encoder(AV_CODEC_ID_OPUS);
 		if (encoder == NULL)
 			av_log(NULL, AV_LOG_FATAL, "Can't find audio encoder\n");
 		*enc_ctx = avcodec_alloc_context3(encoder);
@@ -263,6 +263,11 @@ static int encode_write_frame(AVFormatContext *ofmt_ctx,
 	enc_pkt = av_packet_alloc();
 	for (i = 0; i < nframes;) {
 		av_log(NULL, AV_LOG_INFO, "Encoding frame\n");
+
+	if(enc_ctx->codec_type == AVMEDIA_TYPE_VIDEO) {
+		/* Stamp packet with correct PTS */
+		filt_frame[i]->pts = enc_ctx->frame_number;
+	}
 
 		/* Send frame to encoder */
 		if ((ret = avcodec_send_frame(enc_ctx, filt_frame[i])) != 0) {
@@ -325,7 +330,7 @@ static int filter_write_frame(AVFormatContext *out_ctx,
 {
 	AVFrame *filtered_frames[MAX_FILTERED_FRAMES];
 	int ret;
-	
+
 	ret = filter_encode_write_frame(&filter_ctx[stream_index],
 	    frame, filtered_frames, MAX_FILTERED_FRAMES);
 	if (ret < 0) {
