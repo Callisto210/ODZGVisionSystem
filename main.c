@@ -197,7 +197,7 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 #ifdef DEBUG
 		printf("Stream: %d, VIDEO\n", stream);
 #endif
-		encoder = avcodec_find_encoder(AV_CODEC_ID_VP9);
+		encoder = avcodec_find_encoder(AV_CODEC_ID_H264);
 		if (encoder == NULL)
 			av_log(NULL, AV_LOG_FATAL, "Can't find video encoder\n");
 		*enc_ctx = avcodec_alloc_context3(encoder);
@@ -206,7 +206,7 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 		
 		/* Init filter graph for stream */
 		ret = init_filter_graph_video(&filter_ctx[stream], encoder->pix_fmts[0],
-            "null", dec_ctx);
+            "overlay=main_w-overlay_w-10:main_h-overlay_h-10", dec_ctx);
 		
 	}
 	else if (dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
