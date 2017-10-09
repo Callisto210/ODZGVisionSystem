@@ -29,6 +29,7 @@ extern "C" {
 #endif
 //C++ libraries
 #include <spdlog/spdlog.h>
+#include "../ffmpeg/AVFilter.hh"
 
 class FilteringContext {
 public:
@@ -40,7 +41,7 @@ public:
     /**
      * @brief Initializing filter graph for video stream inside Filtering Context
      * @param pixelFormat
-     * @param
+     * @param Filter_spec
      * @param AVCodecContext codec context
      * @return 0 or error code otherwise
      */
@@ -54,7 +55,7 @@ public:
 
     AVFilterContext *buffersink_ctx;
     AVFilterContext *buffersrc_ctx;
-    AVFilterGraph *filter_graph;
+    ffmpeg::AVFilterGraph* filter_graph;
 private:
     std::shared_ptr<spdlog::logger> _log;
 };

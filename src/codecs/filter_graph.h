@@ -1,5 +1,8 @@
 /* Filter graph */
 
+#include <libavfilter/avfilter.h>
+#include <libavcodec/avcodec.h>
+
 #define MAX_FRAMES_FORM_FILTER 100
 
 typedef struct FilteringContext {

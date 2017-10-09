@@ -19,6 +19,8 @@ namespace ffmpeg{
         ~AVPacket();
         AVPacket& operator=(AVPacket const& other);
         ::AVPacket* av_packet() const;
+        ::AVPacket* operator->() { return _av_packet;}
+        ::AVPacket operator*() { return *_av_packet;}
     private:
         ::AVPacket *_av_packet;
     };

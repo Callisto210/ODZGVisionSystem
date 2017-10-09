@@ -20,7 +20,7 @@ default: all
 prepare:
 	$(info Preparing directory structure)
 	$(shell test -d build/rest || mkdir -p build/rest)
-	$(shell test -d build/ffmpeg || mkdir -p build/ffmpeg)
+#	$(shell test -d build/ffmpeg || mkdir -p build/ffmpeg)
 	$(shell test -d build/lib/pistache || mkdir -p build/lib/pistache)
 	$(shell test -d bin/lib/ffmpeg || mkdir -p bin/lib/ffmpeg)
 	$(shell test -d build/codecs || mkdir -p build/codecs)
@@ -30,9 +30,10 @@ rest: prepare bin/libpistache.a $(REST)
 codecs: prepare $(CODECS)
 
 link: bin/libpistache.a $(OBJFILES)
+	$(CXX) $(CFLAGS) $(OBJFILES) -L bin -L bin/lib/ffmpeg -o bin/rest $(LFLAGS)
 	$(info Linking...)
 	$(info )
-	$(CXX) $(CFLAGS) $(OBJFILES) -L bin -L bin/lib/* -o bin/rest $(LFLAGS)
+#    $(CXX) $(CFLAGS) $(OBJFILES) -L bin -L bin/lib/* -o bin/rest $(LFLAGS)
 
 
 pistache: prepare lib/pistache
@@ -43,46 +44,46 @@ pistache: prepare lib/pistache
 	$(info Copying library file libpistache)
 	@cp build/lib/pistache/src/libpistache.a bin/libpistache.a
 
-ffmpeg: prepare lib/ffmpeg
-	$(info Building ffmpeg libraries)
-	@cd lib/ffmpeg && ./configure \
-	--disable-programs --enable-gpl --libdir=../../bin/lib/ffmpeg \
-	--shlibdir=../../bin/lib/ffmpeg \
-	--enable-shared --enable-avresample --enable-libx264 --enable-libx265
-	@cd ../../
-	$(MAKE) -C lib/ffmpeg all
-	$(info Copying libraries files)
-	# Copying .a library files
-	$(shell cp lib/ffmpeg/lib*/*.a bin/lib/ffmpeg)
-	$(shell cp lib/ffmpeg/lib*/*.so* bin/lib/ffmpeg)
+#ffmpeg: prepare lib/ffmpeg
+#	$(info Building ffmpeg libraries)
+#	@cd lib/ffmpeg && ./configure \
+#	--disable-programs --enable-gpl --libdir=../../bin/lib/ffmpeg \
+#	--shlibdir=../../bin/lib/ffmpeg \
+#	--enable-shared --enable-avresample --enable-libx264 --enable-libx265
+#	@cd ../../
+#	$(MAKE) -C lib/ffmpeg all
+#	$(info Copying libraries files)
+#	# Copying .a library files
+#	$(shell cp lib/ffmpeg/lib*/*.a bin/lib/ffmpeg)
+#	$(shell cp lib/ffmpeg/lib*/*.so* bin/lib/ffmpeg)
 
 
 
-libs: pistache ffmpeg
+libs: pistache
 
 build/rest/%.o: src/rest/%.cc
 	$(info Building rest objects)
 	$(info )
 	$(CXX) -c $(CFLAGS) $(INCLUDE) -o $@ $<
 
-build/codecs/%.o: src/codecs/%.cc
-	$(info Building codecs objects)
-	$(info )
-	$(CXX) -c $(CFLAGS) $(INCLUDE) -o $@ $<
-
-build/ffmpeg/%.o: src/ffmpeg/%.cc
-	$(info Building ffmpeg Cpp wrapper classes)
-	$(info )
-	$(CXX) -c $(CFLAGS) $(INCLUDE) -o $@ $<
+#build/codecs/%.o: src/codecs/%.cc
+#	$(info Building codecs objects)
+#	$(info )
+#	$(CXX) -c $(CFLAGS) $(INCLUDE) -o $@ $<
+#
+#build/ffmpeg/%.o: src/ffmpeg/%.cc
+#	$(info Building ffmpeg Cpp wrapper classes)
+#	$(info )
+#	$(CXX) -c $(CFLAGS) $(INCLUDE) -o $@ $<
 
 
 main:
 	$(info Building main...)
 	$(CXX) -c $(CFLAGS) $(INCLUDE) \
 	-o $(OUTDIR)/main.o $(SRCDIR)/main.cc
-	gcc -c -Wall -std=c99 -o build/codecs/main.o src/codecs/main.c $(INCLUDE)
-	gcc -c -Wall -std=c99 -o build/codecs/filter_graph.c.o src/codecs/filter_graph.c $(INCLUDE)
-	gcc -c -Wall -std=c99 -o build/codecs/log_ffmpeg.o src/codecs/log_ffmpeg.c $(INCLUDE)
+#	gcc -c -Wall -std=c99 -o build/codecs/main.o src/codecs/main.c $(INCLUDE)
+#	gcc -c -Wall -std=c99 -o build/codecs/filter_graph.c.o src/codecs/filter_graph.c $(INCLUDE)
+#	gcc -c -Wall -std=c99 -o build/codecs/log_ffmpeg.o src/codecs/log_ffmpeg.c $(INCLUDE)
 
 clean:
 	$(info Cleaning output files... )

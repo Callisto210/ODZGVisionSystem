@@ -21,11 +21,9 @@ int FilteringContext::init_filter_graph_video(
     AVFilterContext *buffersink_ctx = nullptr;
     ffmpeg::AVFilterInOut outputs;
     ffmpeg::AVFilterInOut inputs;
-    AVFilterGraph *filter_graph = avfilter_graph_alloc();
-    if (!filter_graph) {
-        ret = AVERROR(ENOMEM);
-        goto end;
-    }
+    ffmpeg::AVFilterGraph filter_graph;
+
+
 	buffersrc = avfilter_get_by_name("buffer");
 	buffersink = avfilter_get_by_name("buffersink");
 	if (!buffersrc || !buffersink) {
@@ -45,7 +43,7 @@ int FilteringContext::init_filter_graph_video(
 		_log->debug("{}: Argument list for video graph filtering source\n{}\n", __func__, args);
 
 	ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
-			args, nullptr, filter_graph);
+			args, nullptr, filter_graph.filter());
 	if (ret < 0) {
 		av_log(nullptr, AV_LOG_ERROR, "Cannot create buffer source\n");
 		goto end;
@@ -54,7 +52,7 @@ int FilteringContext::init_filter_graph_video(
 
 	_log->debug("{}: Buffer source (video filtering graph in) created.", __func__);
 	ret = avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out",
-                                       nullptr, nullptr, filter_graph);
+                                       nullptr, nullptr, filter_graph.filter());
 	if (ret < 0) {
 		av_log(nullptr, AV_LOG_ERROR, "Cannot create buffer sink.\n");
 		goto end;
@@ -82,15 +80,14 @@ int FilteringContext::init_filter_graph_video(
         ret = AVERROR(ENOMEM);
         goto end;
     }
-    if ((ret = avfilter_graph_parse_ptr(filter_graph, filter_spec,
+    if ((ret = avfilter_graph_parse_ptr(filter_graph.filter(), filter_spec,
                     inputs.ref(), outputs.ref(), nullptr)) < 0)
         goto end;
-    if ((ret = avfilter_graph_config(filter_graph, nullptr)) < 0)
-        goto end;
+    filter_graph.config(nullptr);
     /* Fill FilteringContext */
     this->buffersrc_ctx = buffersrc_ctx;
     this->buffersink_ctx = buffersink_ctx;
-    this->filter_graph = filter_graph;
+    this->filter_graph = &filter_graph;
 end:
     return ret;
 }
@@ -104,13 +101,9 @@ int FilteringContext::init_filter_graph_audio(AVCodecContext *dec_ctx,
     AVFilter *buffersink = nullptr;
     AVFilterContext *buffersrc_ctx = nullptr;
     AVFilterContext *buffersink_ctx = nullptr;
-    AVFilterInOut *outputs = avfilter_inout_alloc();
-    AVFilterInOut *inputs  = avfilter_inout_alloc();
-    AVFilterGraph *filter_graph = avfilter_graph_alloc();
-    if (!outputs || !inputs || !filter_graph) {
-        ret = AVERROR(ENOMEM);
-        goto end;
-    }
+    ffmpeg::AVFilterInOut outputs;
+    ffmpeg::AVFilterInOut inputs;
+    ffmpeg::AVFilterGraph filter_graph;
 	buffersrc = avfilter_get_by_name("abuffer");
 	buffersink = avfilter_get_by_name("abuffersink");
 	if (!buffersrc || !buffersink) {
@@ -128,13 +121,13 @@ int FilteringContext::init_filter_graph_audio(AVCodecContext *dec_ctx,
 		dec_ctx->channel_layout);
 
 	ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
-			args, nullptr, filter_graph);
+			args, nullptr, filter_graph.filter());
 	if (ret < 0) {
 		av_log(nullptr, AV_LOG_ERROR, "Cannot create audio buffer source\n");
 		goto end;
 	}
 	ret = avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out",
-                                       nullptr, nullptr, filter_graph);
+                                       nullptr, nullptr, filter_graph.filter());
 	if (ret < 0) {
 		av_log(nullptr, AV_LOG_ERROR, "Cannot create audio buffer sink\n");
 		goto end;
@@ -174,18 +167,15 @@ int FilteringContext::init_filter_graph_audio(AVCodecContext *dec_ctx,
         ret = AVERROR(ENOMEM);
         goto end;
     }
-    if ((ret = avfilter_graph_parse_ptr(filter_graph, filter_spec,
-                    &inputs, &outputs, nullptr)) < 0)
+    if ((ret = avfilter_graph_parse_ptr(filter_graph.filter(), filter_spec,
+                    inputs.ref(), outputs.ref(), nullptr)) < 0)
         goto end;
-    if ((ret = avfilter_graph_config(filter_graph, nullptr)) < 0)
-        goto end;
+    filter_graph.config(nullptr);
     /* Fill FilteringContext */
     this->buffersrc_ctx = buffersrc_ctx;
     this->buffersink_ctx = buffersink_ctx;
-    this->filter_graph = filter_graph;
+    this->filter_graph = &filter_graph;
 end:
-    avfilter_inout_free(&inputs);
-    avfilter_inout_free(&outputs);
     return ret;
 }
 
