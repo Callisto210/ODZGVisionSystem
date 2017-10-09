@@ -1,5 +1,6 @@
 CC=gcc
-LIBS=-lavcodec -lavformat -lswscale -lavutil -lavfilter
+LIBS=`pkg-config --libs gstreamer-1.0 gstreamer-audio-1.0 gstreamer-video-1.0`
+GST_CFLAGS=`pkg-config --cflags gstreamer-1.0 gstreamer-audio-1.0 gstreamer-video-1.0`
 CFLAGS=-Wall -Wextra -pedantic -g
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o )
@@ -8,7 +9,7 @@ all: $(OBJS)
 	$(CC) $(OBJS) -o main $(LIBS)
 
 %.o: %.c
-	$(CC) -c $< -o $@ $(CFLAGS) -DDEBUG
+	$(CC) -c $< -o $@ $(CFLAGS) $(GST_CFLAGS) 
 
 clean:
 	rm *.o
