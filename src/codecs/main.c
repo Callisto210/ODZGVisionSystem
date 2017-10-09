@@ -8,7 +8,7 @@
 #include "filter_graph.h"
 #include "log_common.h"
 
-#define FABULOUS_CURRENT FABULOUS_INFO
+#define FABULOUS_CURRENT FABULOUS_VERBOSE
 
 #define MAX_FILTERED_FRAMES 100
 /*
@@ -21,9 +21,10 @@ static AVCodecContext **codec_ctx;
 static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 	int ret;
 	unsigned int i;
+	
 	AVStream *pStream;
 	AVCodec *pCodec;
-
+	
 	*pFormatCtx = NULL;
 	if((ret = avformat_open_input(pFormatCtx, filename, NULL, NULL))!=0) {
 		av_log(NULL, AV_LOG_ERROR, "Cannot open input file\n");
@@ -35,10 +36,12 @@ static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 		av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
 		return ret;
 	}
+		
 	// Dump information about file onto standard error
 	av_dump_format(*pFormatCtx, 0, filename, 0);
+	
 	codec_ctx = malloc(sizeof(AVCodecContext *) * (*pFormatCtx)->nb_streams);
-
+	
 	for (i = 0; i < (*pFormatCtx)->nb_streams; i++) {
 		pStream = (*pFormatCtx)->streams[i];
 		pCodec = avcodec_find_decoder(pStream->codecpar->codec_id);
@@ -48,7 +51,7 @@ static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 		if (codec_ctx[i]->codec_type == AVMEDIA_TYPE_VIDEO || codec_ctx[i]->codec_type == AVMEDIA_TYPE_AUDIO) {
 			/* Open decoder */
 			ret = avcodec_open2(codec_ctx[i], pCodec, NULL);
-			//NSDI(avcodec_open2, ret);
+			NSDI(avcodec_open2, ret, "decoder for stream: %d", i);
 			if (ret < 0) {
 				av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
 				avcodec_free_context(&codec_ctx[i]);
@@ -56,6 +59,7 @@ static int open_input_file(AVFormatContext **pFormatCtx, const char *filename) {
 			}
 		}
 	}
+	
 	return 0;
 }
 
@@ -70,7 +74,7 @@ static int create_output_context(AVFormatContext **pFormatCtx, const char *filen
 }
 
 /* You need:
- * - context
+ * - context 
  * - codec (to encode) AVCodec
  * - stream parameters AVCodecContext
  */
@@ -120,8 +124,8 @@ static void populate_codec_context_video(AVCodecContext *enc_ctx,
 	enc_ctx->pix_fmt = pix_fmt;
 	/* video time_base can be set to whatever is handy and supported by encoder */
 	//enc_ctx->time_base = dec_ctx->time_base;
-	enc_ctx->time_base = (AVRational){1, 30};
-
+	enc_ctx->time_base = (AVRational){1, 25};
+	
 #ifdef DEBUG
 	printf("timebase: %d %d\n", enc_ctx->time_base.num, enc_ctx->time_base.den);
 #endif
@@ -159,6 +163,7 @@ static int remux_stream(AVFormatContext *pFormatCtx, AVStream *in_stream) {
 		av_log(NULL, AV_LOG_ERROR, "Failed allocating output stream\n");
 		return AVERROR_UNKNOWN;
 	}
+	
 	ctx = avcodec_alloc_context3(NULL);
 	ret = avcodec_parameters_to_context(ctx, in_stream->codecpar);
 	if(ret >= 0) {
@@ -193,25 +198,28 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 #ifdef DEBUG
 		printf("Stream: %d, VIDEO\n", stream);
 #endif
-		encoder = avcodec_find_encoder(AV_CODEC_ID_VP8);
+		encoder = avcodec_find_encoder(AV_CODEC_ID_H264);
 		if (encoder == NULL)
 			av_log(NULL, AV_LOG_FATAL, "Can't find video encoder\n");
 		*enc_ctx = avcodec_alloc_context3(encoder);
 	//	NSDP(*enc_ctx = avcodec_alloc_context3, encoder);
 		populate_codec_context_video(*enc_ctx, dec_ctx, encoder->pix_fmts[0], &options);
+		
 		/* Init filter graph for stream */
 		ret = init_filter_graph_video(&filter_ctx[stream], encoder->pix_fmts[0],
-            "null", dec_ctx);
+            "overlay=main_w-overlay_w-10:main_h-overlay_h-10", dec_ctx);
+		
 	}
 	else if (dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
 #ifdef DEBUG
 		printf("Stream: %d, AUDIO\n", stream);
 #endif
-		encoder = avcodec_find_encoder(AV_CODEC_ID_VORBIS);
+		encoder = avcodec_find_encoder(AV_CODEC_ID_OPUS);
 		if (encoder == NULL)
 			av_log(NULL, AV_LOG_FATAL, "Can't find audio encoder\n");
 		*enc_ctx = avcodec_alloc_context3(encoder);
 		populate_codec_context_audio(*enc_ctx, dec_ctx, encoder->sample_fmts[0], &options);
+		
 		/*Init filter graph for stream */
 		ret = init_filter_graph_audio(&filter_ctx[stream], dec_ctx, *enc_ctx,
             "anull");
@@ -220,9 +228,11 @@ setup_stream(AVFormatContext *in_ctx, AVFormatContext *out_ctx,
 		av_log(NULL, AV_LOG_FATAL, "Elementary stream is of unknown type, cannot proceed\n");
 		return AVERROR_INVALIDDATA;
 	}
+	
 	if (in_ctx->oformat != NULL)
 		if (in_ctx->oformat->flags & AVFMT_GLOBALHEADER)
 			(*enc_ctx)->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+	
 	put_stream_into_context(out_ctx, encoder, *enc_ctx, &options);
 	while (t = av_dict_get(options, "", t, AV_DICT_IGNORE_SUFFIX)) {
 		av_log(NULL, AV_LOG_INFO, "Option %s not found\n", t->key);
@@ -254,6 +264,11 @@ static int encode_write_frame(AVFormatContext *ofmt_ctx,
 	enc_pkt = av_packet_alloc();
 	for (i = 0; i < nframes;) {
 		av_log(NULL, AV_LOG_INFO, "Encoding frame\n");
+
+	if(enc_ctx->codec_type == AVMEDIA_TYPE_VIDEO) {
+		/* Stamp packet with correct PTS */
+		filt_frame[i]->pts = enc_ctx->frame_number;
+	}
 
 		/* Send frame to encoder */
 		if ((ret = avcodec_send_frame(enc_ctx, filt_frame[i])) != 0) {
@@ -337,6 +352,7 @@ static int filter_write_frame(AVFormatContext *out_ctx,
 int _main(int argc, char *argv[]) {
 	if (argc != 2)
 		return 1;
+		
 	const char *filename = "./transcoded.mkv";
 	int ret;
 	AVCodecContext **enc_codec_ctx;
@@ -436,6 +452,7 @@ int _main(int argc, char *argv[]) {
                 av_log(NULL, AV_LOG_ERROR, "Receive frame failed with error: %d\n", ret);
 				return ret;
 			}
+				
             if (ret < 0) {
                 av_frame_free(&frame);
                 av_log(NULL, AV_LOG_ERROR, "Decoding failed\n");
