@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 	data.acodec = gst_element_factory_make ("voaacenc", "acodec");
 	//data.acodec = gst_element_factory_make ("lamemp3enc", "acodec");
 	//data.vcodec = gst_element_factory_make ("vp8enc", "vcodec");
-	data.vcodec = gst_element_factory_make ("x265enc", "vcodec");
+	data.vcodec = gst_element_factory_make ("x264enc", "vcodec");
 	data.aqueue = gst_element_factory_make ("queue", "aqueue");
 	data.vqueue = gst_element_factory_make ("queue", "vqueue");
 #ifdef OGGMUX
@@ -141,7 +141,8 @@ int main(int argc, char *argv[]) {
 	g_object_set (data.sink, "port", 8080, NULL);
 #else
 #ifdef HLSSINK
-	g_object_set (data.sink, "max-files", "20", NULL);
+	g_object_set (data.sink, "max-files", "5", NULL);
+	g_object_set (data.sink, "target-duration", "5", NULL);
 	g_object_set (data.sink, "playlist-root", "http://localhost", NULL);
 	g_object_set (data.sink, "playlist-location", "/var/www/localhost/htdocs/playlist.m3u8", NULL);
 	g_object_set (data.sink, "location", "/var/www/localhost/htdocs/segment%05d.ts", NULL);
