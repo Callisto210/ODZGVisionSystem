@@ -141,10 +141,10 @@ int main(int argc, char *argv[]) {
 	g_object_set (data.sink, "port", 8080, NULL);
 #else
 #ifdef HLSSINK
-	g_object_set (data.sink, "max-files", "5", NULL);
+	g_object_set (data.sink, "max-files", "20", NULL);
 	g_object_set (data.sink, "playlist-root", "http://localhost", NULL);
-	g_object_set (data.sink, "playlist-location", "/var/www/localhost/htdocs", NULL);
-	g_object_set (data.sink, "location", "/var/www/localhost/htdocs", NULL);
+	g_object_set (data.sink, "playlist-location", "/var/www/localhost/htdocs/playlist.m3u8", NULL);
+	g_object_set (data.sink, "location", "/var/www/localhost/htdocs/segment%05d.ts", NULL);
 #else
 	g_object_set (data.sink, "location", "transcoded.webm", NULL);
 #endif
