@@ -1,9 +1,13 @@
-<html>
-    <title>A simple HTML5 video test</title>
-</html>
-<body> 
-    <video autoplay controls width=320 height=240>    
-    <source src="http://localhost:8080" type="video/webm">
-       You browser doesn't support element <code>video</code>.
-    </video>
-</body>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<video id="video" width="320" height="240" controls></video>
+<script>
+  if(Hls.isSupported()) {
+    var video = document.getElementById('video');
+    var hls = new Hls();
+    hls.loadSource('playlist.m3u8');
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED,function() {
+      video.play();
+  });
+ }
+</script>

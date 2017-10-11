@@ -1,6 +1,9 @@
 #include <gst/gst.h>
 #include <gst/gstbin.h>
 
+#define HLSSINK
+#define MPEGTS
+
 extern gboolean autoplug_continue_cb(GstBin *, GstPad *,
     GstCaps *, gpointer);
 
@@ -14,6 +17,8 @@ typedef struct _elements {
 	GstElement *vconvert;
 	GstElement *acodec;
 	GstElement *vcodec;
+	GstElement *aqueue;
+	GstElement *vqueue;
 	GstElement *muxer;
 	GstElement *sink;
 } Elements;
@@ -36,11 +41,31 @@ int main(int argc, char *argv[]) {
 	data.decode = gst_element_factory_make ("decodebin", "source");
 	data.aconvert = gst_element_factory_make ("audioconvert", "aconvert");
 	data.vconvert = gst_element_factory_make ("videoconvert", "vconvert");
-	data.acodec = gst_element_factory_make ("opusenc", "acodec");
-	data.vcodec = gst_element_factory_make ("vp8enc", "vcodec");
-	data.muxer = gst_element_factory_make("webmmux", "muxer");
-	//data.sink = gst_element_factory_make ("tcpserversink", "sink");
+	//data.acodec = gst_element_factory_make ("opusenc", "acodec");
+	data.acodec = gst_element_factory_make ("voaacenc", "acodec");
+	//data.acodec = gst_element_factory_make ("lamemp3enc", "acodec");
+	//data.vcodec = gst_element_factory_make ("vp8enc", "vcodec");
+	data.vcodec = gst_element_factory_make ("x265enc", "vcodec");
+	data.aqueue = gst_element_factory_make ("queue", "aqueue");
+	data.vqueue = gst_element_factory_make ("queue", "vqueue");
+#ifdef OGGMUX
+	data.muxer = gst_element_factory_make("oggmux", "muxer");
+#endif
+#ifdef MPEGTS
+	data.muxer = gst_element_factory_make("mpegtsmux", "muxer");
+#endif
+#ifdef MP4MUX
+	data.muxer = gst_element_factory_make("mp4mux", "muxer");
+#endif
+#ifdef TCPSINK
+	data.sink = gst_element_factory_make ("tcpserversink", "sink");
+#else
+#ifdef HLSSINK
+	data.sink = gst_element_factory_make ("hlssink", "sink");
+#else
 	data.sink = gst_element_factory_make ("filesink", "sink");
+#endif
+#endif
 
 	/* Create the empty pipeline */
 	data.pipeline = gst_pipeline_new ("pipeline");
@@ -52,6 +77,8 @@ int main(int argc, char *argv[]) {
 	    !data.vconvert ||
 	    !data.acodec ||
 	    !data.vcodec ||
+	    !data.aqueue ||
+	    !data.vqueue ||
 	    !data.muxer ||
 	    !data.sink) {
 		g_printerr ("Not all elements could be created.\n");
@@ -67,13 +94,15 @@ int main(int argc, char *argv[]) {
 	    data.vconvert,
 	    data.acodec,
 	    data.vcodec,
+	    data.aqueue,
+	    data.vqueue,
 	    data.muxer,
 	    data.sink,
 	    NULL);
 	    
 	if (!gst_element_link (data.filesrc, data.decode) ||
-	    !gst_element_link (data.aconvert, data.acodec) ||
-	    !gst_element_link (data.vconvert, data.vcodec) ||
+	    !gst_element_link_many (data.aconvert, data.acodec, data.aqueue, NULL) ||
+	    !gst_element_link_many (data.vconvert, data.vcodec, data.vqueue, NULL) ||
 	    !gst_element_link (data.muxer, data.sink)) {
 		g_printerr ("Elements could not be linked.\n");
 		gst_object_unref (data.pipeline);
@@ -81,14 +110,19 @@ int main(int argc, char *argv[]) {
 	}
 
 	GstPad *muxer_a_in, *muxer_v_in;
+#ifdef MPEGTS
+	muxer_a_in = gst_element_get_request_pad(data.muxer, "sink_%d");
+	muxer_v_in = gst_element_get_request_pad(data.muxer, "sink_%d");
+#else
 	muxer_a_in = gst_element_get_request_pad(data.muxer, "audio_%u");
 	muxer_v_in = gst_element_get_request_pad(data.muxer, "video_%u");
+#endif
 	g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (muxer_a_in));
 	g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (muxer_v_in));
 	
 	GstPad *acodec_out, *vcodec_out;
-	acodec_out = gst_element_get_static_pad(data.acodec, "src");
-	vcodec_out = gst_element_get_static_pad(data.vcodec, "src");
+	acodec_out = gst_element_get_static_pad(data.aqueue, "src");
+	vcodec_out = gst_element_get_static_pad(data.vqueue, "src");
 	g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (acodec_out));
 	g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (vcodec_out));
 	
@@ -102,9 +136,21 @@ int main(int argc, char *argv[]) {
 	
 	/* Set the URI to play */
 	g_object_set (data.filesrc, "location", "sample.mp4", NULL);
-	//g_object_set (data.sink, "host", "localhost", NULL);
-	//g_object_set (data.sink, "port", "8080", NULL);
+#ifdef TCPSINK
+	g_object_set (data.sink, "host", "127.0.0.1", NULL);
+	g_object_set (data.sink, "port", 8080, NULL);
+#else
+#ifdef HLSSINK
+	g_object_set (data.sink, "max-files", "5", NULL);
+	//g_object_set (data.sink, "playlist-root", "http://localhost", NULL);
+#else
 	g_object_set (data.sink, "location", "transcoded.webm", NULL);
+#endif
+#endif
+
+#ifdef MP4MUX
+	g_object_set (data.muxer, "fragment-duration", 100, NULL);
+#endif
 
 	/* Connect to the pad-added signal */
 	g_signal_connect (data.decode, "pad-added", G_CALLBACK (pad_added_handler), &data);
