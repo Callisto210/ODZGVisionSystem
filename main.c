@@ -1,5 +1,7 @@
 #include <gst/gst.h>
 #include <gst/gstbin.h>
+#include "jsmn/jsmn.h"
+#include <string.h>
 
 #define HLSSINK
 #define MPEGTS
@@ -26,7 +28,7 @@ typedef struct _elements {
 /* Handler for the pad-added signal */
 static void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
 
-int main(int argc, char *argv[]) {
+int magic(int argc, char *argv[]) {
 	Elements data;
 	GstBus *bus;
 	GstMessage *msg;
@@ -141,8 +143,8 @@ int main(int argc, char *argv[]) {
 	g_object_set (data.sink, "port", 8080, NULL);
 #else
 #ifdef HLSSINK
-	g_object_set (data.sink, "max-files", "5", NULL);
-	g_object_set (data.sink, "target-duration", "5", NULL);
+	g_object_set (data.sink, "max-files", 5, NULL);
+	g_object_set (data.sink, "target-duration", 5, NULL);
 	g_object_set (data.sink, "playlist-root", "http://localhost", NULL);
 	g_object_set (data.sink, "playlist-location", "/var/www/localhost/htdocs/playlist.m3u8", NULL);
 	g_object_set (data.sink, "location", "/var/www/localhost/htdocs/segment%05d.ts", NULL);
@@ -266,4 +268,49 @@ exit:
 
 	/* Unreference the sink pad */
 	gst_object_unref (sink_pad);
+}
+
+static void configure_pipeline(const char *json)
+{
+	jsmn_parser parser;
+	jsmntok_t tokens[50];
+	size_t toknum;
+
+	jsmn_init(&parser);
+
+	if((toknum = jsmn_parse(&parser, json, strlen(json), tokens, 50)) < 0) {
+		g_print ("Failed to parse json ;< \n");
+		return;
+	}
+
+	for (int i=0; i<toknum; i++) {
+		switch (tokens[i].type) {
+			case JSMN_OBJECT:
+				g_print("Found OBJECT start: %d, end: %d, children: %d\n",
+				    tokens[i].start, tokens[i].end, tokens[i].size);
+			break;
+			case JSMN_ARRAY:
+				g_print("Found ARRAY start: %d, end: %d, children: %d\n",
+				    tokens[i].start, tokens[i].end, tokens[i].size);
+			break;
+			case JSMN_STRING:
+				g_print("Found STRING start: %d, end: %d\n",
+				    tokens[i].start, tokens[i].end);
+			break;
+			case JSMN_PRIMITIVE:
+				g_print("Found PRIMITIVE start: %d, end: %d\n",
+				    tokens[i].start, tokens[i].end);
+			break;
+			default:
+				g_print("wut?!\n");
+		}
+	}
+	return;
+}
+
+
+int main(int argc, char *argv[]) {
+	configure_pipeline("{\"ala\" : \"ma kota\", \"num\" : 42}");
+
+	return (0);
 }
