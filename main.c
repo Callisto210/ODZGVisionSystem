@@ -12,7 +12,7 @@ extern gboolean autoplug_continue_cb(GstBin *, GstPad *,
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _elements {
 	GstElement *pipeline;
-	GstElement *filesrc;
+	GstElement *src;
 	GstElement *decode;
 	
 	GstElement *aconvert;
@@ -28,18 +28,13 @@ typedef struct _elements {
 /* Handler for the pad-added signal */
 static void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
 
-int magic(int argc, char *argv[]) {
-	Elements data;
+int magic(Elements data) {
 	GstBus *bus;
 	GstMessage *msg;
 	GstStateChangeReturn ret;
 	gboolean terminate = FALSE;
 
-	/* Initialize GStreamer */
-	gst_init (&argc, &argv);
-
 	/* Create the elements */
-	data.filesrc = gst_element_factory_make ("filesrc", "filesource");
 	data.decode = gst_element_factory_make ("decodebin", "source");
 	data.aconvert = gst_element_factory_make ("audioconvert", "aconvert");
 	data.vconvert = gst_element_factory_make ("videoconvert", "vconvert");
@@ -73,7 +68,7 @@ int magic(int argc, char *argv[]) {
 	data.pipeline = gst_pipeline_new ("pipeline");
 
 	if (!data.pipeline ||
-	    !data.filesrc ||
+	    !data.src ||
 	    !data.decode ||
 	    !data.aconvert ||
 	    !data.vconvert ||
@@ -90,7 +85,7 @@ int magic(int argc, char *argv[]) {
 	/* Build the pipeline. Note that we are NOT linking the source at this
 	 * point. We will do it later. */
 	gst_bin_add_many (GST_BIN (data.pipeline),
-	    data.filesrc,
+	    data.src,
 	    data.decode,
 	    data.aconvert,
 	    data.vconvert,
@@ -102,7 +97,7 @@ int magic(int argc, char *argv[]) {
 	    data.sink,
 	    NULL);
 	    
-	if (!gst_element_link (data.filesrc, data.decode) ||
+	if (!gst_element_link (data.src, data.decode) ||
 	    !gst_element_link_many (data.aconvert, data.acodec, data.aqueue, NULL) ||
 	    !gst_element_link_many (data.vconvert, data.vcodec, data.vqueue, NULL) ||
 	    !gst_element_link (data.muxer, data.sink)) {
@@ -137,7 +132,6 @@ int magic(int argc, char *argv[]) {
 	}
 	
 	/* Set the URI to play */
-	g_object_set (data.filesrc, "location", "sample.mp4", NULL);
 #ifdef TCPSINK
 	g_object_set (data.sink, "host", "127.0.0.1", NULL);
 	g_object_set (data.sink, "port", 8080, NULL);
@@ -274,35 +268,52 @@ static void configure_pipeline(const char *json)
 {
 	jsmn_parser parser;
 	jsmntok_t tokens[50];
-	size_t toknum;
+	int toknum, i=0, entries;
+	Elements data;
+	char path[256];
 
 	jsmn_init(&parser);
+	gst_init (NULL, NULL);
+	
+	/* Firstly prepare buffers */
+	for (i=0; i<sizeof(path); i++)
+		path[i] = '\0';
 
 	if((toknum = jsmn_parse(&parser, json, strlen(json), tokens, 50)) < 0) {
 		g_print ("Failed to parse json ;< \n");
 		return;
 	}
+	
+	if (tokens[0].type == JSMN_OBJECT) {
+		entries = tokens[0].size;
+		i=1;
+	}
 
-	for (int i=0; i<toknum; i++) {
+	for(; i<toknum; i+=2) {
 		switch (tokens[i].type) {
-			case JSMN_OBJECT:
-				g_print("Found OBJECT start: %d, end: %d, children: %d\n",
-				    tokens[i].start, tokens[i].end, tokens[i].size);
-			break;
-			case JSMN_ARRAY:
-				g_print("Found ARRAY start: %d, end: %d, children: %d\n",
-				    tokens[i].start, tokens[i].end, tokens[i].size);
-			break;
 			case JSMN_STRING:
-				g_print("Found STRING start: %d, end: %d\n",
-				    tokens[i].start, tokens[i].end);
+				if(strncmp(json + tokens[i].start, "source", MIN(6, tokens[i].end - tokens[i].start)) == 0) {
+					g_print("Source: ");
+					if(strncmp(json + tokens[i+1].start, "file", MIN(4, tokens[i+1].end - tokens[i+1].start)) == 0) {
+						g_print("file\n");
+						data.src = gst_element_factory_make("filesrc", "filesource");
+					}
+				}
+				else if(strncmp(json + tokens[i].start, "path", MIN(4, tokens[i].end - tokens[i].start)) == 0) {
+					strncpy(path, json + tokens[i+1].start, MIN(sizeof(path), tokens[i+1].end - tokens[i+1].start));
+					g_print("Path %s\n", path);
+					g_object_set (data.src, "location", path, NULL);
+				}
+				else if(strncmp(json + tokens[i].start, "fps", MIN(3, tokens[i].end - tokens[i].start)) == 0) {
+					g_print("Fps\n");
+				}
 			break;
 			case JSMN_PRIMITIVE:
 				g_print("Found PRIMITIVE start: %d, end: %d\n",
 				    tokens[i].start, tokens[i].end);
 			break;
 			default:
-				g_print("wut?!\n");
+				g_print("Bad entry\n");
 		}
 	}
 	return;
@@ -310,7 +321,11 @@ static void configure_pipeline(const char *json)
 
 
 int main(int argc, char *argv[]) {
-	configure_pipeline("{\"ala\" : \"ma kota\", \"num\" : 42}");
+	configure_pipeline("{"
+					   "\"source\" : \"file\","
+					   "\"path\" : \"./sample.mp4\","
+					   " \"fps\" : 25"
+					   "}");
 
 	return (0);
 }
