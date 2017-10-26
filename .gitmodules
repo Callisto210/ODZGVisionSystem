@@ -1,9 +1,20 @@
 [submodule "lib/pistache"]
 	path = lib/pistache
-	url = git@github.com:oktal/pistache.git
+    url = git@github.com:oktal/pistache.git
+    ignore = dirty
 [submodule "lib/spdlog"]
 	path = lib/spdlog
-	url = git@github.com:gabime/spdlog.git
+    url = git@github.com:gabime/spdlog.git
+    ignore = dirty
 [submodule "lib/ffmpeg"]
 	path = lib/ffmpeg
-	url = git@github.com:FFmpeg/FFmpeg.git
+    url = git@github.com:FFmpeg/FFmpeg.git
+    ignore = dirty
+[submodule "lib/gstreamer"]
+	path = lib/gstreamer
+    url = git@github.com:GStreamer/gstreamer.git
+    ignore = dirty
+[submodule "lib/jsmn"]
+	path = lib/jsmn
+    url = git@github.com:zserge/jsmn.git
+    ignore = dirty

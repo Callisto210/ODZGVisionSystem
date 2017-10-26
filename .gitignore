@@ -2,3 +2,4 @@ main
 *.o
 [Bb]uild/
 [Bb]in/
+cmake-build*/
