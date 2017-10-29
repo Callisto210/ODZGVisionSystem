@@ -2,38 +2,60 @@
 ---
 ### Requirements
 
-* ffmpeg ver. 3 https://ffmpeg.org
+* Gstreamer-1.0 >= 1.12 (gstreamer, gstreamer-video, gstreamer-audio)
 * pistache https://pistache.io
 * GTest https://github.com/google/googletest
 * spdlog https://github.com/gabime/spdlog
-* CMake (3.0) for building pistache
-* Autotools for building ffmpeg
-* nasm/yasm - requirement for compiling ffmpeg
+* rapidJSON - C++ json library
+* jsmn - C json library
+* CMake (3.5.1) for building project
+* Autotools for building dependencies (gstreamer libraries)
 * C/C++ compiler with C++14 support (tested on gcc)
 * GNU Make
 * HTTP server like nginx or apache for serving static files
 
 
+
 ## Opis developerski ODZGVisionSystem
 ---
 ### Budowanie projektu
- Domyślnie powinno wystarczyć uruchomienie komendą `make`.  
- *CMake nie jest w pełni skonfigurowany*  
- Najważniejsze zależności w formie bibliotek są załączone jako submoduły w repozytorium.
- Aby je pobrać, należy wykonać komendę `git submodule update --init` w katalogu projektu.
- Przykładowa instrukcja budowania ffmpeg:  
+ Projekt budujemy przy pomocy cmake dwuetapowo:
+ 
+ Etap 1:
+ * Utwórz katalog na biblioteki/zależności
+ * Wykonaj cmake dla katalogu lib
+ * Zbuduj i zainstaluj potrzebne biblioteki
+ 
+ np. 
+ 
+ ```bash 
+    mkdir cmake-build-lib
+    cd cmake-build-lib
+    cmake /path/to/project/lib -DCMAKE_INSTALL_DIR=/path/to/install 
+    # Opcjonalny parametr -DCORES
+    # make all wywołuje od razu instalację zależności z autotoolsów, stąd sudo
+    [sudo] make all 
+    [sudo] make install
+ ```
+ Projekt zbuduje tylko te zależności, które nie zostały znalezione.
+ Pozostałe mogą być pominięte.
+ 
+ Etap 2:
+ * Utwórz katalog do budowania
+ * Wykonaj cmake dla katalogu głównego
+ * Zbuduj projekt komendą make
+ 
+ np.
+ 
  ```bash
- cd lib/ffmpeg && ./configure \
- 	--disable-programs --enable-gpl --libdir=../../bin/lib/ffmpeg \
- 	--shlibdir=../../bin/lib/ffmpeg \
- 	--enable-shared --enable-avresample --enable-libx264 --enable-libx265
+    mkdir cmake-build
+    cd cmake-build
+    cmake /path/to/project -DCMAKE_INSTALL_DIR=/path/to/target
+    make all -j$(nproc)
+    [sudo] make install
 ```
-**!Uwaga: projekt po zlinkowaniu zwykle wymaga podania ścieżki bibliotek z paczki ffmpeg.
-Aby je dostarczyć, należy ustawić zmienną `LD_LIBRARY_PATH`.**  
-
-Przykładowe uruchomienie z katalogu głównego:
-`LD_LIBRARY_PATH=./bin/lib/ffmpeg ./bin/rest`.
-
+    
+    
 Serwer backendowy uruchamia się na porcie `8090`. Frontend jest dostarczony za pomocą
 statycznych plików umieszczonych w katalogu `data/html`.
 
@@ -63,15 +85,15 @@ server {
 
 Struktura katalogów:
 ```
-├── bin        //katalog wyjściowy dla plików
-│   └── lib    // Biblioteki w formacie *.so
-├── build      //katalog tymczasowy na pliki pośrednie
 ├── data       // pliki statyczne
 │   └── html   // pliki statyczne frontendu
 ├── docs       // Dokumentacja - jeszcze pusty
-├── include    // zebrane linki do plików nagłówkowych
+├── include    // zebrane linki do plików nagłówkowych (nie wszystkie)
 ├── lib        // repozytoria z zależnymi bibliotekami
-│   ├── ffmpeg
+│   ├── gstreamer
+│   ├── gst-plugins-base
+│   ├── gst-plugins-good
+│   ├── jsmn
 │   ├── pistache
 │   └── spdlog
 ├── src        // źródła projektu

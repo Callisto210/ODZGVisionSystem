@@ -9,7 +9,7 @@ extern "C" {
 namespace spd = spdlog;
 using namespace Pistache;
 
-
+#include "test_main.hh"
 int main(int argc, char** argv) {
     std::vector<spdlog::sink_ptr> sinks;
     sinks.push_back(std::make_shared<spdlog::sinks::stdout_sink_mt>());
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
         std::thread api_thread = std::thread(&Endpoints::start, api);
         main_log->debug("Noted start of server");
         char s;
-        std::thread back(_main, argc, argv);
+        std::thread back(play);
         std::cin>>s;
         api.shutdown();
         main_log->info("called shutdown");

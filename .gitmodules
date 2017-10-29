@@ -18,3 +18,11 @@
 	path = lib/jsmn
     url = git@github.com:zserge/jsmn.git
     ignore = dirty
+[submodule "lib/gst-plugins-good"]
+	path = lib/gst-plugins-good
+    url = git@github.com:GStreamer/gst-plugins-good.git
+    ignore = dirty
+[submodule "lib/gst-plugins-base"]
+	path = lib/gst-plugins-base
+    url = git@github.com:GStreamer/gst-plugins-base.git
+    ignore = dirty
