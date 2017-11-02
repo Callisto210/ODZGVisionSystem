@@ -25,7 +25,7 @@ pkg_check_modules(GST_PKG gstreamer-1.0>=1.12 gstreamer-audio-1.0>=1.12 gstreame
 
 include(CheckIncludeFiles)
 include_directories(include)
-include_directories(lib/jsmn)
+include_directories(lib)
 include_directories(${GST_PKG_INCLUDE_DIRS})
 
 find_library(pistache pistache HINTS lib ${PISTACHE_PATH})
