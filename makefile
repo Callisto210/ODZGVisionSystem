@@ -6,7 +6,7 @@ SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=.o )
 
 all: $(OBJS)
-	$(CC) $(OBJS) jsmn/libjsmn.a -o main $(LIBS)
+	$(CC) $(OBJS) jsmn64/libjsmn.a -o main $(LIBS)
 
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(GST_CFLAGS) 
