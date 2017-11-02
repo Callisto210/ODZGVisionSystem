@@ -7,7 +7,6 @@ INCLUDE=-Ilib/
 SRCS=$(wildcard src/*.c) $(wildcard src/codecs/*.c)
 OBJS=$(SRCS:.c=.o )
 
-
 all: $(OBJS) jsmn
 	$(info Libs: $(LIBS))
 	$(CC) $(OBJS)  -o main -L./lib/jsmn -ljsmn $(LIBS)

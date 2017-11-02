@@ -4,7 +4,7 @@
 #include <thread>
 #include <vector>
 extern "C" {
-#include "codecs/main.h"
+#include "codecs/codec_module.h"
 }
 namespace spd = spdlog;
 using namespace Pistache;
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
         std::thread api_thread = std::thread(&Endpoints::start, api);
         main_log->debug("Noted start of server");
         char s;
-        std::thread back(play);
+        std::thread back(test_pipeline);
         std::cin>>s;
         api.shutdown();
         main_log->info("called shutdown");

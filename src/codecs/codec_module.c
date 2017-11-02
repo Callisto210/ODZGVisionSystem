@@ -2,6 +2,7 @@
 #include <gst/gstbin.h>
 #include "jsmn/jsmn.h"
 #include <string.h>
+#include "codec_module.h"
 
 #define HLSSINK
 #define MPEGTS
@@ -9,75 +10,25 @@
 extern gboolean autoplug_continue_cb(GstBin *, GstPad *,
     GstCaps *, gpointer);
 
-/* Structure to contain all our information, so we can pass it to callbacks */
-typedef struct _elements {
-	GstElement *pipeline;
-	GstElement *src;
-	GstElement *decode;
-	
-	GstElement *aconvert;
-	GstElement *vconvert;
-	GstElement *acodec;
-	GstElement *vcodec;
-	GstElement *aqueue;
-	GstElement *vqueue;
-	GstElement *muxer;
-	GstElement *sink;
-} Elements;
-
 /* Handler for the pad-added signal */
 static void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
 
-int magic(Elements data) {
+int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	GstBus *bus;
 	GstMessage *msg;
 	GstStateChangeReturn ret;
 	gboolean terminate = FALSE;
 
-	/* Create the elements */
-	data.decode = gst_element_factory_make ("decodebin", "source");
-	data.aconvert = gst_element_factory_make ("audioconvert", "aconvert");
-	data.vconvert = gst_element_factory_make ("videoconvert", "vconvert");
-	//data.acodec = gst_element_factory_make ("opusenc", "acodec");
-	data.acodec = gst_element_factory_make ("voaacenc", "acodec");
-	//data.acodec = gst_element_factory_make ("lamemp3enc", "acodec");
-	//data.vcodec = gst_element_factory_make ("vp8enc", "vcodec");
-	data.vcodec = gst_element_factory_make ("x264enc", "vcodec");
-	data.aqueue = gst_element_factory_make ("queue", "aqueue");
-	data.vqueue = gst_element_factory_make ("queue", "vqueue");
-#ifdef OGGMUX
-	data.muxer = gst_element_factory_make("oggmux", "muxer");
-#endif
-#ifdef MPEGTS
-	data.muxer = gst_element_factory_make("mpegtsmux", "muxer");
-#endif
-#ifdef MP4MUX
-	data.muxer = gst_element_factory_make("mp4mux", "muxer");
-#endif
-#ifdef TCPSINK
-	data.sink = gst_element_factory_make ("tcpserversink", "sink");
-#else
-#ifdef HLSSINK
-	data.sink = gst_element_factory_make ("hlssink", "sink");
-#else
-	data.sink = gst_element_factory_make ("filesink", "sink");
-#endif
-#endif
+	char* mux_str = get_mux_str(mux_type);
+	char* sink_str = get_sink_str(sink_type);
 
-	/* Create the empty pipeline */
-	data.pipeline = gst_pipeline_new ("pipeline");
+	data.muxer = gst_element_factory_make(mux_str, "muxer");
+	data.sink = gst_element_factory_make (sink_str, "sink");
 
-	if (!data.pipeline ||
-	    !data.src ||
-	    !data.decode ||
-	    !data.aconvert ||
-	    !data.vconvert ||
-	    !data.acodec ||
-	    !data.vcodec ||
-	    !data.aqueue ||
-	    !data.vqueue ||
-	    !data.muxer ||
-	    !data.sink) {
+	free(mux_str);
+	free(sink_str);
+
+	if (elements_has_null_field(&data)) {
 		g_printerr ("Not all elements could be created.\n");
 		return -1;
 	}
@@ -85,22 +36,11 @@ int magic(Elements data) {
 	/* Build the pipeline. Note that we are NOT linking the source at this
 	 * point. We will do it later. */
 	gst_bin_add_many (GST_BIN (data.pipeline),
-	    data.src,
-	    data.decode,
-	    data.aconvert,
-	    data.vconvert,
-	    data.acodec,
-	    data.vcodec,
-	    data.aqueue,
-	    data.vqueue,
 	    data.muxer,
 	    data.sink,
 	    NULL);
 	    
-	if (!gst_element_link (data.src, data.decode) ||
-	    !gst_element_link_many (data.aconvert, data.acodec, data.aqueue, NULL) ||
-	    !gst_element_link_many (data.vconvert, data.vcodec, data.vqueue, NULL) ||
-	    !gst_element_link (data.muxer, data.sink)) {
+	if (!gst_element_link (data.muxer, data.sink)) {
 		g_printerr ("Elements could not be linked.\n");
 		gst_object_unref (data.pipeline);
 		return -1;
@@ -151,9 +91,6 @@ int magic(Elements data) {
 	g_object_set (data.muxer, "fragment-duration", 100, NULL);
 #endif
 
-	/* Connect to the pad-added signal */
-	g_signal_connect (data.decode, "pad-added", G_CALLBACK (pad_added_handler), &data);
-	g_signal_connect (data.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &data);
 
 	/* Start playing */
 	ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
@@ -209,6 +146,9 @@ int magic(Elements data) {
 	gst_object_unref (bus);
 	gst_element_set_state (data.pipeline, GST_STATE_NULL);
 	gst_object_unref (data.pipeline);
+
+	free(sink_str);
+	free(mux_str);
 	return 0;
 }
 
@@ -268,16 +208,41 @@ static void configure_pipeline(const char *json)
 {
 	jsmn_parser parser;
 	jsmntok_t tokens[50];
-	int toknum, i=0, entries;
-	Elements data;
+	unsigned int entries;
+	int toknum, i=0;
+	static Elements data;
 	char path[256];
+	static GstElement *video_last = NULL;
+	static GstElement *audio_last = NULL;
+	static int configured = 0;
+
+	if(!configured++)
+		for(unsigned int i=0; i<sizeof(Elements)/sizeof(GstElement *); i++)
+			((GstElement **)(&data))[i] = (GstElement *)NULL;
 
 	jsmn_init(&parser);
 	gst_init (NULL, NULL);
 	
 	/* Firstly prepare buffers */
-	for (i=0; i<sizeof(path); i++)
+	for (unsigned int i=0; i<sizeof(path); i++)
 		path[i] = '\0';
+
+	/* Create the empty pipeline */
+	if(data.pipeline == NULL) {
+		data.pipeline = gst_pipeline_new ("pipeline");
+		data.aconvert = gst_element_factory_make ("audioconvert", "aconvert");
+		data.vconvert = gst_element_factory_make ("videoconvert", "vconvert");
+		data.aqueue = gst_element_factory_make ("queue", "aqueue");
+		data.vqueue = gst_element_factory_make ("queue", "vqueue");
+		video_last = data.vconvert;
+		audio_last = data.aconvert;
+		gst_bin_add_many(GST_BIN(data.pipeline),
+		    data.aconvert,
+		    data.aqueue,
+		    data.vconvert,
+		    data.vqueue,
+		    NULL);
+	}
 
 	if((toknum = jsmn_parse(&parser, json, strlen(json), tokens, 50)) < 0) {
 		g_print ("Failed to parse json ;< \n");
@@ -297,7 +262,16 @@ static void configure_pipeline(const char *json)
 					if(strncmp(json + tokens[i+1].start, "file", MIN(4, tokens[i+1].end - tokens[i+1].start)) == 0) {
 						g_print("file\n");
 						data.src = gst_element_factory_make("filesrc", "filesource");
+						gst_bin_add(GST_BIN(data.pipeline), data.src);
 					}
+					
+					data.decode = gst_element_factory_make ("decodebin", "source");
+					gst_bin_add(GST_BIN(data.pipeline), data.decode);
+					gst_element_link (data.src, data.decode);
+
+					/* Connect to the pad-added signal */
+					g_signal_connect (data.decode, "pad-added", G_CALLBACK (pad_added_handler), &data);
+					g_signal_connect (data.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &data);
 				}
 				else if(strncmp(json + tokens[i].start, "path", MIN(4, tokens[i].end - tokens[i].start)) == 0) {
 					strncpy(path, json + tokens[i+1].start, MIN(sizeof(path), tokens[i+1].end - tokens[i+1].start));
@@ -306,6 +280,40 @@ static void configure_pipeline(const char *json)
 				}
 				else if(strncmp(json + tokens[i].start, "fps", MIN(3, tokens[i].end - tokens[i].start)) == 0) {
 					g_print("Fps\n");
+				}
+				else if(strncmp(json + tokens[i].start, "acodec", MIN(6, tokens[i].end - tokens[i].start)) == 0) {
+					g_print("Audio codec: ");
+					if(strncmp(json + tokens[i+1].start, "opus", MIN(4, tokens[i+1].end - tokens[i+1].start)) == 0) {
+						g_print("opus\n");
+						data.acodec = gst_element_factory_make ("opusenc", "acodec");
+					}
+					if(strncmp(json + tokens[i+1].start, "aac", MIN(3, tokens[i+1].end - tokens[i+1].start)) == 0) {
+						g_print("aac\n");
+						data.acodec = gst_element_factory_make ("voaacenc", "acodec");
+					}
+					if(strncmp(json + tokens[i+1].start, "lame", MIN(4, tokens[i+1].end - tokens[i+1].start)) == 0) {
+						g_print("lame\n");
+						data.acodec = gst_element_factory_make ("lamemp3enc", "acodec");
+					}
+					if (data.acodec != NULL) {
+						gst_bin_add(GST_BIN(data.pipeline), data.acodec);	
+						gst_element_link_many (audio_last, data.acodec, data.aqueue, NULL);
+					}
+				}
+				else if(strncmp(json + tokens[i].start, "vcodec", MIN(6, tokens[i].end - tokens[i].start)) == 0) {
+					g_print("Video codec: ");
+					if(strncmp(json + tokens[i+1].start, "vp8", MIN(3, tokens[i+1].end - tokens[i+1].start)) == 0) {
+						g_print("vp8\n");					
+						data.vcodec = gst_element_factory_make ("vp8enc", "vcodec");
+					}
+					if(strncmp(json + tokens[i+1].start, "h264", MIN(4, tokens[i+1].end - tokens[i+1].start)) == 0) {
+						g_print("h264\n");					
+						data.vcodec = gst_element_factory_make ("x264enc", "vcodec");
+					}
+					if (data.vcodec != NULL) {
+						gst_bin_add(GST_BIN(data.pipeline), data.vcodec);
+						gst_element_link_many (video_last, data.vcodec, data.vqueue, NULL);
+					}
 				}
 			break;
 			case JSMN_PRIMITIVE:
@@ -316,16 +324,36 @@ static void configure_pipeline(const char *json)
 				g_print("Bad entry\n");
 		}
 	}
+	magic(data, HLS_SINK, MPEG_TS_MUX);
 	return;
 }
 
 
-int main(int argc, char *argv[]) {
+int test_pipeline() {
 	configure_pipeline("{"
 					   "\"source\" : \"file\","
 					   "\"path\" : \"./sample.mp4\","
-					   " \"fps\" : 25"
+					   "\"fps\" : 25,"
+					   "\"acodec\" : \"aac\","
+					   "\"vcodec\" : \"h264\""
 					   "}");
 
 	return (0);
+}
+
+
+int elements_has_null_field(Elements* data)
+{
+	return (data == NULL ||
+			!data->pipeline ||
+		   !data->src ||
+		   !data->decode ||
+		   !data->aconvert ||
+		   !data->vconvert ||
+		   !data->acodec ||
+		   !data->vcodec ||
+		   !data->aqueue ||
+		   !data->vqueue ||
+		   !data->muxer ||
+		   !data->sink);
 }
