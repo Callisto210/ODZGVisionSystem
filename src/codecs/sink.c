@@ -2,7 +2,6 @@
 // Created by misiek on 03.11.17.
 //
 
-#include <lzma.h>
 #include "sink.h"
 
 char *get_sink_str(e_sink_t sink) {

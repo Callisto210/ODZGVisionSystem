@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(ODZGVisionSystem)
 
-set(CMAKE_VERBOSE_MAKEFILE on)
+set(CMAKE_VERBOSE_MAKEFILE off)
 set(CMAKE_MODULE_PATH .)
 find_package(Threads REQUIRED)
 find_package(GTest REQUIRED)

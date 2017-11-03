@@ -1,20 +1,3 @@
-/*
- * =====================================================================================
- *
- *       Filename:  codec_module.h
- *
- *    Description:  
- *
- *        Version:  1.0
- *        Created:  02.11.2017 23:49:50
- *       Revision:  none
- *       Compiler:  gcc
- *
- *   Organization:  
- *
- * =====================================================================================
- */
-
 #ifndef __CODEC_MODULE_H
 #define __CODEC_MODULE_H
 
@@ -24,6 +7,9 @@
 #include <string.h>
 #include "mux.h"
 #include "sink.h"
+
+gboolean autoplug_continue_cb(GstBin *bin, GstPad *pad,
+                              GstCaps *caps, gpointer user_data);
 
 
 /* Structure to contain all our information, so we can pass it to callbacks */
@@ -50,5 +36,7 @@ int test_pipeline();
 
 int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type);
 
+void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data);
 
+void configure_pipeline(const char* json);
 #endif

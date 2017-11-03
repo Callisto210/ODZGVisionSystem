@@ -7,10 +7,13 @@
 #include <pistache/peer.h>
 #include <pistache/http.h>
 #include <pistache/router.h>
-
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
 #include <spdlog/spdlog.h>
 #include <pistache/endpoint.h>
-
+extern "C" {
+#include "codec_module.h"
+};
 //using namespace Net;
 using namespace Pistache;
 namespace spd = spdlog;
@@ -32,7 +35,7 @@ public:
 
 private:
     void setup_routes();
-    void put_config(const Rest::Request& request, Http::ResponseWriter response);
+    void put_input_config(const Rest::Request &request, Http::ResponseWriter response);
     void home(const Rest::Request& request, Http::ResponseWriter response);
     void info(const Rest::Request& request, Http::ResponseWriter response);
     std::shared_ptr<spdlog::logger> log_rest;

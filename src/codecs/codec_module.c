@@ -10,8 +10,9 @@
 extern gboolean autoplug_continue_cb(GstBin *, GstPad *,
     GstCaps *, gpointer);
 
+
 /* Handler for the pad-added signal */
-static void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
+void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
 
 int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	GstBus *bus;
@@ -153,7 +154,7 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 }
 
 /* This function will be called by the pad-added signal */
-static void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
+void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	GstPad *sink_pad = NULL;
 	GstPadLinkReturn ret;
 	GstCaps *new_pad_caps = NULL;
@@ -204,7 +205,7 @@ exit:
 	gst_object_unref (sink_pad);
 }
 
-static void configure_pipeline(const char *json)
+void configure_pipeline(const char *json)
 {
 	jsmn_parser parser;
 	jsmntok_t tokens[50];
@@ -328,6 +329,7 @@ static void configure_pipeline(const char *json)
 	return;
 }
 
+/*
 
 int test_pipeline() {
 	configure_pipeline("{"
@@ -341,6 +343,7 @@ int test_pipeline() {
 	return (0);
 }
 
+*/
 
 int elements_has_null_field(Elements* data)
 {
