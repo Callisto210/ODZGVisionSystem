@@ -37,6 +37,14 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	/* Build the pipeline. Note that we are NOT linking the source at this
 	 * point. We will do it later. */
 	gst_bin_add_many (GST_BIN (data.pipeline),
+	    data.src,
+	    data.decode,
+	    data.aconvert,
+	    data.vconvert,
+	    data.acodec,
+	    data.vcodec,
+	    data.aqueue,
+	    data.vqueue,
 	    data.muxer,
 	    data.sink,
 	    NULL);
@@ -92,6 +100,9 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	g_object_set (data.muxer, "fragment-duration", 100, NULL);
 #endif
 
+	/* Connect to the pad-added signal */
+	g_signal_connect (data.decode, "pad-added", G_CALLBACK (pad_added_handler), &data);
+	g_signal_connect (data.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &data);
 
 	/* Start playing */
 	ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
@@ -147,9 +158,6 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	gst_object_unref (bus);
 	gst_element_set_state (data.pipeline, GST_STATE_NULL);
 	gst_object_unref (data.pipeline);
-
-	free(sink_str);
-	free(mux_str);
 	return 0;
 }
 
