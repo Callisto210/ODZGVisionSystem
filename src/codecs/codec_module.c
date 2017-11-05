@@ -2,6 +2,7 @@
 #include <gst/gstbin.h>
 #include "jsmn/jsmn.h"
 #include <string.h>
+#include "codec_module.h"
 
 #define HLSSINK
 #define MPEGTS
@@ -9,62 +10,26 @@
 extern gboolean autoplug_continue_cb(GstBin *, GstPad *,
     GstCaps *, gpointer);
 
-/* Structure to contain all our information, so we can pass it to callbacks */
-typedef struct _elements {
-	GstElement *pipeline;
-	GstElement *src;
-	GstElement *decode;
-	
-	GstElement *aconvert;
-	GstElement *vconvert;
-	GstElement *acodec;
-	GstElement *vcodec;
-	GstElement *aqueue;
-	GstElement *vqueue;
-	GstElement *muxer;
-	GstElement *sink;
-} Elements;
 
 /* Handler for the pad-added signal */
-static void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
+void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
 
-int magic(Elements data) {
+int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	GstBus *bus;
 	GstMessage *msg;
 	GstStateChangeReturn ret;
 	gboolean terminate = FALSE;
 
-#ifdef OGGMUX
-	data.muxer = gst_element_factory_make("oggmux", "muxer");
-#endif
-#ifdef MPEGTS
-	data.muxer = gst_element_factory_make("mpegtsmux", "muxer");
-#endif
-#ifdef MP4MUX
-	data.muxer = gst_element_factory_make("mp4mux", "muxer");
-#endif
-#ifdef TCPSINK
-	data.sink = gst_element_factory_make ("tcpserversink", "sink");
-#else
-#ifdef HLSSINK
-	data.sink = gst_element_factory_make ("hlssink", "sink");
-#else
-	data.sink = gst_element_factory_make ("filesink", "sink");
-#endif
-#endif
+	char* mux_str = get_mux_str(mux_type);
+	char* sink_str = get_sink_str(sink_type);
 
+	data.muxer = gst_element_factory_make(mux_str, "muxer");
+	data.sink = gst_element_factory_make (sink_str, "sink");
 
-	if (!data.pipeline ||
-	    !data.src ||
-	    !data.decode ||
-	    !data.aconvert ||
-	    !data.vconvert ||
-	    !data.acodec ||
-	    !data.vcodec ||
-	    !data.aqueue ||
-	    !data.vqueue ||
-	    !data.muxer ||
-	    !data.sink) {
+	free(mux_str);
+	free(sink_str);
+
+	if (elements_has_null_field(&data)) {
 		g_printerr ("Not all elements could be created.\n");
 		return -1;
 	}
@@ -72,6 +37,14 @@ int magic(Elements data) {
 	/* Build the pipeline. Note that we are NOT linking the source at this
 	 * point. We will do it later. */
 	gst_bin_add_many (GST_BIN (data.pipeline),
+	    data.src,
+	    data.decode,
+	    data.aconvert,
+	    data.vconvert,
+	    data.acodec,
+	    data.vcodec,
+	    data.aqueue,
+	    data.vqueue,
 	    data.muxer,
 	    data.sink,
 	    NULL);
@@ -127,6 +100,9 @@ int magic(Elements data) {
 	g_object_set (data.muxer, "fragment-duration", 100, NULL);
 #endif
 
+	/* Connect to the pad-added signal */
+	g_signal_connect (data.decode, "pad-added", G_CALLBACK (pad_added_handler), &data);
+	g_signal_connect (data.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &data);
 
 	/* Start playing */
 	ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
@@ -186,7 +162,7 @@ int magic(Elements data) {
 }
 
 /* This function will be called by the pad-added signal */
-static void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
+void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	GstPad *sink_pad = NULL;
 	GstPadLinkReturn ret;
 	GstCaps *new_pad_caps = NULL;
@@ -237,7 +213,7 @@ exit:
 	gst_object_unref (sink_pad);
 }
 
-static void configure_pipeline(const char *json)
+void configure_pipeline(const char *json)
 {
 	jsmn_parser parser;
 	jsmntok_t tokens[50];
@@ -357,12 +333,13 @@ static void configure_pipeline(const char *json)
 				g_print("Bad entry\n");
 		}
 	}
-	magic(data);
+	magic(data, HLS_SINK, MPEG_TS_MUX);
 	return;
 }
 
+/*
 
-int main(int argc, char *argv[]) {
+int test_pipeline() {
 	configure_pipeline("{"
 					   "\"source\" : \"file\","
 					   "\"path\" : \"./sample.mp4\","
@@ -372,4 +349,22 @@ int main(int argc, char *argv[]) {
 					   "}");
 
 	return (0);
+}
+
+*/
+
+int elements_has_null_field(Elements* data)
+{
+	return (data == NULL ||
+			!data->pipeline ||
+		   !data->src ||
+		   !data->decode ||
+		   !data->aconvert ||
+		   !data->vconvert ||
+		   !data->acodec ||
+		   !data->vcodec ||
+		   !data->aqueue ||
+		   !data->vqueue ||
+		   !data->muxer ||
+		   !data->sink);
 }
