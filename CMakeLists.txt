@@ -21,7 +21,7 @@ if(PKG_PATH)
     set(ENV{PKG_CONFIG_PATH} "${PKG_PATH}/pkgconfig/:$ENV{PKG_CONFIG_PATH}")
 endif()
 message(STATUS "PKG config path: $ENV{PKG_CONFIG_PATH}")
-pkg_check_modules(GST_PKG gstreamer-1.0>=1.12 gstreamer-audio-1.0>=1.12 gstreamer-video-1.0>=1.12)
+pkg_check_modules(GST_PKG gstreamer-1.0>=1.10 gstreamer-audio-1.0>=1.10 gstreamer-video-1.0>=1.10)
 
 include(CheckIncludeFiles)
 include_directories(include)
@@ -38,7 +38,7 @@ if(jsmn)
     message(STATUS "Found jsmn: ${jsmn}")
 endif()
 
-find_library(GST gstreamer-1.0>=1.12 )
+find_library(GST gstreamer-1.0>=1.10 )
 find_package(RapidJSON)
 
 set(CMAKE_CXX_STANDARD 14)

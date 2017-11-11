@@ -48,8 +48,8 @@ endif()
 set(ENV{PKG_CONFIG_PATH} "${CMAKE_BINARY_DIR}/pkgconfig/:$ENV{PKG_CONFIG_PATH}")
 message(STATUS "PKG config path: $ENV{PKG_CONFIG_PATH}")
 
-pkg_check_modules(GST_PKG gstreamer-1.0>=1.12)
-pkg_check_modules(GST_VIDEO gstreamer-audio-1.0>=1.12 gstreamer-video-1.0>=1.12)
+pkg_check_modules(GST_PKG gstreamer-1.0>=1.10)
+pkg_check_modules(GST_VIDEO gstreamer-audio-1.0>=1.10 gstreamer-video-1.0>=1.10)
 
 string(REPLACE "\n" " " CORES ${CORES})
 message(STATUS "Cores count: ${CORES}")

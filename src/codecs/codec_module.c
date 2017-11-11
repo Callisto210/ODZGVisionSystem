@@ -7,13 +7,6 @@
 #define HLSSINK
 #define MPEGTS
 
-extern gboolean autoplug_continue_cb(GstBin *, GstPad *,
-    GstCaps *, gpointer);
-
-
-/* Handler for the pad-added signal */
-void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
-
 int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	GstBus *bus;
 	GstMessage *msg;
@@ -37,14 +30,6 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	/* Build the pipeline. Note that we are NOT linking the source at this
 	 * point. We will do it later. */
 	gst_bin_add_many (GST_BIN (data.pipeline),
-	    data.src,
-	    data.decode,
-	    data.aconvert,
-	    data.vconvert,
-	    data.acodec,
-	    data.vcodec,
-	    data.aqueue,
-	    data.vqueue,
 	    data.muxer,
 	    data.sink,
 	    NULL);
@@ -99,10 +84,6 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 #ifdef MP4MUX
 	g_object_set (data.muxer, "fragment-duration", 100, NULL);
 #endif
-
-	/* Connect to the pad-added signal */
-	g_signal_connect (data.decode, "pad-added", G_CALLBACK (pad_added_handler), &data);
-	g_signal_connect (data.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &data);
 
 	/* Start playing */
 	ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
@@ -180,8 +161,7 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	if (g_str_has_prefix (new_pad_type, "audio/x-raw")) {
 		sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
 	}
-	
-	if (g_str_has_prefix (new_pad_type, "video/x-raw")) {
+	else if (g_str_has_prefix (new_pad_type, "video/x-raw")) {
 		sink_pad = gst_element_get_static_pad (data->vconvert, "sink");
 	}
 

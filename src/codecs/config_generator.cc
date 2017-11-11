@@ -74,7 +74,7 @@ Elements& configure_pipeline(string source, string path, int fps, string acodec,
 
     log_config->debug("Elements opts: source: {} acodec: {} vcodec: {}",
         source_gst, acodec_gst, vcodec_gst);
-    gst_init(NULL, nullptr);
+    gst_init(NULL, NULL);
 
     if(e.pipeline == NULL) {
         empty_pipeline(e, audio_last, video_last);
@@ -84,9 +84,11 @@ Elements& configure_pipeline(string source, string path, int fps, string acodec,
     gst_bin_add(GST_BIN(e.pipeline), e.src);
     e.decode = gst_element_factory_make("decodebin", "source");
     gst_bin_add(GST_BIN(e.pipeline), e.decode);
+    
+    gst_element_link (e.src, e.decode);
 
     g_signal_connect (e.decode, "pad-added", G_CALLBACK (pad_added_handler), &e);
-    g_signal_connect (e.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &e);
+    //g_signal_connect (e.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &e);
 
     g_object_set (e.src, "location", path.c_str(), nullptr);
 
@@ -94,13 +96,18 @@ Elements& configure_pipeline(string source, string path, int fps, string acodec,
     if (e.acodec != nullptr) {
         gst_bin_add(GST_BIN(e.pipeline), e.acodec);
         gst_element_link_many (audio_last, e.acodec, e.aqueue, NULL);
-    }
+    } else {
+		log_config->error("Can't find audio codec");
+	}
     e.vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
     if (e.vcodec != nullptr) {
         gst_bin_add(GST_BIN(e.pipeline), e.vcodec);
         gst_element_link_many (video_last, e.vcodec, e.vqueue, NULL);
-    }
+    } else {
+		log_config->error("Can't find video codec");
+	}
 
+	return (e);
 }
 
 
