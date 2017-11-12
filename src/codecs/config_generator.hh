@@ -19,7 +19,7 @@ extern "C" {
 #endif
 using std::string;
 
-Elements& configure_pipeline(string source, string path, int fps, string acodec, string vcodec);
+Elements& configure_pipeline(Elements &e, string source, string path, int fps, string acodec, string vcodec);
 
 
 #endif //ODZGVISIONSYSTEM_CONFIG_GENERATOR_HH

@@ -46,6 +46,7 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 //    log_rest->info("put /config at id: {}", id);
     log_rest->info("POST: /input -- {}", config);
     Document doc;
+    Elements e;
     string acodec, vcodec, source, path;
     int fps;
 //    configure_pipeline(config.c_str());
@@ -61,7 +62,7 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
         }
         acodec = doc["acodec"].GetString();
         vcodec = doc["vcodec"].GetString();
-        Elements e = configure_pipeline(source, path, fps, acodec, vcodec);
+        configure_pipeline(e, source, path, fps, acodec, vcodec);
         magic(e, HLS_SINK, MPEG_TS_MUX);
     }catch(...) {
         log_rest->error("Cannot parse json :<");

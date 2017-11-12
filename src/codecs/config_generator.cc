@@ -28,28 +28,7 @@ static void zero_elements(Elements& e) {
     memset(&e, 0, sizeof(Elements));
 }
 
-static void empty_pipeline(Elements& data, GstElement*& video_last, GstElement*& audio_last) {
-    data.pipeline = gst_pipeline_new("pipeline");
-    data.aconvert = gst_element_factory_make("audioconvert", "aconvert");
-    data.vconvert = gst_element_factory_make("videoconvert", "vconvert");
-
-    data.aqueue = gst_element_factory_make("queue", "aqueue");
-    data.vqueue = gst_element_factory_make("queue", "vqueue");
-
-    video_last = data.vconvert;
-    audio_last = data.aconvert;
-
-    gst_bin_add_many(GST_BIN(data.pipeline),
-                     data.aconvert,
-                     data.aqueue,
-                     data.vconvert,
-                     data.vqueue,
-                     NULL);
-
-
-}
-
-Elements& configure_pipeline(string source, string path, int fps, string acodec, string vcodec)
+Elements& configure_pipeline(Elements &e, string source, string path, int fps, string acodec, string vcodec)
 {
     if(log_config == nullptr) {
         log_config = spdlog::get("config");
@@ -59,7 +38,6 @@ Elements& configure_pipeline(string source, string path, int fps, string acodec,
 
     static GstElement* audio_last = nullptr;
     static GstElement* video_last = nullptr;
-    static Elements e;
     static bool configured = false;
 
     if(!configured) {
@@ -74,11 +52,24 @@ Elements& configure_pipeline(string source, string path, int fps, string acodec,
 
     log_config->debug("Elements opts: source: {} acodec: {} vcodec: {}",
         source_gst, acodec_gst, vcodec_gst);
-    gst_init(NULL, NULL);
 
-    if(e.pipeline == NULL) {
-        empty_pipeline(e, audio_last, video_last);
-    }
+
+    e.pipeline = gst_pipeline_new("pipeline");
+    e.aconvert = gst_element_factory_make("audioconvert", "aconvert");
+    e.vconvert = gst_element_factory_make("videoconvert", "vconvert");
+
+    e.aqueue = gst_element_factory_make("queue", "aqueue");
+    e.vqueue = gst_element_factory_make("queue", "vqueue");
+
+    video_last = e.vconvert;
+    audio_last = e.aconvert;
+
+    gst_bin_add_many(GST_BIN(e.pipeline),
+                     e.aconvert,
+                     e.aqueue,
+                     e.vconvert,
+                     e.vqueue,
+                     NULL);
 
     e.src = gst_element_factory_make(source_gst.c_str(), "filesource");
     gst_bin_add(GST_BIN(e.pipeline), e.src);
@@ -86,9 +77,6 @@ Elements& configure_pipeline(string source, string path, int fps, string acodec,
     gst_bin_add(GST_BIN(e.pipeline), e.decode);
     
     gst_element_link (e.src, e.decode);
-
-    g_signal_connect (e.decode, "pad-added", G_CALLBACK (pad_added_handler), &e);
-    //g_signal_connect (e.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &e);
 
     g_object_set (e.src, "location", path.c_str(), nullptr);
 

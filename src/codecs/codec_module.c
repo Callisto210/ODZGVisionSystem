@@ -85,6 +85,10 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	g_object_set (data.muxer, "fragment-duration", 100, NULL);
 #endif
 
+
+    g_signal_connect (data.decode, "pad-added", G_CALLBACK (pad_added_handler), &data);
+    //g_signal_connect (data.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &data);
+
 	/* Start playing */
 	ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
 	if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -157,7 +161,9 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	new_pad_struct = gst_caps_get_structure (new_pad_caps, 0);
 	new_pad_type = gst_structure_get_name (new_pad_struct);
 	g_print("new_pad_type: %s \n", new_pad_type);
+
 	
+
 	if (g_str_has_prefix (new_pad_type, "audio/x-raw")) {
 		sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
 	}

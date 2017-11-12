@@ -14,6 +14,7 @@ using namespace Pistache;
 
 int main(int argc, char** argv) {
 
+    gst_init(NULL, NULL);
     init_sinks();
     set_loggers();
     set_global_level(spdlog::level::debug);
