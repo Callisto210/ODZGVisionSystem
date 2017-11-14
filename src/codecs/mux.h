@@ -8,7 +8,8 @@
 typedef enum _e_mux_t {
     MP4_MUX,
     OGG_MUX,
-    MPEG_TS_MUX
+    MPEG_TS_MUX,
+    WEBM_MUX
 } e_mux_t;
 
 char* get_mux_str(e_mux_t mux);

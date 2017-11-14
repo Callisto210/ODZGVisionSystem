@@ -4,8 +4,8 @@
 #include <string.h>
 #include "codec_module.h"
 
-#define HLSSINK
-#define MPEGTS
+#define ICECAST
+#define WEBM
 
 int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	GstBus *bus;
@@ -77,13 +77,21 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	g_object_set (data.sink, "playlist-location", "/var/www/localhost/htdocs/playlist.m3u8", NULL);
 	g_object_set (data.sink, "location", "/var/www/localhost/htdocs/segment%05d.ts", NULL);
 #else
+#ifdef ICECAST
+	g_object_set (data.sink, "ip", "127.0.0.1", NULL);
+	g_object_set (data.sink, "port", 8000, NULL);
+	g_object_set (data.sink, "password", "ala123", NULL);
+	g_object_set (data.sink, "mount", "/stream.webm", NULL);
+#else
 	g_object_set (data.sink, "location", "transcoded.webm", NULL);
+#endif
 #endif
 #endif
 
 #ifdef MP4MUX
 	g_object_set (data.muxer, "fragment-duration", 100, NULL);
 #endif
+
 
 
     g_signal_connect (data.decode, "pad-added", G_CALLBACK (pad_added_handler), &data);
@@ -341,16 +349,34 @@ int test_pipeline() {
 
 int elements_has_null_field(Elements* data)
 {
-	return (data == NULL ||
-			!data->pipeline ||
-		   !data->src ||
-		   !data->decode ||
-		   !data->aconvert ||
-		   !data->vconvert ||
-		   !data->acodec ||
-		   !data->vcodec ||
-		   !data->aqueue ||
-		   !data->vqueue ||
-		   !data->muxer ||
-		   !data->sink);
+	char *reason = NULL;
+
+	if(data != NULL)
+	if(!data->src)
+		reason = "source";
+	else if(!data->decode)
+		reason = "decode";
+	else if(!data->aconvert)
+		reason = "aconvert";
+	else if(!data->vconvert)
+		reason = "vconvert";
+	else if(!data->acodec)
+		reason = "acodec";
+	else if(!data->vcodec)
+		reason = "vcodec";
+	else if(!data->aqueue)
+		reason = "aqueue";
+	else if(!data->vqueue)
+		reason = "vqueue";
+	else if(!data->muxer)
+		reason = "muxer";
+	else if(!data->sink)
+		reason = "sink";
+
+	if(reason) {
+		g_print("%s element can't be created\n", reason);
+		return (1);
+	}
+	else
+		return (0);
 }

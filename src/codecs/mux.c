@@ -18,6 +18,9 @@ char* get_mux_str(e_mux_t mux) {
         case OGG_MUX:
             mux_str = strncpy(mux_str, "oggmux", mux_str_size);
             break;
+        case WEBM_MUX:
+            mux_str = strncpy(mux_str, "webmmux", mux_str_size);
+            break;
     }
     return mux_str;
 }

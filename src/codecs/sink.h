@@ -11,7 +11,8 @@
 typedef enum _e_sink_t {
     HLS_SINK,
     TCP_SINK,
-    FILE_SINK
+    FILE_SINK,
+    ICECAST
 } e_sink_t;
 
 char* get_sink_str(e_sink_t sink);

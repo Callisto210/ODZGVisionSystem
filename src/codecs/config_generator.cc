@@ -24,13 +24,15 @@ static std::shared_ptr<spdlog::logger> log_config = std::shared_ptr<spdlog::logg
 static map<string, string> acodec_map = {
         {"opus" , "opusenc"},
         {"aac", "voaacenc"},
-        {"lame" ,"lamemp3enc"}
+        {"lame" ,"lamemp3enc"},
+	{"vorbis", "vorbisenc"}
 };
 
 static map<string, string> vcodec_map = {
         {"vp8", "vp8enc"},
         {"vp9", "vp9enc"},
-        {"h264", "x264enc"}
+        {"h264", "x264enc"},
+	{"theora", "theoraenc"}
 };
 
 static map <string, string> source_map = {
@@ -122,6 +124,9 @@ void configure_pipeline(Elements &e, string source, string path, int fps, string
 	}
     e.vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
     if (e.vcodec != nullptr) {
+    	if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0)
+		g_object_set(e.vcodec, "threads", 6, NULL);
+		g_object_set(e.vcodec, "target-bitrate", 2000, NULL);
         gst_bin_add(GST_BIN(e.pipeline), e.vcodec);
         gst_element_link_many (video_last, e.vcodec, e.vqueue, NULL);
     } else {

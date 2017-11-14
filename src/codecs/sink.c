@@ -18,6 +18,9 @@ char *get_sink_str(e_sink_t sink) {
         case FILE_SINK:
             sink_str = strncpy(sink_str, "filesink", sink_str_size);
             break;
+        case ICECAST:
+            sink_str = strncpy(sink_str, "shout2send", sink_str_size);
+            break;
     }
     return sink_str;
 }

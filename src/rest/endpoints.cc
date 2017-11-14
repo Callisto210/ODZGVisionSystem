@@ -63,7 +63,7 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
         acodec = doc["acodec"].GetString();
         vcodec = doc["vcodec"].GetString();
         configure_pipeline(e, source, path, fps, acodec, vcodec, response);
-        magic(e, HLS_SINK,MPEG_TS_MUX);
+        magic(e, ICECAST, WEBM_MUX);
     }catch(...) {
         log_rest->error("Cannot parse json :<");
     }
