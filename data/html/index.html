@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="pl">
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -5,87 +7,61 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="css/index.css" />
+    <link rel="stylesheet" href="C:\Users\GOSIA\Downloads\data (4)\data\data\css\index.css" />
 
     <title>Homepage - ODZG Vision System</title>
 
   </head>
   <body>
-            <div class="container">
             <h1>ODZVisionSystem</h1>
-            </div>
-<!--    
+<!--
               <div class="column-sm-4">
                 
               </div>
 -->
-        <div class="container">
             <div class="btn-group col-sm-6">
               <button type="button" class="btn btn-danger" id="mainListButton">STREAMS</button>
               <button type="button" class="btn btn-danger dropdown-toggle" id ="smallButton" data-toggle="dropdown">
               <span class="caret"></span>
               </button>
               <ul class="dropdown-menu" id="menuList" role="menu">
-                <li><a  id ="" href="#" data-toggle="modal" class="dropdown-item"
+                <li><a  id ="" href="#" data-toggle="modal"
                         data-target="#input_stream">Add Input Stream</a></li>
-                <li><a id ="text2"href="#" data-toggle="modal" class="dropdown-item"
+                <li><a id ="text2"href="#" data-toggle="modal"
                        data-target="#output_stream">Add Output Stream</a></li>
                 <li class="divider"></li>
               </ul>
             </div>
-        </div>
+
 
 
             <div class="modal" id="input_stream">
               <div class="modal-dialog">
               <div class="modal-content">
-              <div class="container">
                 <!-- multistep form -->
                 <form id="msform">
-                  <!-- progressbar -->
+                    <h2 class="text-center">Choose source</h2>
 
-                  <!-- fieldsets -->
-                  <fieldset class="form-group">
-                    <h2 class="fs-title">Choose source</h2>
-                    <div><label class="col-lg-2">File</label>
-                      <input class="col-lg-9" type="file" name="file" id="file" placeholder="File" /></div>
-                    <div><label class="col-lg-2">Socket</label>
-                      <input class="col-lg-9" type="text" name="socket" /></div>
-                     <div> <label class="col-lg-2">Device</label>
-                       <input class="col-lg-9" type="file" name="device" placeholder="Device" /></div>
-                    <input type="button" name="next" class="btn btn-primary" class="next action-button" value="Next" />
-                  </fieldset>
-                  <fieldset class="form-group">
-                    <h2 class="fs-title">Choose Params</h2>
-                  <div>  <label class="col-lg-2">Frames</label>
-                    <input class="col-lg-7"type="number" name="frames"  /></div>
-                   <div> <label class="col-lg-2 ">RGB Colors</label>
-                     <label class="col-lg-1">R:</label>
-
-                     <input id="R_from" class="col-lg-1" type="number" min="0" max="255"  />
-                     <input id="R_to" class="col-lg-1" type="numer" min="0" max="255" />
-                     <label class="col-lg-1">G:</label>
-
-                     <input id="G_from" class="col-lg-1" type="number" min="0" max="255"  />
-                     <input id="G_to" class="col-lg-1" type="number" min="0" max="255" />
-                     <label class="col-lg-1">B:</label>
-
-                     <input id="B_from" class="col-lg-1" type="number" min="0" max="255"  />
-                     <input id="B_to" class="col-lg-1" type="number" min="0" max="255" />
-
-
-                   </div>
-
-
-                    <div><label class="col-lg-2">Resolution</label>
-                      <input class="col-lg-7"type="number" name="resolution"  />
+                    <div>
+                        <label class="col-lg-2">Sources</label>
+                        <select class="col-lg-9" id="source" requireds>
+                            <option value="" disabled selected style="display:none;">Sources</option>
+                            <option value="file">File</option>
+                            <option value="socket">Socket</option>
+                            <option value="mercedes">Device</option>
+                        </select>
                     </div>
-              <button type="button" name="previous" class="btn btn-primary" class="previous action-button" value="Previous" />
-              <input type="submit" name="submit" class="btn btn-primary" class="submit action-button" value="Submit" />
-                  </fieldset>
+                  <!-- fieldsets -->
+                    <div><label class="col-lg-2">Path</label>
+                      <input class="col-lg-9" name="file" id="file" required /></div>
+
+
+
+              <input type="submit" name="submit" class="submit action-button" value="Submit" />
+
 
                 </form>
-                </div>
+
               </div>
               </div>
 
@@ -96,28 +72,36 @@
                 <div class="modal-content">
                   <!-- multistep form -->
                   <form id="outputform">
-                    <fieldset>
-                        <div class="form-row">
                       <h2 class="fs-title">Choose parameters</h2>
-                      </div>
-                      <div class="form-row">
-                      <div class="form-group">
-                 <label class="col-lg-2">Bit rate</label>
-                 <input class="col-lg-9"type="number" min="0">
-                 </div></div>
-               </div>
-               <div class="form-
-               <div class="form-group">
-                 <label class="col-lg-2">Sample rate</label>
-                 <input class="col-lg-9"type="number" min="0">
-               </div>
-                  <div class="form-group">
-                    <label class="col-lg-2">Channels</label>
-                    <input class="col-lg-9" type="text">
-                  </div>
-                      <input class="btn btn-primary" type="submit" name="submit" class="submit action-button" value="Submit" />
 
-                    </fieldset>
+
+                      <div>
+                 <label class="col-lg-2">Audio codec</label>
+                          <select class="col-lg-4" id="audioCodec">
+                              <option value="">Volvo</option>
+                              <option value="saab">Saab</option>
+                              <option value="mercedes">Mercedes</option>
+                              <option value="audi">Audi</option>
+                          </select>
+                      </div>
+               <div>
+                 <label class="col-lg-2">Video codec</label>
+                   <select class="col-lg-4" id="videoCodec">
+                       <option value="volvo">Volvo</option>
+                       <option value="saab">Saab</option>
+                       <option value="mercedes">Mercedes</option>
+                       <option value="audi">Audi</option>
+                   </select>                 </div>
+                  <div>
+                    <label class="col-lg-2">Bit rate</label>
+                    <input class="col-lg-4" id="bitRate" type="number">
+                  </div>
+                      <div>
+                          <label class="col-lg-2">fps</label>
+                          <input class="col-lg-4" id="fps" type="number">
+                      </div>
+                      <input type="submit" name="submit" class="submit action-button" value="Submit" />
+
                   </form>
 
                 </div>
@@ -136,7 +120,12 @@
             <script src="http://thecodeplayer.com/uploads/js/jquery.easing.min.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
-  <script src="js/form.js"></script>
+  <script src="../js/Stream1Data.js"></script>
+  <script src="../js/SendingStream1.js"></script>
+  <script src="../js/handleStream1Form.js"></script>
+            <script src="../js/Stream2Data.js"></script>
+            <script src="../js/SendingStream2.js"></script>
+            <script src="../js/handleStream2Form.js"></script>
 
   </body>
  
