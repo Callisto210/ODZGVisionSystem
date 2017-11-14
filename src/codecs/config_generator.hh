@@ -19,7 +19,12 @@ extern "C" {
 #endif
 using std::string;
 
-Elements& configure_pipeline(Elements &e, string source, string path, int fps, string acodec, string vcodec);
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include <pistache/http.h>
+
+void configure_pipeline(Elements &e, string source, string path, int fps, string acodec, string vcodec, Pistache::Http::ResponseWriter &resp);
 
 
 #endif //ODZGVISIONSYSTEM_CONFIG_GENERATOR_HH

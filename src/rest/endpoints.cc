@@ -1,15 +1,15 @@
-#include <config_generator.hh>
 #include "endpoints.hh"
 
+#include <config_generator.hh>
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
 
 
 using std::string;
 using rapidjson::Document;
 //using namespace Net;
 namespace spd = spdlog;
-
-
-
 
 void Endpoints::init(size_t threads) {
     log_rest->info("Starting endpoints.");
@@ -62,13 +62,12 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
         }
         acodec = doc["acodec"].GetString();
         vcodec = doc["vcodec"].GetString();
-        configure_pipeline(e, source, path, fps, acodec, vcodec);
-        magic(e, HLS_SINK, MPEG_TS_MUX);
+        configure_pipeline(e, source, path, fps, acodec, vcodec, response);
+        magic(e, HLS_SINK,MPEG_TS_MUX);
     }catch(...) {
         log_rest->error("Cannot parse json :<");
     }
 
-    response.send(Http::Code::Ok, config);
 }
 
 void Endpoints::home(const Rest::Request& request, Http::ResponseWriter response) {
