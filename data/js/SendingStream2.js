@@ -12,7 +12,7 @@ SendingStream2 = function (SendStream2) {
 
     console.log(SendStream2);
     $.ajax({
-        url: "http://localhost:8080/YoutubeManager/api3",
+        url: "http://localhost:8090/input",
         type: 'POST',
         contentType: "application/json",
         data: JSON.stringify(SendStream2),

@@ -25,7 +25,7 @@
               <span class="caret"></span>
               </button>
               <ul class="dropdown-menu" id="menuList" role="menu">
-                <li><a  id ="" href="#" data-toggle="modal"
+                <li><a  id ="text1" href="#" data-toggle="modal"
                         data-target="#input_stream">Add Input Stream</a></li>
                 <li><a id ="text2"href="#" data-toggle="modal"
                        data-target="#output_stream">Add Output Stream</a></li>
@@ -76,29 +76,31 @@
 
 
                       <div>
-                 <label class="col-lg-2">Audio codec</label>
-                          <select class="col-lg-4" id="audioCodec">
-                              <option value="">Volvo</option>
-                              <option value="saab">Saab</option>
-                              <option value="mercedes">Mercedes</option>
-                              <option value="audi">Audi</option>
+                 <label class="col-lg-2" >Audio codec</label>
+                          <select class="col-lg-4" id="audioCodec" requireds>
+                              <option value="" disabled selected style="display:none;">Choose audio codecs</option>
+                              <option value="opus">opus</option>
+                              <option value="aac">aac</option>
+                              <option value="lame">lame</option>
+                              <option value="vorbis">vorbis</option>
                           </select>
                       </div>
                <div>
                  <label class="col-lg-2">Video codec</label>
-                   <select class="col-lg-4" id="videoCodec">
-                       <option value="volvo">Volvo</option>
-                       <option value="saab">Saab</option>
-                       <option value="mercedes">Mercedes</option>
-                       <option value="audi">Audi</option>
+                   <select class="col-lg-4" id="videoCodec" requireds>
+                       <option value="" disabled selected style="display:none;">Choose video codecs</option>
+                       <option value="vp8">vp8</option>
+                       <option value="vp9">vp9</option>
+                       <option value="h264">h264</option>
+                       <option value="theora">theora</option>
                    </select>                 </div>
                   <div>
                     <label class="col-lg-2">Bit rate</label>
-                    <input class="col-lg-4" id="bitRate" type="number">
+                    <input class="col-lg-4" id="bitRate" type="number" requireds>
                   </div>
                       <div>
                           <label class="col-lg-2">fps</label>
-                          <input class="col-lg-4" id="fps" type="number">
+                          <input class="col-lg-4" id="fps" type="number" requireds>
                       </div>
                       <input type="submit" name="submit" class="submit action-button" value="Submit" />
 
