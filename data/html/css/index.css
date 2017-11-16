@@ -1,0 +1,192 @@
+
+/* Modal Content */
+.modal{
+    vertical-align: middle;
+
+}
+
+@media (min-width: 576px){
+    .modal-dialog {
+        max-width: 800px;
+        margin: 30px auto;
+    }
+.modal-content {
+
+    padding-top: 20px;
+    border: 1px solid #C0C0C0;
+    /*width: 80%;*/
+    /*width: 400px;*/
+    height: auto;
+    font-size: 80%;
+    text-align: center;
+
+}
+
+
+
+
+body {
+    background-image: url("streaming.jpg");
+}
+
+h1 {
+
+    padding: 1px 220px 260px 260px;
+    text-align: center;
+    color: #FF7F50;
+    /*#B87333;*/
+    /*#C04000;*/
+    text-shadow: 0 1px 1px #B87333;
+    font-family: delta;
+    font-size: 300%;
+
+}
+#mainListButton {
+
+    left: auto;
+	right: -1100px;
+	bottom: 310px;
+	padding: 10px 10px 10px 10px;
+    border: solid;
+    align: right;
+    background-color: transparent;
+    color: #FF7F50;
+
+
+}
+#smallButton {
+
+    left: auto;
+	right: -1100px;
+	bottom: 310px;
+    border: solid;
+    background-color: transparent;
+    color: #FF7F50;
+}
+#menuList {
+    padding: 10px 10px 10px 10px;
+    text-align: center;
+    border: solid;
+    background-color: transparent;
+    color: #FF7F50;
+
+}
+#text1 {
+    text-align: right;
+    color: #FF7F50;
+}
+#text2 {
+    text-align: right;
+    color: #FF7F50;
+}
+
+#configformInputStream {
+
+    border: 2px solid #888;
+    margin-top: 20px!important;
+    margin: auto;
+}
+#configform {
+
+    border: 2px solid #888;
+    margin-top: 20px!important;
+    margin: auto;
+}
+/* The Close Button */
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/*.form {*/
+	/*align: center;*/
+	/*bottom: 25%;*/
+	/*left: 25%;*/
+	/*size: 25%;*/
+/*}*/
+    #outputform fieldset:not(:first-of-type) {
+        display: none;
+    }
+    /*inputs*/
+    #outputform input, #outputform textarea {
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        margin-bottom: 10px;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: montserrat;
+        color: #2C3E50;
+        font-size: 13px;
+    }
+    /*buttons*/
+    #outputform .action-button {
+        width: 100px;
+        background: #27AE60;
+        font-weight: bold;
+        color: white;
+        border: 0 none;
+        border-radius: 1px;
+        cursor: pointer;
+        padding: 10px 5px;
+        margin: 10px 5px;
+    }
+    #outputform .action-button:hover, #outputform .action-button:focus {
+        box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
+    }
+
+#msform fieldset:not(:first-of-type) {
+    display: none;
+}
+/*inputs*/
+#msform input, #msform textarea {
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: montserrat;
+    color: #2C3E50;
+    font-size: 13px;
+}
+/*buttons*/
+#msform .action-button {
+    width: 100px;
+    background: #27AE60;
+    font-weight: bold;
+    color: white;
+    border: 0 none;
+    border-radius: 1px;
+    cursor: pointer;
+    padding: 10px 5px;
+    margin: 10px 5px;
+}
+#msform .action-button:hover, #msform .action-button:focus {
+    box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
+}
+/*headings*/
+.fs-title {
+    font-size: 15px;
+    text-transform: uppercase;
+    color: #2C3E50;
+    margin-bottom: 10px;
+}
+.fs-subtitle {
+    font-weight: normal;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+
+}
