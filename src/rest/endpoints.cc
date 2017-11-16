@@ -58,12 +58,15 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
             fps = doc["fps"].GetInt();
         }
         else {
+            log_rest->debug("fps is not an int: {}", doc["fps"].GetString());
             fps = std::atoi(doc["fps"].GetString());
         }
         acodec = doc["acodec"].GetString();
         vcodec = doc["vcodec"].GetString();
         configure_pipeline(e, source, path, fps, acodec, vcodec, response);
         magic(e, ICECAST, WEBM_MUX);
+        log_rest->debug("Parsing json completed successfully.");
+        log_rest->debug("Do the magic");
     }catch(...) {
         log_rest->error("Cannot parse json :<");
     }

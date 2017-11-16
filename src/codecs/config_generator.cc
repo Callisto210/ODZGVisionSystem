@@ -7,7 +7,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
-#include <endpoints.hh>
+#include "pistache/endpoints.hh"
 using std::string;
 using std::map;
 using namespace rapidjson;
@@ -25,7 +25,7 @@ static map<string, string> acodec_map = {
         {"opus" , "opusenc"},
         {"aac", "voaacenc"},
         {"lame" ,"lamemp3enc"},
-	{"vorbis", "vorbisenc"}
+        {"vorbis", "vorbisenc"}
 };
 
 static map<string, string> vcodec_map = {
@@ -39,11 +39,21 @@ static map <string, string> source_map = {
         {"file", "filesrc"}
 };
 
-static void zero_elements(Elements& e) {
-    memset(&e, 0, sizeof(Elements));
+static void zero_elements(Elements* e) {
+    memset(e, 0, sizeof(Elements));
 }
 
-void configure_pipeline(Elements &e, string source, string path, int fps, string acodec, string vcodec, Http::ResponseWriter &resp)
+
+static void basic_pipeline(Elements* data) {
+    data->pipeline = gst_pipeline_new("pipeline");
+    data->aconvert = gst_element_factory_make("audioconvert", "aconvert");
+    data->vconvert = gst_element_factory_make("videoconvert", "vconvert");
+
+    data->aqueue = gst_element_factory_make("queue", "aqueue");
+    data->vqueue = gst_element_factory_make("queue", "vqueue");
+}
+
+void configure_pipeline(Elements& e, string source, string path, int fps, string acodec, string vcodec)
 {
     if(log_config == nullptr) {
         log_config = spdlog::get("config");
@@ -57,7 +67,7 @@ void configure_pipeline(Elements &e, string source, string path, int fps, string
 
     if(!configured) {
         configured = !configured;
-        zero_elements(e);
+        zero_elements(&e);
     }
 
     string acodec_gst = acodec_map[acodec];
@@ -69,13 +79,8 @@ void configure_pipeline(Elements &e, string source, string path, int fps, string
         source_gst, acodec_gst, vcodec_gst);
 
 
-    e.pipeline = gst_pipeline_new("pipeline");
-    e.aconvert = gst_element_factory_make("audioconvert", "aconvert");
-    e.vconvert = gst_element_factory_make("videoconvert", "vconvert");
 
-    e.aqueue = gst_element_factory_make("queue", "aqueue");
-    e.vqueue = gst_element_factory_make("queue", "vqueue");
-
+    basic_pipeline(&e);
     video_last = e.vconvert;
     audio_last = e.aconvert;
 
@@ -120,17 +125,17 @@ void configure_pipeline(Elements &e, string source, string path, int fps, string
         gst_bin_add(GST_BIN(e.pipeline), e.acodec);
         gst_element_link_many (audio_last, e.acodec, e.aqueue, NULL);
     } else {
-		log_config->error("Can't find audio codec");
+        log_config->error("Can't find audio codec");
 	}
     e.vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
     if (e.vcodec != nullptr) {
-    	if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0)
+        if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0)
 		g_object_set(e.vcodec, "threads", 6, NULL);
 		g_object_set(e.vcodec, "target-bitrate", 2000, NULL);
         gst_bin_add(GST_BIN(e.pipeline), e.vcodec);
         gst_element_link_many (video_last, e.vcodec, e.vqueue, NULL);
     } else {
-		log_config->error("Can't find video codec");
+        log_config->error("Can't find video codec");
 	}
 
 	return;

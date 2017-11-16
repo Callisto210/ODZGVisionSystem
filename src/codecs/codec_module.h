@@ -32,8 +32,6 @@ typedef struct _elements {
 
 int elements_has_null_field(Elements* elements);
 
-int test_pipeline();
-
 int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type);
 
 void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data);

@@ -3,14 +3,16 @@
 #include <spdlog/spdlog.h>
 #include <thread>
 #include <vector>
+
 #include "app_config.hh"
 extern "C" {
+#include <gst/gst.h>
 #include "codecs/codec_module.h"
 }
 namespace spd = spdlog;
 using namespace Pistache;
 
-#include "test_main.hh"
+static GMainLoop *loop;
 
 int main(int argc, char** argv) {
 
@@ -34,15 +36,27 @@ int main(int argc, char** argv) {
         std::thread api_thread = std::thread(&Endpoints::start, api);
         main_log->debug("Noted start of server");
         char s = 's';
+        loop = g_main_loop_new(NULL, FALSE);
+        std::thread backend = std::thread(g_main_loop_run, loop);
         while(s != 'q') {
             std::cin >> s;
         }
         api.shutdown();
         main_log->info("called shutdown");
-        api_thread.join();
+        if (g_main_loop_is_running(loop)) {
+            g_main_loop_quit(loop);
+        }
+        if (backend.joinable()) {
+            backend.join();
+        }
+        if (api_thread.joinable()) {
+            api_thread.join();
+        }
     } catch(...) {
         main_log->warn("Catched an exception.");
-        
+
     }
+    main_log->debug("Unref main loop");
+    g_main_loop_unref(loop);
     return 0;
 }

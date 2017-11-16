@@ -8,21 +8,23 @@
 #include <string>
 #include <vector>
 #include <spdlog/spdlog.h>
+
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "pistache/http.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "codec_module.h"
+
 #ifdef __cplusplus
 };
-
 #endif
-using std::string;
 
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include <pistache/http.h>
+using std::string;
 
 void configure_pipeline(Elements &e, string source, string path, int fps, string acodec, string vcodec, Pistache::Http::ResponseWriter &resp);
 

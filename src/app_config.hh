@@ -7,9 +7,11 @@
 
 #include <spdlog/spdlog.h>
 
-void init_sinks();
+void init_log_sinks();
 
 void set_loggers();
 
 void set_global_level(spdlog::level::level_enum);
+
+
 #endif //ODZGVISIONSYSTEM_APP_CONFIG_HH

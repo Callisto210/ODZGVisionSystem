@@ -4,8 +4,15 @@
 #include <string.h>
 #include "codec_module.h"
 
+
 #define ICECAST
 #define WEBM
+// #define HLSSINK
+// #define MPEGTS
+
+
+
+// void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
 
 int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	GstBus *bus;
@@ -16,6 +23,8 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	char* mux_str = get_mux_str(mux_type);
 	char* sink_str = get_sink_str(sink_type);
 
+    g_printerr("Mux is %s\n", mux_str);
+    g_printerr("Sink is %s\n", sink_str);
 	data.muxer = gst_element_factory_make(mux_str, "muxer");
 	data.sink = gst_element_factory_make (sink_str, "sink");
 
@@ -45,8 +54,8 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	muxer_a_in = gst_element_get_request_pad(data.muxer, "sink_%d");
 	muxer_v_in = gst_element_get_request_pad(data.muxer, "sink_%d");
 #else
-	muxer_a_in = gst_element_get_request_pad(data.muxer, "audio_%u");
-	muxer_v_in = gst_element_get_request_pad(data.muxer, "video_%u");
+    muxer_a_in = gst_element_get_request_pad(data.muxer, "audio_%u");
+    muxer_v_in = gst_element_get_request_pad(data.muxer, "video_%u");
 #endif
 	g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (muxer_a_in));
 	g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (muxer_v_in));
@@ -224,8 +233,7 @@ void configure_pipeline(const char *json)
 			((GstElement **)(&data))[i] = (GstElement *)NULL;
 
 	jsmn_init(&parser);
-	gst_init (NULL, NULL);
-	
+
 	/* Firstly prepare buffers */
 	for (unsigned int i=0; i<sizeof(path); i++)
 		path[i] = '\0';
@@ -331,52 +339,56 @@ void configure_pipeline(const char *json)
 	return;
 }
 
-/*
-
-int test_pipeline() {
-	configure_pipeline("{"
-					   "\"source\" : \"file\","
-					   "\"path\" : \"./sample.mp4\","
-					   "\"fps\" : 25,"
-					   "\"acodec\" : \"aac\","
-					   "\"vcodec\" : \"h264\""
-					   "}");
-
-	return (0);
-}
-
-*/
 
 int elements_has_null_field(Elements* data)
 {
-	char *reason = NULL;
-
-	if(data != NULL)
-	if(!data->src)
-		reason = "source";
-	else if(!data->decode)
-		reason = "decode";
-	else if(!data->aconvert)
-		reason = "aconvert";
-	else if(!data->vconvert)
-		reason = "vconvert";
-	else if(!data->acodec)
-		reason = "acodec";
-	else if(!data->vcodec)
-		reason = "vcodec";
-	else if(!data->aqueue)
-		reason = "aqueue";
-	else if(!data->vqueue)
-		reason = "vqueue";
-	else if(!data->muxer)
-		reason = "muxer";
-	else if(!data->sink)
-		reason = "sink";
-
-	if(reason) {
-		g_print("%s element can't be created\n", reason);
-		return (1);
-	}
-	else
-		return (0);
+    if (!data) {
+        g_print("Data is null.");
+        return (1);
+    }
+    if (!data->pipeline) {
+        g_print("Pipeline is null.\n");
+    }
+    if (!data->src) {
+        g_print("Src is null.\n");
+    }
+    if (!data->decode) {
+        g_print("decode is null.\n");
+    }
+    if (!data->aconvert) {
+        g_print("aconvert is null.\n");
+    }
+    if (!data->vconvert) {
+        g_print("vconvert is null.\n");
+    }
+    if (!data->acodec) {
+        g_print("acodec is null.\n");
+    }
+    if (!data->vcodec) {
+        g_print("vcodec is null.\n");
+    }
+    if (!data->aqueue) {
+        g_print("aqueue is null.\n");
+    }
+    if (!data->vqueue) {
+        g_print("vqueue is null.\n");
+    }
+    if (!data->muxer) {
+        g_print("muxer is null.\n");
+    }
+    if (!data->sink) {
+        g_print("sink is null.\n");
+    }
+	return (data == NULL ||
+             !data->pipeline ||
+             !data->src ||
+             !data->decode ||
+             !data->aconvert ||
+             !data->vconvert ||
+             !data->acodec ||
+             !data->vcodec ||
+             !data->aqueue ||
+             !data->vqueue ||
+             !data->muxer ||
+             !data->sink);
 }
