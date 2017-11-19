@@ -17,7 +17,7 @@ static GMainLoop *loop;
 int main(int argc, char** argv) {
 
     gst_init(NULL, NULL);
-    init_sinks();
+    init_log_sinks();
     set_loggers();
     set_global_level(spdlog::level::debug);
     auto main_log = spdlog::get("main");
@@ -40,6 +40,8 @@ int main(int argc, char** argv) {
         std::thread backend = std::thread(g_main_loop_run, loop);
         while(s != 'q') {
             std::cin >> s;
+            if(std::cin.eof())
+                break;
         }
         api.shutdown();
         main_log->info("called shutdown");

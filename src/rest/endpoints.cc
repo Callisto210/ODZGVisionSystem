@@ -4,6 +4,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
+#include <pthread.h>
 
 
 using std::string;
@@ -52,23 +53,44 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 //    configure_pipeline(config.c_str());
     try {
         doc.Parse(config.c_str());
-        source = doc["source"].GetString();
-        path = doc["path"].GetString();
-        if(doc["fps"].IsInt()) {
-            fps = doc["fps"].GetInt();
+        if(doc.HasParseError()){
+             response.send(Http::Code::Bad_Request);
+             return;
         }
-        else {
-            log_rest->debug("fps is not an int: {}", doc["fps"].GetString());
-            fps = std::atoi(doc["fps"].GetString());
+        if(doc.HasMember("source") && doc["source"].IsString())
+            source = doc["source"].GetString();
+        else{
+            response.send(Http::Code::Bad_Request);
+            return;
         }
-        acodec = doc["acodec"].GetString();
-        vcodec = doc["vcodec"].GetString();
-        configure_pipeline(e, source, path, fps, acodec, vcodec, response);
+        if(source == "file") {
+            if(doc.HasMember("path") && doc["path"].IsString()) {
+                path = doc["path"].GetString();
+            }else {
+                response.send(Http::Code::Bad_Request);
+                return;
+            }
+            if(doc.HasMember("fps") && doc["fps"].IsInt()) {
+                fps = doc["fps"].GetInt();
+            }
+            else {
+                log_rest->debug("fps is not an int: {}", doc["fps"].GetString());
+                fps = std::atoi(doc["fps"].GetString());
+            }
+        }
+        if(doc.HasMember("acodec") && doc["acodec"].IsString())
+            acodec = doc["acodec"].GetString();
+        if(doc.HasMember("vcodec") && doc["vcodec"].IsString())
+            vcodec = doc["vcodec"].GetString();
+        response.send(Http::Code::Ok);
+        configure_pipeline(e, source, path, fps, acodec, vcodec);
         magic(e, ICECAST, WEBM_MUX);
         log_rest->debug("Parsing json completed successfully.");
         log_rest->debug("Do the magic");
     }catch(...) {
         log_rest->error("Cannot parse json :<");
+        response.send(Http::Code::Bad_Request);
+        return;
     }
 
 }

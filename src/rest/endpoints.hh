@@ -11,6 +11,7 @@
 #include <rapidjson/document.h>
 #include <spdlog/spdlog.h>
 #include <pistache/endpoint.h>
+#include "pistache/net.h"
 extern "C" {
 #include "codec_module.h"
 };

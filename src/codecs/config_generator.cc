@@ -7,7 +7,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
-#include "pistache/endpoints.hh"
+#include "rest/endpoints.hh"
 using std::string;
 using std::map;
 using namespace rapidjson;
@@ -138,7 +138,7 @@ void configure_pipeline(Elements& e, string source, string path, int fps, string
         log_config->error("Can't find video codec");
 	}
 
-	return;
+    return;
 }
 
 gboolean bus_watch_get_stream (GstBus* bus, GstMessage *msg, GstElement *pipeline)
