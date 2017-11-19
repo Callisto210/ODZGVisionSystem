@@ -50,28 +50,35 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	}
 
 	GstPad *muxer_a_in, *muxer_v_in;
-#ifdef MPEGTS
-	muxer_a_in = gst_element_get_request_pad(data.muxer, "sink_%d");
-	muxer_v_in = gst_element_get_request_pad(data.muxer, "sink_%d");
-#else
-    muxer_a_in = gst_element_get_request_pad(data.muxer, "audio_%u");
-    muxer_v_in = gst_element_get_request_pad(data.muxer, "video_%u");
-#endif
-	g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (muxer_a_in));
-	g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (muxer_v_in));
-	
 	GstPad *acodec_out, *vcodec_out;
-	acodec_out = gst_element_get_static_pad(data.aqueue, "src");
-	vcodec_out = gst_element_get_static_pad(data.vqueue, "src");
-	g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (acodec_out));
-	g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (vcodec_out));
-	
-	
-	if (gst_pad_link (acodec_out, muxer_a_in) != GST_PAD_LINK_OK ||
-        gst_pad_link (vcodec_out, muxer_v_in) != GST_PAD_LINK_OK) {
-		g_printerr ("Links could not be linked.\n");
-		gst_object_unref (data.pipeline);
-		return -1;
+
+	if (data.acodec != NULL) {
+		muxer_a_in = gst_element_get_request_pad(data.muxer, "audio_%u");
+		g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (muxer_a_in));
+
+		acodec_out = gst_element_get_static_pad(data.aqueue, "src");
+		g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (acodec_out));
+
+		if (gst_pad_link (acodec_out, muxer_a_in) != GST_PAD_LINK_OK) {
+			g_printerr ("Links could not be linked.\n");
+			gst_object_unref (data.pipeline);
+			return -1;
+		}
+	}
+
+	if (data.vcodec != NULL) {
+		muxer_v_in = gst_element_get_request_pad(data.muxer, "video_%u");
+		g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (muxer_v_in));
+		
+		vcodec_out = gst_element_get_static_pad(data.vqueue, "src");
+		g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (vcodec_out));
+		
+		
+		if (gst_pad_link (vcodec_out, muxer_v_in) != GST_PAD_LINK_OK) {
+			g_printerr ("Links could not be linked.\n");
+			gst_object_unref (data.pipeline);
+			return -1;
+		}
 	}
 	
 	/* Set the URI to play */
@@ -182,10 +189,20 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	
 
 	if (g_str_has_prefix (new_pad_type, "audio/x-raw")) {
-		sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
+		if (data->aconvert != NULL)
+			sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
+		else {
+			g_print ("Audio not selected for transcoding. Skip \n");
+			goto exit;
+		}
 	}
 	else if (g_str_has_prefix (new_pad_type, "video/x-raw")) {
-		sink_pad = gst_element_get_static_pad (data->vconvert, "sink");
+		if (data->vconvert != NULL)
+			sink_pad = gst_element_get_static_pad (data->vconvert, "sink");
+		else {
+			g_print ("Video not selected for transcoding. Skip \n");
+			goto exit;
+		}
 	}
 
 	if (sink_pad == NULL) {
@@ -213,7 +230,8 @@ exit:
 		gst_caps_unref (new_pad_caps);
 
 	/* Unreference the sink pad */
-	gst_object_unref (sink_pad);
+	if (sink_pad != NULL)
+		gst_object_unref (sink_pad);
 }
 
 void configure_pipeline(const char *json)
@@ -339,56 +357,60 @@ void configure_pipeline(const char *json)
 	return;
 }
 
-
+static void print_null_element(const char* element) {
+    if(element != NULL) {
+        g_print("%s element cannot be created.\n", element);
+    }
+}
 int elements_has_null_field(Elements* data)
 {
-    if (!data) {
-        g_print("Data is null.");
-        return (1);
+	char *reason = NULL;
+    int null_count = 0;
+    if(data != NULL) {
+    if(!data->src) {
+        print_null_element("src");
+        null_count++;
     }
-    if (!data->pipeline) {
-        g_print("Pipeline is null.\n");
+    if(!data->decode) {
+        print_null_element("decode");
+        null_count++;
     }
-    if (!data->src) {
-        g_print("Src is null.\n");
+    if(!data->aconvert)
+		goto skip_audio;
+    if(!data->aqueue) {
+        print_null_element("aqueue");
+        null_count++;
     }
-    if (!data->decode) {
-        g_print("decode is null.\n");
+    if(!data->acodec) {
+        print_null_element("acodec");
+        null_count++;
     }
-    if (!data->aconvert) {
-        g_print("aconvert is null.\n");
+	
+	skip_audio:
+	if(!data->vcodec)
+		goto skip_video;
+    if(!data->vconvert) {
+        print_null_element("vconvert");
+        null_count++;
+    if(!data->vqueue) {
+        print_null_element("vqueue");
+        null_count++;
     }
-    if (!data->vconvert) {
-        g_print("vconvert is null.\n");
+	
+	skip_video:
+    if(!data->muxer) {
+        print_null_element("muxer");
+        null_count++;
     }
-    if (!data->acodec) {
-        g_print("acodec is null.\n");
+    if(!data->sink) {
+        print_null_element("sink");
+        null_count++;
     }
-    if (!data->vcodec) {
-        g_print("vcodec is null.\n");
-    }
-    if (!data->aqueue) {
-        g_print("aqueue is null.\n");
-    }
-    if (!data->vqueue) {
-        g_print("vqueue is null.\n");
-    }
-    if (!data->muxer) {
-        g_print("muxer is null.\n");
-    }
-    if (!data->sink) {
-        g_print("sink is null.\n");
-    }
-	return (data == NULL ||
-             !data->pipeline ||
-             !data->src ||
-             !data->decode ||
-             !data->aconvert ||
-             !data->vconvert ||
-             !data->acodec ||
-             !data->vcodec ||
-             !data->aqueue ||
-             !data->vqueue ||
-             !data->muxer ||
-             !data->sink);
+	if(reason) {
+		g_print("%s element can't be created\n", reason);
+		return (1);
+	}
+	else
+		return (0);
+
 }
