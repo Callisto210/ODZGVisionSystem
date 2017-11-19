@@ -24,7 +24,15 @@ using std::string;
 #include "rapidjson/writer.h"
 #include <pistache/http.h>
 
-void configure_pipeline(Elements &e, string source, string path, int fps, string acodec, string vcodec, Pistache::Http::ResponseWriter &resp);
+struct config_struct {
+	int audio_bitrate;
+	int video_bitrate;
+	int fps;
+	int width;
+	int height;
+};
+
+void configure_pipeline(Elements &e, string source, string path, string acodec, string vcodec, Pistache::Http::ResponseWriter &resp, config_struct conf);
 
 
 #endif //ODZGVISIONSYSTEM_CONFIG_GENERATOR_HH
