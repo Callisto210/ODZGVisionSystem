@@ -58,7 +58,7 @@ void configure_pipeline(Elements &e, string source, string path, string acodec, 
 
     if(!configured) {
         configured = !configured;
-        zero_elements(e);
+ 	memset(&e, 0, sizeof(Elements));
     }
 
     string acodec_gst = acodec_map[acodec];
@@ -71,21 +71,23 @@ void configure_pipeline(Elements &e, string source, string path, string acodec, 
 
 
     e.pipeline = gst_pipeline_new("pipeline");
-    e.aconvert = gst_element_factory_make("audioconvert", "aconvert");
-    e.vconvert = gst_element_factory_make("videoconvert", "vconvert");
 
-    e.aqueue = gst_element_factory_make("queue", "aqueue");
-    e.vqueue = gst_element_factory_make("queue", "vqueue");
-
-    video_last = e.vconvert;
-    audio_last = e.aconvert;
-
-    gst_bin_add_many(GST_BIN(e.pipeline),
-                     e.aconvert,
-                     e.aqueue,
-                     e.vconvert,
-                     e.vqueue,
-                     NULL);
+    if (!acodec_gst.empty()) {
+	    e.aconvert = gst_element_factory_make("audioconvert", "aconvert");
+	    e.aqueue = gst_element_factory_make("queue", "aqueue");
+	    audio_last = e.aconvert;
+	    gst_bin_add_many(GST_BIN(e.pipeline), e.aconvert, e.aqueue, NULL);
+    }
+   
+    if (!vcodec_gst.empty()) {
+	    e.vconvert = gst_element_factory_make("videoconvert", "vconvert");
+	    e.vqueue = gst_element_factory_make("queue", "vqueue");
+	    video_last = e.vconvert;
+	    gst_bin_add_many(GST_BIN(e.pipeline),
+			     e.vconvert,
+			     e.vqueue,
+			     NULL);
+    }
 
     e.src = gst_element_factory_make(source_gst.c_str(), "filesource");
     gst_bin_add(GST_BIN(e.pipeline), e.src);
@@ -116,67 +118,74 @@ void configure_pipeline(Elements &e, string source, string path, string acodec, 
 	}
 #endif
 
-    if(conf.fps != -1) {
-	optional = gst_element_factory_make("videorate", "fps");
-	if (optional != NULL) {
-		gst_bin_add(GST_BIN(e.pipeline), optional);
-		g_object_set(optional, "max-rate", conf.fps, NULL);
-		if (gst_element_link(video_last, optional)) {
-			video_last = optional;
+
+    if (!vcodec_gst.empty()) {
+	    if(conf.fps != -1) {
+		optional = gst_element_factory_make("videorate", "fps");
+		if (optional != NULL) {
+			gst_bin_add(GST_BIN(e.pipeline), optional);
+			g_object_set(optional, "max-rate", conf.fps, NULL);
+			if (gst_element_link(video_last, optional)) {
+				video_last = optional;
+			}
 		}
-	}
+	    }
+
+	    if(conf.width != -1 && conf.height !=-1) {
+		optional = gst_element_factory_make("videoscale", "scale");
+		if (optional != NULL) {
+			gst_bin_add(GST_BIN(e.pipeline), optional);
+			GstCaps * caps = gst_caps_new_simple ("video/x-raw",
+			    "width", G_TYPE_INT, conf.width,
+			    "height", G_TYPE_INT, conf.height,
+			    NULL);
+			gst_pad_set_caps(gst_element_get_static_pad (optional, "src"), caps);
+			gst_caps_unref(caps);
+			if (gst_element_link(video_last, optional)) {
+				video_last = optional;
+			}
+		}
+	    }
     }
 
-    if(conf.width != -1 && conf.height !=-1) {
-	optional = gst_element_factory_make("videoscale", "scale");
-	if (optional != NULL) {
-		gst_bin_add(GST_BIN(e.pipeline), optional);
-		GstCaps * caps = gst_caps_new_simple ("video/x-raw",
-		    "width", G_TYPE_INT, conf.width,
-		    "height", G_TYPE_INT, conf.height,
-		    NULL);
-		gst_pad_set_caps(gst_element_get_static_pad (optional, "src"), caps);
-		gst_caps_unref(caps);
-		if (gst_element_link(video_last, optional)) {
-			video_last = optional;
+    if (!acodec_gst.empty()) {
+	    e.acodec = gst_element_factory_make(acodec_gst.c_str(), "acodec");
+	    if (e.acodec != nullptr) {
+		if (conf.audio_bitrate != -1) {
+		//lamemp3enc takes bitrate in kbit/s
+			if (strncmp("lamemp3enc", acodec_gst.c_str(), 10) == 0)
+				g_object_set(e.acodec, "bitrate", (conf.audio_bitrate/8)*8, NULL);
+			else	
+				g_object_set(e.acodec, "bitrate", ((conf.audio_bitrate*1000)/8)*8, NULL);
 		}
-	}
+		gst_bin_add(GST_BIN(e.pipeline), e.acodec);
+		gst_element_link_many (audio_last, e.acodec, e.aqueue, NULL);
+	    } else {
+			log_config->error("Can't find audio codec");
+		}
     }
 
-    e.acodec = gst_element_factory_make(acodec_gst.c_str(), "acodec");
-    if (e.acodec != nullptr) {
-	if (conf.audio_bitrate != -1) {
-	//lamemp3enc takes bitrate in kbit/s
-		if (strncmp("lamemp3enc", acodec_gst.c_str(), 10) == 0)
-			g_object_set(e.acodec, "bitrate", (conf.audio_bitrate/8)*8, NULL);
-		else	
-			g_object_set(e.acodec, "bitrate", ((conf.audio_bitrate*1000)/8)*8, NULL);
-	}
-        gst_bin_add(GST_BIN(e.pipeline), e.acodec);
-        gst_element_link_many (audio_last, e.acodec, e.aqueue, NULL);
-    } else {
-		log_config->error("Can't find audio codec");
-	}
+    if (!vcodec_gst.empty()) {
+	    e.vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
+	    if (e.vcodec != nullptr) {
+		if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0) {
+			g_object_set(e.vcodec, "threads", 6, NULL);
+			if (conf.video_bitrate != -1)
+				g_object_set(e.vcodec, "target-bitrate", conf.video_bitrate*1000, NULL);
+		}	
+		if(strncmp("vp9enc", vcodec_gst.c_str(), 6) == 0) {
+			g_object_set(e.vcodec, "threads", 6, NULL);
+			if (conf.video_bitrate != -1)
+				g_object_set(e.vcodec, "target-bitrate", conf.video_bitrate*1000, NULL);
+		}
+		gst_bin_add(GST_BIN(e.pipeline), e.vcodec);
+		gst_element_link_many (video_last, e.vcodec, e.vqueue, NULL);
+	    } else {
+			log_config->error("Can't find video codec");
+		}
 
-    e.vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
-    if (e.vcodec != nullptr) {
-    	if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0) {
-		g_object_set(e.vcodec, "threads", 6, NULL);
-		if (conf.video_bitrate != -1)
-			g_object_set(e.vcodec, "target-bitrate", conf.video_bitrate*1000, NULL);
-	}	
-    	if(strncmp("vp9enc", vcodec_gst.c_str(), 6) == 0) {
-		g_object_set(e.vcodec, "threads", 6, NULL);
-		if (conf.video_bitrate != -1)
-			g_object_set(e.vcodec, "target-bitrate", conf.video_bitrate*1000, NULL);
-	}
-        gst_bin_add(GST_BIN(e.pipeline), e.vcodec);
-        gst_element_link_many (video_last, e.vcodec, e.vqueue, NULL);
-    } else {
-		log_config->error("Can't find video codec");
-	}
-
-	return;
+		return;
+    }
 }
 
 gboolean bus_watch_get_stream (GstBus* bus, GstMessage *msg, GstElement *pipeline)
