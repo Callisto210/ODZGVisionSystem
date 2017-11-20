@@ -29,4 +29,5 @@ using std::string;
 void configure_pipeline(Elements &e, string source, string path, int fps, string acodec, string vcodec, Pistache::Http::ResponseWriter &resp);
 
 
+
 #endif //ODZGVISIONSYSTEM_CONFIG_GENERATOR_HH

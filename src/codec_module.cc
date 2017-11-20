@@ -17,7 +17,11 @@ static GMainLoop *loop;
 int main(int argc, char** argv) {
 
     gst_init(NULL, NULL);
-    init_sinks();
+//#if !GLIB_CHECK_VERSION (2, 31, 0)
+//    if (!g_thread_supported ())
+//    g_thread_init (NULL);
+//#endif
+    init_log_sinks();
     set_loggers();
     set_global_level(spdlog::level::debug);
     auto main_log = spdlog::get("main");
