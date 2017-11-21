@@ -586,9 +586,11 @@ static gboolean handle_message2 (GstBus *bus, GstMessage *msg, Elements *data) {
             break;
         case GST_MESSAGE_EOS:
             g_print("End-Of-Stream reached play.\n");
-            gst_element_set_state (data->playbin, GST_STATE_NULL);
-            gst_element_send_event (data->intervideosrc, gst_event_new_eos());
-            gst_element_send_event (data->interaudiosrc, gst_event_new_eos());
+
+
+            gst_element_send_event (data->pipeline, gst_event_new_eos());
+			//gst_element_send_event (data->intervideosrc, gst_event_new_eos());
+			gst_element_set_state (data->playbin, GST_STATE_NULL);
             //gst_element_set_state (data->pipeline, GST_STATE_NULL);
             //gst_object_unref (data->playbin);
 
