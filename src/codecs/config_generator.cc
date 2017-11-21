@@ -39,17 +39,23 @@ static map <string, string> source_map = {
         {"file", "filesrc"}
 };
 
+static map <string, string> sink_map = {
+        {"file", "filesink"},
+	{"udp", "udpsink"},
+	{"icecast", "shout2send"}
+};
+
 static void zero_elements(Elements& e) {
     memset(&e, 0, sizeof(Elements));
 }
 
-void configure_pipeline(Elements &e, string source, string path, string acodec, string vcodec, Http::ResponseWriter &resp, config_struct conf)
+void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct conf)
 {
     if(log_config == nullptr) {
         log_config = spdlog::get("config");
     }
-    log_config->debug("Source {}, path: {}, acodec: {}, vcodec: {}",
-                      source, path, acodec, vcodec);
+    log_config->debug("Source {}, path: {}, acodec: {}, vcodec: {}, sink: {}",
+                      conf.source, conf.path, conf.acodec, conf.vcodec, conf.sink);
 
     static GstElement* audio_last = nullptr;
     static GstElement* video_last = nullptr;
@@ -61,13 +67,14 @@ void configure_pipeline(Elements &e, string source, string path, string acodec, 
  	memset(&e, 0, sizeof(Elements));
     }
 
-    string acodec_gst = acodec_map[acodec];
-    string vcodec_gst = vcodec_map[vcodec];
-    string source_gst = source_map[source];
+    string acodec_gst = acodec_map[conf.acodec];
+    string vcodec_gst = vcodec_map[conf.vcodec];
+    string source_gst = source_map[conf.source];
+    string sink_gst = sink_map[conf.sink];
 
 
-    log_config->debug("Elements opts: source: {} acodec: {} vcodec: {}",
-        source_gst, acodec_gst, vcodec_gst);
+    log_config->debug("Elements opts: source: {} acodec: {} vcodec: {} sink: {}",
+        source_gst, acodec_gst, vcodec_gst, sink_gst);
 
 
     e.pipeline = gst_pipeline_new("pipeline");
@@ -96,7 +103,7 @@ void configure_pipeline(Elements &e, string source, string path, string acodec, 
     
     gst_element_link (e.src, e.decode);
 
-    g_object_set (e.src, "location", path.c_str(), nullptr);
+    g_object_set (e.src, "location", conf.path.c_str(), nullptr);
 
 #if 0
 	/* Get info about streams */
@@ -184,7 +191,26 @@ void configure_pipeline(Elements &e, string source, string path, string acodec, 
 			log_config->error("Can't find video codec");
 		}
 
-		return;
+    }
+
+    if (!sink_gst.empty()) {
+    	e.sink = gst_element_factory_make(sink_gst.c_str(), "sink");
+	if (e.sink != nullptr) {
+	    if (strncmp("filesink", sink_gst.c_str(), 4) == 0) {
+		g_object_set (e.sink, "location", "transcoded.webm", NULL);
+	    }
+	    if (strncmp("udpsink", sink_gst.c_str(), 3) == 0) {
+		g_object_set (e.sink, "host", "127.0.0.1", NULL);
+		g_object_set (e.sink, "port", 8080, NULL);
+	    }
+	    if (strncmp("shout2send", sink_gst.c_str(), 7) == 0) {
+		g_object_set (e.sink, "ip", "127.0.0.1", NULL);
+		g_object_set (e.sink, "port", 8000, NULL);
+		g_object_set (e.sink, "password", "ala123", NULL);
+		g_object_set (e.sink, "mount", "/stream.webm", NULL);
+	    }
+	    gst_bin_add(GST_BIN(e.pipeline), e.sink);
+	}
     }
 }
 

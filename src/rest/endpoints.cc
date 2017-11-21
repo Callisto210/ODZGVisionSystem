@@ -47,7 +47,6 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
     log_rest->info("POST: /input -- {}", config);
     Document doc;
     Elements e;
-    string acodec, vcodec, source, path;
     config_struct conf;
 
     conf.fps = -1;
@@ -58,8 +57,8 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 
     try {
         doc.Parse(config.c_str());
-        source = doc["source"].GetString();
-        path = doc["path"].GetString();
+        conf.source = doc["source"].GetString();
+        conf.path = doc["path"].GetString();
         if(doc.HasMember("fps")) {
 		if(doc["fps"].IsInt()) {
 		    conf.fps = doc["fps"].GetInt();
@@ -71,12 +70,17 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 
 	if(doc.HasMember("acodec")) {
 		if(doc["acodec"].IsString())
-        		acodec = doc["acodec"].GetString();
+        		conf.acodec = doc["acodec"].GetString();
 	}
 
 	if(doc.HasMember("vcodec")) {
 		if(doc["vcodec"].IsString())
-        		vcodec = doc["vcodec"].GetString();
+        		conf.vcodec = doc["vcodec"].GetString();
+	}
+
+	if(doc.HasMember("sink")) {
+		if(doc["sink"].IsString())
+        		conf.sink = doc["sink"].GetString();
 	}
 
 	if(doc.HasMember("video_bitrate")) {
@@ -107,8 +111,8 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 			conf.height = std::atoi(doc["height"].GetString());
 	}
 	response.send(Http::Code::Ok);
-        configure_pipeline(e, source, path, acodec, vcodec, response, conf);
-        magic(e, ICECAST, WEBM_MUX);
+        configure_pipeline(e, response, conf);
+        magic(e, WEBM_MUX);
     }catch(...) {
         log_rest->error("Cannot parse json :<");
     }
