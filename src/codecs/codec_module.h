@@ -18,6 +18,8 @@ typedef struct _elements {
     GstElement *playbin;
     GstElement *src;
     GstElement *decode;
+    GstElement *vbin;
+    GstElement *abin;
     GstElement *aconvert;
     GstElement *vconvert;
     GstElement *acodec;

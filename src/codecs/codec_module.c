@@ -67,10 +67,10 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 //	gst_element_add_pad (bin, ghost_pad);
 //	gst_object_unref (pad);
 //	GstPad  *pad;
-	acodec_out = gst_element_get_static_pad(data.acodec, "src");
-	vcodec_out = gst_element_get_static_pad(data.vcodec, "src");
-//	g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (acodec_out));
-//	g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (vcodec_out));
+	acodec_out = gst_element_get_static_pad(data.aqueue, "src");
+	vcodec_out = gst_element_get_static_pad(data.vqueue, "src");
+	g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (acodec_out));
+	g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (vcodec_out));
 //	pad = gst_element_get_static_pad (data.intervideosink, "src");
 //	vcodec_out = gst_element_get_static_pad (data.intervideosink, "src");
 //	gst_pad_set_active (vcodec_out, TRUE);
@@ -125,8 +125,7 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 
 	/* Start playing */
 
-    gst_pipeline_set_auto_flush_bus(GST_PIPELINE(data.pipeline), FALSE);
-    gst_pipeline_set_auto_flush_bus(GST_PIPELINE(data.playbin), FALSE);
+
     ret = gst_element_set_state (data.playbin, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         g_printerr ("Unable to set the playbin to the playing state.\n");
@@ -139,6 +138,8 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 		gst_object_unref (data.pipeline);
 		return -1;
 	}
+    gst_pipeline_set_auto_flush_bus(GST_PIPELINE(data.pipeline), FALSE);
+    gst_pipeline_set_auto_flush_bus(GST_PIPELINE(data.playbin), FALSE);
     bus = gst_element_get_bus (data.pipeline);
     gst_bus_add_watch (bus, (GstBusFunc)handle_message, &data);
 
@@ -202,10 +203,14 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 //    msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
 //    if (msg != NULL)
 //        gst_message_unref (msg);
-//    gst_object_unref (bus);
-	gst_object_unref (data.playbin);
+    gst_object_unref (bus);
+    gst_element_set_state (data.playbin, GST_STATE_NULL);
+   // gst_element_set_state (data.pipeline, GST_STATE_NULL);
+	//gst_object_unref (data.playbin);
 //    gst_element_set_state (data.pipeline, GST_STATE_NULL);
     gst_object_unref (data.pipeline);
+
+    gst_object_unref (data.playbin);
 	return 0;
 }
 
@@ -531,12 +536,14 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, Elements *data) {
 
             break;
         case GST_MESSAGE_STATE_CHANGED:
-            /* We are only interested in state-changed messages from the pipeline */
-            if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
-                GstState old_state, new_state, pending_state;
-                gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
-                g_print ("Pipeline state changed from %s to %s:\n",
-                         gst_element_state_get_name (old_state), gst_element_state_get_name (new_state));
+            if(GST_ELEMENT(msg->src) == data->pipeline) {
+                /* We are only interested in state-changed messages from the pipeline */
+                if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
+                    GstState old_state, new_state, pending_state;
+                    gst_message_parse_state_changed(msg, &old_state, &new_state, &pending_state);
+                    g_print("Pipeline state changed from %s to %s:\n",
+                            gst_element_state_get_name(old_state), gst_element_state_get_name(new_state));
+                }
             }
             break;
         case GST_MESSAGE_INFO:
@@ -572,20 +579,29 @@ static gboolean handle_message2 (GstBus *bus, GstMessage *msg, Elements *data) {
             g_printerr("Debugging information: %s\n", debug_info ? debug_info : "none");
             g_clear_error(&err);
             g_free(debug_info);
+
             gst_element_set_state (data->playbin, GST_STATE_NULL);
+
+            //gst_object_unref (data->playbin);
             break;
         case GST_MESSAGE_EOS:
             g_print("End-Of-Stream reached play.\n");
             gst_element_set_state (data->playbin, GST_STATE_NULL);
+            gst_element_send_event (data->intervideosrc, gst_event_new_eos());
+            gst_element_send_event (data->interaudiosrc, gst_event_new_eos());
+            //gst_element_set_state (data->pipeline, GST_STATE_NULL);
+            //gst_object_unref (data->playbin);
 
             break;
         case GST_MESSAGE_STATE_CHANGED:
+            if(GST_ELEMENT(msg->src) == data->playbin){
             /* We are only interested in state-changed messages from the pipeline */
             if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
                 GstState old_state, new_state, pending_state;
                 gst_message_parse_state_changed(msg, &old_state, &new_state, &pending_state);
                 g_print("Playbin state changed from %s to %s:\n",
                         gst_element_state_get_name(old_state), gst_element_state_get_name(new_state));
+            }
             }
             break;
         case GST_MESSAGE_INFO: {
