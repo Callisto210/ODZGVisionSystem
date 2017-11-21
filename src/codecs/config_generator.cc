@@ -55,8 +55,6 @@ static void basic_pipeline(Elements* data) {
     data->interaudiosink = gst_element_factory_make ("interaudiosink", "interaudiosink");
     data->intervideosrc = gst_element_factory_make ("intervideosrc", "intervideosrc");
     data->interaudiosrc = gst_element_factory_make ("interaudiosrc", "interaudiosrc");
-    data->vbin = gst_bin_new ("vbin");
-    data->abin = gst_bin_new ("abin");
 }
 
 
@@ -71,16 +69,10 @@ void configure_pipeline(Elements& e, string source, string path, int fps, string
 
     static GstElement* audio_last = nullptr;
     static GstElement* video_last = nullptr;
-    GstElement * in_a_queue, * in_v_queue, * out_v_queue, * out_a_queue;
-    GstPad *pad, *a_pad, *v_pad;
-    GstPad *acodec_out, *vcodec_out;
-    GstPad *muxer_a_in, *muxer_v_in;
-    in_a_queue = gst_element_factory_make("queue", "in_a_queue");
-    in_v_queue = gst_element_factory_make("queue", "in_v_queue");
-    out_a_queue = gst_element_factory_make("queue", "out_a_queue");
-    out_v_queue = gst_element_factory_make("queue", "out_v_queue");
-    GstBus *bus;
-    GstStateChangeReturn ret;
+    GstElement * in_a_queue, * in_v_queue;
+    gint flags;
+
+
     static bool configured = false;
 
     if(!configured) {
@@ -101,6 +93,8 @@ void configure_pipeline(Elements& e, string source, string path, int fps, string
     basic_pipeline(&e);
     video_last = e.vconvert;
     audio_last = e.aconvert;
+    in_a_queue = gst_element_factory_make("queue", "in_a_queue");
+    in_v_queue = gst_element_factory_make("queue", "in_v_queue");
     // Configure interaudiosink
     g_object_set (G_OBJECT (e.intervideosink), "sync", TRUE, NULL);
     g_object_set (G_OBJECT (e.interaudiosink), "sync", TRUE, NULL);
@@ -120,14 +114,9 @@ void configure_pipeline(Elements& e, string source, string path, int fps, string
     g_object_set (G_OBJECT (e.interaudiosink), "blocksize", 4096, NULL);
     g_object_set (G_OBJECT (e.interaudiosrc), "blocksize", 4096, NULL);
 
-//    g_object_set (G_OBJECT (e.intervideosrc), "num-buffers", 2200, NULL);
-//    g_object_set (G_OBJECT (e.interaudiosrc), "num-buffers", 2200, NULL);
-//    g_object_set (G_OBJECT (e.intervideosink), "num-buffers", 100, NULL);
-//    g_object_set (G_OBJECT (e.interaudiosink), "num-buffers", 100, NULL);
-//    gst_element_link(e.intervideosink,e.intervideosrc);
-//    gst_element_link(e.interaudiosink,e.interaudiosrc);
 
-    gint flags;
+
+
     gst_bin_add_many(GST_BIN(e.pipeline),
                      e.interaudiosrc,
                      in_a_queue,
@@ -152,49 +141,16 @@ void configure_pipeline(Elements& e, string source, string path, int fps, string
     flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO;
     flags &= ~GST_PLAY_FLAG_TEXT;
     g_object_set (e.playbin, "flags", flags, NULL);
-    //g_object_set (e.playbin, "connection-speed", 56, NULL);
-//    GString *pipe_desc;
-//    GError *error = NULL;
-//    pipe_desc = g_string_new ("");
-//    g_string_append (pipe_desc, "playbin uri=file:///home/jgorski/Downloads/matroska_test_w1_1/test2.mkv");
-//    //g_string_append (pipe_desc, path.c_str());
-//    log_config->debug(pipe_desc->str);
-//    e.playbin = (GstElement*) gst_parse_launch(pipe_desc->str, &error);
-//    if (error) {
-//        g_print ("pipeline parsing error: %s\n", error->message);
-//        gst_object_unref (e.playbin);
-//        g_clear_error (&error);
-//        return;
-//    }
-    //gst_element_link (e.src, e.decode);
-//    gst_bin_add_many(GST_BIN(e.vbin),
-//                    out_v_queue,
-//                     e.intervideosink,
-//                     NULL);
-//    gst_bin_add_many(GST_BIN(e.abin),
-//                     out_a_queue,
-//                     e.interaudiosink,
-//                     NULL);
-//    gst_element_link_many(out_a_queue, e.interaudiosink, NULL);
-//    gst_element_link_many(out_v_queue, e.intervideosink, NULL);
-//    pad = gst_element_get_static_pad (out_a_queue, "sink");
-//    a_pad = gst_ghost_pad_new ("sink", pad);
-//    gst_pad_set_active (a_pad, TRUE);
-//    gst_element_add_pad (e.abin, a_pad);
-//    gst_object_unref (pad);
-//    pad = gst_element_get_static_pad (out_v_queue, "sink");
-//    v_pad = gst_ghost_pad_new ("sink", pad);
-//    gst_pad_set_active (v_pad, TRUE);
-//    gst_element_add_pad (e.vbin, v_pad);
-//    gst_object_unref (pad);
+
     g_object_set (GST_OBJECT (e.playbin), "audio-sink",e.interaudiosink, NULL);
     g_object_set (GST_OBJECT (e.playbin), "video-sink", e.intervideosink, NULL);
+   // g_object_set (GST_OBJECT (e.playbin), "current-video", 1, NULL);
     g_object_set (GST_OBJECT (in_a_queue), "leaky",2, NULL);
     g_object_set (GST_OBJECT (in_v_queue), "leaky", 2, NULL);
-//    g_object_set (GST_OBJECT (e.playbin), "message-forward",TRUE, NULL);
-//    g_object_set (GST_OBJECT (e.playbin), "async-handling",TRUE, NULL),
+//    g_object_set (GST_OBJECT (e.playbin), "video-multiview-mode", 3, NULL);
+//    g_object_set (GST_OBJECT (e.playbin), "video-multiview-flags", 0x00000001, NULL);
     gst_element_set_state (e.playbin, GST_STATE_READY);
-//    g_object_set (e.src, "location", path.c_str(), nullptr);
+
 
 #if 0
 	/* Get info about streams */
@@ -221,14 +177,7 @@ void configure_pipeline(Elements& e, string source, string path, int fps, string
         //gst_bin_add_many(GST_BIN(e.playbin),audio_last, e.acodec, e.interaudiosink, NULL);
         gst_bin_add(GST_BIN(e.pipeline), e.acodec);
         gst_element_link_many (e.interaudiosrc ,in_a_queue, audio_last, e.acodec,e.aqueue, NULL);
-//        gst_element_link_many (audio_last, e.acodec,e.aqueue, NULL);
-//        muxer_a_in = gst_element_get_static_pad (audio_last, "sink");
-//        acodec_out = gst_element_get_static_pad(in_a_queue, "src");
-//        if (gst_pad_link (acodec_out, muxer_a_in) != GST_PAD_LINK_OK)  {
-//            g_printerr ("Links could not be linked audio.\n");
-//            //gst_object_unref (e.pipeline);
-//            return;
-//        }
+
     } else {
         log_config->error("Can't find audio codec");
 	}
@@ -239,26 +188,12 @@ void configure_pipeline(Elements& e, string source, string path, int fps, string
 		g_object_set(e.vcodec, "target-bitrate", 20000, NULL);}
         gst_bin_add(GST_BIN(e.pipeline), e.vcodec);
         gst_element_link_many (e.intervideosrc,in_v_queue, video_last,e.vcodec,e.vqueue, NULL);
-//        gst_element_link_many (e.intervideosrc ,in_v_queue,  NULL);
-//        gst_element_link_many (video_last, e.vcodec,e.vqueue, NULL);
-//        muxer_v_in = gst_element_get_static_pad (video_last, "sink");
-//        vcodec_out = gst_element_get_static_pad(in_v_queue, "src");
-//        if (gst_pad_link (vcodec_out, muxer_v_in) != GST_PAD_LINK_OK)  {
-//            g_printerr ("Links could not be linked video.\n");
-//            //gst_object_unref (e.pipeline);
-//            return;
-//        }
+
 
     } else {
         log_config->error("Can't find video codec");
 	}
-//    GstStateChangeReturn ret;
-//    ret = gst_element_set_state (e.playbin, GST_STATE_READY);
-//    if (ret == GST_STATE_CHANGE_FAILURE) {
-//        g_printerr ("Unable to set the 2 pipeline to the playing state.\n");
-//        gst_object_unref (e.playbin);
-//        return;
-//    }
+
 
 
 	return;

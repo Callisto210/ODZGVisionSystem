@@ -16,9 +16,8 @@
 
 int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	GstBus *bus;
-	GstMessage *msg;
 	GstStateChangeReturn ret;
-	gboolean terminate = FALSE;
+
 	GstPad *acodec_out, *vcodec_out;
 	char* mux_str = get_mux_str(mux_type);
 	char* sink_str = get_sink_str(sink_type);
@@ -62,26 +61,13 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 #endif
 	g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (muxer_a_in));
 	g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (muxer_v_in));
-//	ghost_pad = gst_ghost_pad_new ("sink", pad);
-//	gst_pad_set_active (ghost_pad, TRUE);
-//	gst_element_add_pad (bin, ghost_pad);
-//	gst_object_unref (pad);
-//	GstPad  *pad;
+
 	acodec_out = gst_element_get_static_pad(data.aqueue, "src");
 	vcodec_out = gst_element_get_static_pad(data.vqueue, "src");
 	g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (acodec_out));
 	g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (vcodec_out));
-//	pad = gst_element_get_static_pad (data.intervideosink, "src");
-//	vcodec_out = gst_element_get_static_pad (data.intervideosink, "src");
-//	gst_pad_set_active (vcodec_out, TRUE);
-//	gst_element_add_pad (data.video_bin, vcodec_out);
-//	gst_object_unref (pad);
-//	pad = gst_element_get_static_pad (data.acodec, "src");
-//	acodec_out = gst_element_get_static_pad (data.interaudiosink,"src");
-//	gst_pad_set_active (acodec_out, TRUE);
-//	gst_element_add_pad (data.audio_bin, acodec_out);
-//	gst_object_unref (pad);
-//
+
+
 
 	if (gst_pad_link (acodec_out, muxer_a_in) != GST_PAD_LINK_OK ||
         gst_pad_link (vcodec_out, muxer_v_in) != GST_PAD_LINK_OK) {
@@ -145,69 +131,14 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 
 	/* Listen to the bus */
 	bus = gst_element_get_bus (data.playbin);
-    gst_bus_add_watch (bus, (GstBusFunc)handle_message2, &data);
-//	do {
-////        msg = gst_bus_timed_pop(bus,GST_CLOCK_TIME_NONE);
-//		msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
-//				GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
-//
-//		/* Parse message */
-//		if (msg != NULL) {
-//            GError *err;
-//            gchar *debug_info;
-//
-//
-//            switch (GST_MESSAGE_TYPE (msg)) {
-//                case GST_MESSAGE_ERROR:
-//                    gst_message_parse_error(msg, &err, &debug_info);
-//                    g_printerr("Error received from element %s: %s\n", GST_OBJECT_NAME (msg->src), err->message);
-//                    g_printerr("Debugging information: %s\n", debug_info ? debug_info : "none");
-//                    g_clear_error(&err);
-//                    g_free(debug_info);
-//                    terminate = TRUE;
-//                    break;
-//                case GST_MESSAGE_EOS:
-//                    g_print("End-Of-Stream reached for playbin.\n");
-//                    terminate = TRUE;
-//
-//                    break;
-//                case GST_MESSAGE_STATE_CHANGED: {
-//                    GstState old_state, new_state, pending_state;
-//                    gst_message_parse_state_changed(msg, &old_state, &new_state, &pending_state);
-//                    if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data.playbin)) {
-//                        if (new_state == GST_STATE_PLAYING) {
-//                            /* Once we are in the playing state, analyze the streams */
-//                            analyze_streams(&data);
-//                        }
-//                    }
-//                }
-//                    break;
-//                default:
-//                    g_print ("message in play: %s\n", GST_MESSAGE_TYPE_NAME (msg));
-//                    //g_printerr ("Unexpected message received.\n");
-//                    break;
-//
-//
-//
-//            }
-//        }
-//        gst_message_unref (msg);
-//
-//    } while (!terminate);
+    gst_bus_add_watch (bus, (GstBusFunc)handle_playbin, &data);
+
     data.main_loop = g_main_loop_new (NULL, FALSE);
     g_main_loop_run (data.main_loop);
-	/* Free resources */
-//    bus = gst_element_get_bus (data.pipeline);
-//	gst_element_set_state (data.playbin, GST_STATE_NULL);
-    g_print ("here I am \n");
-//    msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
-//    if (msg != NULL)
-//        gst_message_unref (msg);
+    g_main_loop_unref (data.main_loop);
     gst_object_unref (bus);
     gst_element_set_state (data.playbin, GST_STATE_NULL);
-   // gst_element_set_state (data.pipeline, GST_STATE_NULL);
-	//gst_object_unref (data.playbin);
-//    gst_element_set_state (data.pipeline, GST_STATE_NULL);
+
     gst_object_unref (data.pipeline);
 
     gst_object_unref (data.playbin);
@@ -511,7 +442,8 @@ static void analyze_streams (Elements *data) {
     g_print ("\n");
     g_print ("Currently playing video stream %d, audio stream %d and text stream %d\n",
              data->current_video, data->current_audio, data->current_text);
-    g_print ("Type any number and hit ENTER to select a different audio stream\n");
+//    g_object_set (GST_OBJECT (data->playbin), "current-video", 1, NULL);
+//    g_object_set (GST_OBJECT (data->playbin), "current-audio", 1, NULL);
 }
 
 /* Process messages from GStreamer */
@@ -558,7 +490,7 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, Elements *data) {
         }
         default:
             /* We should not reach here */
-            g_print ("message in pip: %s\n", GST_MESSAGE_TYPE_NAME (msg));
+            //g_print ("message in pip: %s\n", GST_MESSAGE_TYPE_NAME (msg));
             //g_printerr ("Unexpected message received.\n");
             break;
     }
@@ -569,58 +501,51 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, Elements *data) {
     return TRUE;
 }
 
-static gboolean handle_message2 (GstBus *bus, GstMessage *msg, Elements *data) {
+static gboolean handle_playbin (GstBus *bus, GstMessage *msg, Elements *data) {
     GError *err;
     gchar *debug_info;
-    switch (GST_MESSAGE_TYPE (msg)) {
-        case GST_MESSAGE_ERROR:
-            gst_message_parse_error(msg, &err, &debug_info);
-            g_printerr("Error received from element %s: %s\n", GST_OBJECT_NAME (msg->src), err->message);
-            g_printerr("Debugging information: %s\n", debug_info ? debug_info : "none");
-            g_clear_error(&err);
-            g_free(debug_info);
-
-            gst_element_set_state (data->playbin, GST_STATE_NULL);
-
-            //gst_object_unref (data->playbin);
-            break;
-        case GST_MESSAGE_EOS:
-            g_print("End-Of-Stream reached play.\n");
+		if (msg != NULL) {
+            GError *err;
+            gchar *debug_info;
 
 
-            gst_element_send_event (data->pipeline, gst_event_new_eos());
-			//gst_element_send_event (data->intervideosrc, gst_event_new_eos());
-			gst_element_set_state (data->playbin, GST_STATE_NULL);
-            //gst_element_set_state (data->pipeline, GST_STATE_NULL);
-            //gst_object_unref (data->playbin);
+            switch (GST_MESSAGE_TYPE (msg)) {
+                case GST_MESSAGE_ERROR:
+                    gst_message_parse_error(msg, &err, &debug_info);
+                    g_printerr("Error received from element %s: %s\n", GST_OBJECT_NAME (msg->src), err->message);
+                    g_printerr("Debugging information: %s\n", debug_info ? debug_info : "none");
+                    g_clear_error(&err);
+                    g_free(debug_info);
 
-            break;
-        case GST_MESSAGE_STATE_CHANGED:
-            if(GST_ELEMENT(msg->src) == data->playbin){
-            /* We are only interested in state-changed messages from the pipeline */
-            if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
-                GstState old_state, new_state, pending_state;
-                gst_message_parse_state_changed(msg, &old_state, &new_state, &pending_state);
-                g_print("Playbin state changed from %s to %s:\n",
-                        gst_element_state_get_name(old_state), gst_element_state_get_name(new_state));
+                    break;
+                case GST_MESSAGE_EOS:
+                    g_print("End-Of-Stream reached for playbin.\n");
+                    gst_element_send_event (data->pipeline, gst_event_new_eos());
+
+                    break;
+                case GST_MESSAGE_STATE_CHANGED: {
+                    GstState old_state, new_state, pending_state;
+                    gst_message_parse_state_changed(msg, &old_state, &new_state, &pending_state);
+//                    g_print("Playbin state changed from %s to %s:\n",
+//                            gst_element_state_get_name(old_state), gst_element_state_get_name(new_state));
+                    if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
+                        if (new_state == GST_STATE_PLAYING) {
+                            /* Once we are in the playing state, analyze the streams */
+                            analyze_streams(data);
+                        }
+
+                    }
+                }
+                    break;
+                default:
+                    //g_print ("message in play: %s\n", GST_MESSAGE_TYPE_NAME (msg));
+                    //g_printerr ("Unexpected message received.\n");
+                    break;
+
+
+
             }
-            }
-            break;
-        case GST_MESSAGE_INFO: {
-            GError *error = NULL;
-            gchar *debug;
-
-            gst_message_parse_info(msg, &error, &debug);
-            g_print("info: %s\n", error->message);
-            g_error_free(error);
-            g_free(debug);
         }
-        default:
-            /* We should not reach here */
-            g_print("message in play: %s\n", GST_MESSAGE_TYPE_NAME (msg));
-            //g_printerr ("Unexpected message received.\n");
-            break;
-    }
 
 
 

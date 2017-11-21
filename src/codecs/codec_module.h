@@ -18,8 +18,6 @@ typedef struct _elements {
     GstElement *playbin;
     GstElement *src;
     GstElement *decode;
-    GstElement *vbin;
-    GstElement *abin;
     GstElement *aconvert;
     GstElement *vconvert;
     GstElement *acodec;
@@ -55,9 +53,9 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type);
 void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data);
 
 static void analyze_streams (Elements *data);
-
+static gboolean handle_playbin (GstBus *bus, GstMessage *msg, Elements *data);
 static gboolean handle_message (GstBus *bus, GstMessage *msg, Elements *data);
-static gboolean handle_message2 (GstBus *bus, GstMessage *msg, Elements *data);
+
 
 void configure_pipeline(const char* json);
 #endif
