@@ -48,25 +48,67 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
     Document doc;
     Elements e;
     string acodec, vcodec, source, path;
-    int fps;
-//    configure_pipeline(config.c_str());
+    config_struct conf;
+
+    conf.fps = -1;
+    conf.audio_bitrate = -1;
+    conf.video_bitrate = -1;
+    conf.width = -1;
+    conf.height = -1;
+
     try {
         doc.Parse(config.c_str());
         source = doc["source"].GetString();
         path = doc["path"].GetString();
-        if(doc["fps"].IsInt()) {
-            fps = doc["fps"].GetInt();
+        if(doc.HasMember("fps")) {
+            if(doc["fps"].IsInt()) {
+                conf.fps = doc["fps"].GetInt();
+            }
+            else {
+                conf.fps = std::atoi(doc["fps"].GetString());
+            }
         }
-        else {
-            log_rest->debug("fps is not an int: {}", doc["fps"].GetString());
-            fps = std::atoi(doc["fps"].GetString());
+
+        if(doc.HasMember("acodec")) {
+            if(doc["acodec"].IsString())
+                acodec = doc["acodec"].GetString();
         }
-        acodec = doc["acodec"].GetString();
-        vcodec = doc["vcodec"].GetString();
-        configure_pipeline(e, source, path, fps, acodec, vcodec, response);
+
+        if(doc.HasMember("vcodec")) {
+            if(doc["vcodec"].IsString())
+                vcodec = doc["vcodec"].GetString();
+        }
+
+        if(doc.HasMember("video_bitrate")) {
+            if(doc["video_bitrate"].IsInt())
+                conf.video_bitrate = doc["video_bitrate"].GetInt();
+            else
+                conf.video_bitrate = std::atoi(doc["video_bitrate"].GetString());
+        }
+
+        if(doc.HasMember("audio_bitrate")) {
+            if(doc["audio_bitrate"].IsInt())
+                conf.audio_bitrate = doc["audio_bitrate"].GetInt();
+            else
+                conf.audio_bitrate = std::atoi(doc["audio_bitrate"].GetString());
+        }
+
+        if(doc.HasMember("width")) {
+            if(doc["width"].IsInt())
+                conf.width = doc["width"].GetInt();
+            else
+                conf.width = std::atoi(doc["width"].GetString());
+        }
+
+        if(doc.HasMember("height")) {
+            if(doc["height"].IsInt())
+                conf.height = doc["height"].GetInt();
+            else
+                conf.height = std::atoi(doc["height"].GetString());
+        }
+        response.send(Http::Code::Ok);
+        configure_pipeline(e, source, path, acodec, vcodec, response, conf);
         magic(e, FILE_SINK, WEBM_MUX);
-        log_rest->debug("Parsing json completed successfully.");
-        log_rest->debug("Do the magic");
     }catch(...) {
         log_rest->error("Cannot parse json :<");
     }

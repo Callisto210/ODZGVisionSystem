@@ -120,7 +120,7 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
     }
 	ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
 	if (ret == GST_STATE_CHANGE_FAILURE) {
-		g_printerr ("Unable to set the 1 pipeline to the playing state.\n");
+		g_printerr ("Unable to set the  pipeline to the playing state.\n");
 		gst_object_unref (data.pipeline);
 		return -1;
 	}
