@@ -38,6 +38,7 @@ private:
     void put_input_config(const Rest::Request &request, Http::ResponseWriter response);
     void home(const Rest::Request& request, Http::ResponseWriter response);
     void info(const Rest::Request& request, Http::ResponseWriter response);
+    void handle_streaming_request(std::string config);
     std::shared_ptr<spdlog::logger> log_rest;
     std::shared_ptr<Http::Endpoint> httpEndpoint;
     Rest::Router router;

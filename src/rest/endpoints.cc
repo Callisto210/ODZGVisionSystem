@@ -4,9 +4,12 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
+#include <handler.hh>
 
+#include <thread>
 
 using std::string;
+using std::thread;
 using rapidjson::Document;
 //using namespace Net;
 namespace spd = spdlog;
@@ -41,111 +44,13 @@ void Endpoints::setup_routes() {
 }
 
 void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWriter response) {
-//    auto id = request.param(":id").as<int>();
-    auto config = request.body();
-//    log_rest->info("put /config at id: {}", id);
-    log_rest->info("POST: /input -- {}", config);
-    Document doc;
-    Elements e;
-    config_struct conf;
-
-    conf.fps = -1;
-    conf.audio_bitrate = -1;
-    conf.video_bitrate = -1;
-    conf.width = -1;
-    conf.height = -1;
-    conf.port = -1;
-
-    try {
-        doc.Parse(config.c_str());
-        conf.source = doc["source"].GetString();
-        conf.path = doc["path"].GetString();
-        if(doc.HasMember("fps")) {
-		if(doc["fps"].IsInt()) {
-		    conf.fps = doc["fps"].GetInt();
-		}
-		else {
-		    conf.fps = std::atoi(doc["fps"].GetString());
-		}
-	}
-
-        if(doc.HasMember("port")) {
-		if(doc["port"].IsInt()) {
-		    conf.port = doc["port"].GetInt();
-		}
-		else {
-		    conf.port = std::atoi(doc["port"].GetString());
-		}
-	}
-
-	if(doc.HasMember("acodec")) {
-		if(doc["acodec"].IsString())
-        		conf.acodec = doc["acodec"].GetString();
-	}
-
-	if(doc.HasMember("vcodec")) {
-		if(doc["vcodec"].IsString())
-        		conf.vcodec = doc["vcodec"].GetString();
-	}
-
-	if(doc.HasMember("sink")) {
-		if(doc["sink"].IsString())
-        		conf.sink = doc["sink"].GetString();
-	}
-
-	if(doc.HasMember("video_bitrate")) {
-		if(doc["video_bitrate"].IsInt())
-			conf.video_bitrate = doc["video_bitrate"].GetInt();
-		else
-			conf.video_bitrate = std::atoi(doc["video_bitrate"].GetString());
-	}
-
-	if(doc.HasMember("audio_bitrate")) {
-		if(doc["audio_bitrate"].IsInt())
-			conf.audio_bitrate = doc["audio_bitrate"].GetInt();
-		else
-			conf.audio_bitrate = std::atoi(doc["audio_bitrate"].GetString());
-	}
-
-	if(doc.HasMember("width")) {
-		if(doc["width"].IsInt())
-			conf.width = doc["width"].GetInt();
-		else
-			conf.width = std::atoi(doc["width"].GetString());
-	}
-
-	if(doc.HasMember("height")) {
-		if(doc["height"].IsInt())
-			conf.height = doc["height"].GetInt();
-		else
-			conf.height = std::atoi(doc["height"].GetString());
-	}
-
-	if(doc.HasMember("host")) {
-		if(doc["host"].IsString())
-        		conf.host = doc["host"].GetString();
-	}
-
-	if(doc.HasMember("location")) {
-		if(doc["location"].IsString())
-        		conf.location = doc["location"].GetString();
-	}
-
-	if(doc.HasMember("random")) {
-		if(doc["random"].IsString())
-        		conf.random = doc["random"].GetString();
-	}
-	if (conf.random.empty()) {	
-		response.send(Http::Code::Bad_Request);
-		return;
-	}
+	string config = request.body();
+	log_rest->info("POST: /input -- {}", config);
 	response.send(Http::Code::Ok);
-        configure_pipeline(e, response, conf);
-        magic(e, WEBM_MUX);
-    }catch(...) {
-        log_rest->error("Cannot parse json :<");
-    }
 
+	streaming_handler handle_streaming_request(config);
+	thread stream(handle_streaming_request);
+	stream.detach();
 }
 
 void Endpoints::home(const Rest::Request& request, Http::ResponseWriter response) {
@@ -157,6 +62,3 @@ void Endpoints::info(const Rest::Request& request, Http::ResponseWriter response
     log_rest->info("GET /info");
     response.send(Http::Code::Ok, "info");
 }
-
-
-

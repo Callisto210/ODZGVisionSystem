@@ -49,7 +49,7 @@ static void zero_elements(Elements& e) {
     memset(&e, 0, sizeof(Elements));
 }
 
-void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct conf)
+void configure_pipeline(Elements &e, config_struct conf)
 {
     if(log_config == nullptr) {
         log_config = spdlog::get("config");

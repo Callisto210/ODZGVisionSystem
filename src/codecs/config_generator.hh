@@ -41,7 +41,7 @@ struct config_struct {
 	string location;
 };
 
-void configure_pipeline(Elements &e, Pistache::Http::ResponseWriter &resp, config_struct conf);
+void configure_pipeline(Elements &e, config_struct conf);
 
 
 #endif //ODZGVISIONSYSTEM_CONFIG_GENERATOR_HH
