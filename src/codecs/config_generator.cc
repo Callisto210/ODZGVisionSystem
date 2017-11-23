@@ -8,14 +8,12 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include <endpoints.hh>
+
 using std::string;
 using std::map;
 using namespace rapidjson;
 
-struct pads_struct {
-	Elements *e;
-	Http::ResponseWriter *response;
-};
+
 
 void no_more_pads_cb (GstElement *e, Elements *ptr);
 gboolean bus_watch_get_stream (GstBus* bus, GstMessage *msg, GstElement *pipeline);
@@ -105,24 +103,53 @@ void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct c
 
     g_object_set (e.src, "location", conf.path.c_str(), nullptr);
 
-#if 0
+#if 1
 	/* Get info about streams */
-	pads_struct s;
-	s.response = new Http::ResponseWriter(resp);
-	s.e = &e;
+	pads_struct data;
+    GError *err = NULL;
+    memset (&data, 0, sizeof (data));
+    g_print ("Discovering '%s'\n", conf.path.c_str());
+    data.discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
+    if (!data.discoverer) {
+        g_print ("Error creating discoverer instance: %s\n", err->message);
+        g_clear_error (&err);
+        return;
+    }
+    g_signal_connect (data.discoverer, "discovered", G_CALLBACK (on_discovered_cb), &data);
+    g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb), &data);
+    gst_discoverer_start (data.discoverer);
+    if(strncmp("file", conf.source.c_str(),4)==0){
+        conf.path.insert(0,"file://");
+    }
+    if (!gst_discoverer_discover_uri_async (data.discoverer, conf.path.c_str())) {
+        g_print ("Failed to start discovering URI '%s'\n", conf.path.c_str());
+        g_object_unref (data.discoverer);
+        return;
+    }
+    data.loop = g_main_loop_new (NULL, FALSE);
+    g_main_loop_run (data.loop);
 
-	GstBus *bus = gst_element_get_bus(e.pipeline);
-	g_signal_connect(G_OBJECT(e.decode), "no-more-pads", G_CALLBACK(no_more_pads_cb), &s);
-	gst_element_set_state(e.pipeline, GST_STATE_PAUSED);
-	while (true)
-	{
-		GstMessage *msg = gst_bus_pop(bus);
-		if (msg) 
-			if (!bus_watch_get_stream(bus,msg, e.pipeline))
-	  			break;
-		 else
-			break;
-	}
+    /* Stop the discoverer process */
+    gst_discoverer_stop (data.discoverer);
+
+    /* Free resources */
+    g_object_unref (data.discoverer);
+    g_main_loop_unref (data.loop);
+//	s.response = new Http::ResponseWriter(resp);
+//	//s.e = &e;
+//
+//	GstBus *bus = gst_element_get_bus(e.pipeline);
+//	g_signal_connect(G_OBJECT(e.decode), "no-more-pads", G_CALLBACK(no_more_pads_cb), &s);
+//	gst_element_set_state(e.pipeline, GST_STATE_PAUSED);
+//	while (true)
+//	{
+//		GstMessage *msg = gst_bus_pop(bus);
+//		if (msg)
+//			if (!bus_watch_get_stream(bus,msg, e.pipeline))
+//	  			break;
+//		 else
+//			break;
+//	}
 #endif
 
 
@@ -271,4 +298,214 @@ no_more_pads_cb (GstElement *e, pads_struct *ptr)
 	doc.Accept(writer);
 	g_print("%s\n", strbuf.GetString());
 	ptr->response->send(Http::Code::Ok, strbuf.GetString());
+}
+static void print_tag_foreach (const GstTagList *tags, const gchar *tag, gpointer user_data) {
+    GValue val = { 0, };
+    gchar *str;
+    gint depth = GPOINTER_TO_INT (user_data);
+
+    gst_tag_list_copy_value (&val, tags, tag);
+
+    if (G_VALUE_HOLDS_STRING (&val))
+        str = g_value_dup_string (&val);
+    else
+        str = gst_value_serialize (&val);
+
+    g_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
+    g_free (str);
+
+    g_value_unset (&val);
+}
+
+/* Print information regarding a stream */
+static void print_stream_info (GstDiscovererStreamInfo *info, gint depth,pads_struct *data) {
+    gchar *desc = NULL;
+    GstCaps *caps;
+    const GstTagList *tags;
+    caps = gst_discoverer_stream_info_get_caps (info);
+    Document::AllocatorType& alloc = data->doc.GetAllocator();
+    if (caps) {
+        if (gst_caps_is_fixed (caps))
+            desc = gst_pb_utils_get_codec_description (caps);
+        else
+            desc = gst_caps_to_string (caps);
+        gst_caps_unref (caps);
+    }
+    if(g_strcmp0("audio",gst_discoverer_stream_info_get_stream_type_nick (info))==0){
+        Value str(kObjectType);
+        Value obj(kObjectType);
+        Value name(kObjectType);
+        name.SetString("codec", alloc);
+        if(desc) {
+            str.SetString(desc, alloc);
+        } else{
+            str.SetString("",alloc);
+        }
+        obj.AddMember(name, str, alloc);
+        data->audio.AddMember(Value(data->audion++), obj, alloc);
+
+    }
+    if(g_strcmp0("video",gst_discoverer_stream_info_get_stream_type_nick (info))==0){
+        Value str(kObjectType);
+        Value obj(kObjectType);
+        Value name(kObjectType);
+        if(desc) {
+            str.SetString(desc, alloc);
+        } else{
+            str.SetString("",alloc);
+        }
+        name.SetString("codec", alloc);
+        obj.AddMember(name, str, alloc);
+        data->video.AddMember(Value(data->videon++), obj, alloc);
+
+    }
+    g_print ("%*s%s: %s\n", 2 * depth, " ", gst_discoverer_stream_info_get_stream_type_nick (info), (desc ? desc : ""));
+
+    if (desc) {
+        g_free (desc);
+        desc = NULL;
+    }
+
+    tags = gst_discoverer_stream_info_get_tags (info);
+    if (tags) {
+        g_print ("%*sTags:\n", 2 * (depth + 1), " ");
+        gst_tag_list_foreach (tags, print_tag_foreach, GINT_TO_POINTER (depth + 2));
+    }
+}
+
+/* Print information regarding a stream and its substreams, if any */
+static void print_topology (GstDiscovererStreamInfo *info, gint depth,pads_struct *data) {
+    GstDiscovererStreamInfo *next;
+
+    if (!info)
+        return;
+
+    print_stream_info (info, depth,data);
+
+    next = gst_discoverer_stream_info_get_next (info);
+    if (next) {
+        print_topology (next, depth + 1,data);
+        gst_discoverer_stream_info_unref (next);
+    } else if (GST_IS_DISCOVERER_CONTAINER_INFO (info)) {
+        GList *tmp, *streams;
+        //Value container(kObjectType);
+        streams = gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO (info));
+        for (tmp = streams; tmp; tmp = tmp->next) {
+            GstDiscovererStreamInfo *tmpinf = (GstDiscovererStreamInfo *) tmp->data;
+            print_topology (tmpinf, depth + 1,data);
+        }
+        gst_discoverer_stream_info_list_free (streams);
+    }
+}
+
+/* This function is called every time the discoverer has information regarding
+ * one of the URIs we provided.*/
+static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, pads_struct *data) {
+    GstDiscovererResult result;
+    const gchar *uri;
+    const GstTagList *tags;
+    GstDiscovererStreamInfo *sinfo;
+    Document doc;
+    g_print("HeRe");
+    Document::AllocatorType& alloc = data->doc.GetAllocator();
+    g_print("Tutaj");
+
+
+    data->audio = data->audio.SetObject();
+    data->video = data->video.SetObject();
+    data->audion =0 ;
+    data->videon = 0;
+//    Document doc;
+//    Document::AllocatorType& alloc = doc.GetAllocator();
+//    doc.SetObject();
+    uri = gst_discoverer_info_get_uri (info);
+    result = gst_discoverer_info_get_result (info);
+    switch (result) {
+        case GST_DISCOVERER_URI_INVALID:
+            g_print ("Invalid URI '%s'\n", uri);
+            break;
+        case GST_DISCOVERER_ERROR:
+            g_print ("Discoverer error: %s\n", err->message);
+            break;
+        case GST_DISCOVERER_TIMEOUT:
+            g_print ("Timeout\n");
+            break;
+        case GST_DISCOVERER_BUSY:
+            g_print ("Busy\n");
+            break;
+        case GST_DISCOVERER_MISSING_PLUGINS:{
+            const GstStructure *s;
+            gchar *str;
+
+            s = gst_discoverer_info_get_misc (info);
+            str = gst_structure_to_string (s);
+
+            g_print ("Missing plugins: %s\n", str);
+            g_free (str);
+            break;
+        }
+        case GST_DISCOVERER_OK:
+            g_print ("Discovered '%s'\n", uri);
+            break;
+    }
+
+    if (result != GST_DISCOVERER_OK) {
+        g_printerr ("This URI cannot be played\n");
+        return;
+    }
+
+    /* If we got no error, show the retrieved information */
+
+    g_print ("\nDuration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
+
+//    tags = gst_discoverer_info_get_tags (info);
+//    if (tags) {
+//        g_print ("Tags:\n");
+//        gst_tag_list_foreach (tags, print_tag_foreach, GINT_TO_POINTER (1));
+//    }
+
+    g_print ("Seekable: %s\n", (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
+
+    g_print ("\n");
+
+    sinfo = gst_discoverer_info_get_stream_info (info);
+    if (!sinfo)
+        return;
+
+    g_print ("Stream information:\n");
+
+    print_topology (sinfo, 1,data);
+
+    gst_discoverer_stream_info_unref (sinfo);
+    Value obj(kObjectType);
+    Value audio_n ;
+    audio_n.SetString("audio_n",alloc);
+    Value video_n ;
+    video_n.SetString("video_n",alloc);
+    Value data_count ;
+    data_count.SetString("data_count",alloc);
+    Value audio ;
+    audio_n.SetString("audio",alloc);
+    Value video ;
+    audio_n.SetString("video",alloc);
+    obj.AddMember(audio_n, Value(data->audion), alloc);
+    obj.AddMember(video_n, Value(data->videon), alloc);
+    data->doc.AddMember(data_count,obj , alloc);
+    data->doc.AddMember(audio, data->audio, alloc);
+    data->doc.AddMember(video, data->video, alloc);
+
+    StringBuffer strbuf;
+    Writer<StringBuffer> writer(strbuf);
+    data->doc.Accept(writer);
+    g_print("%s\n", strbuf.GetString());
+
+    g_print ("\n");
+}
+
+/* This function is called when the discoverer has finished examining
+ * all the URIs we provided.*/
+static void on_finished_cb (GstDiscoverer *discoverer, pads_struct *data) {
+    g_print ("Finished discovering\n");
+
+    g_main_loop_quit (data->loop);
 }

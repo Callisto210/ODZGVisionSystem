@@ -21,7 +21,7 @@ if(PKG_PATH)
     set(ENV{PKG_CONFIG_PATH} "${PKG_PATH}/pkgconfig/:$ENV{PKG_CONFIG_PATH}")
 endif()
 message(STATUS "PKG config path: $ENV{PKG_CONFIG_PATH}")
-pkg_check_modules(GST_PKG gstreamer-1.0>=1.10 gstreamer-audio-1.0>=1.10 gstreamer-video-1.0>=1.10)
+pkg_check_modules(GST_PKG gstreamer-1.0>=1.10 gstreamer-audio-1.0>=1.10 gstreamer-video-1.0>=1.10 gstreamer-pbutils-1.0>=1.10)
 
 include(CheckIncludeFiles)
 include_directories(include)
