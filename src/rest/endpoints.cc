@@ -47,7 +47,6 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
     log_rest->info("POST: /input -- {}", config);
     Document doc;
     Elements e;
-    string acodec, vcodec, source, path;
     config_struct conf;
 
     conf.fps = -1;
@@ -58,57 +57,62 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 
     try {
         doc.Parse(config.c_str());
-        source = doc["source"].GetString();
-        path = doc["path"].GetString();
+        conf.source = doc["source"].GetString();
+        conf.path = doc["path"].GetString();
         if(doc.HasMember("fps")) {
-            if(doc["fps"].IsInt()) {
-                conf.fps = doc["fps"].GetInt();
-            }
-            else {
-                conf.fps = std::atoi(doc["fps"].GetString());
-            }
-        }
+		if(doc["fps"].IsInt()) {
+		    conf.fps = doc["fps"].GetInt();
+		}
+		else {
+		    conf.fps = std::atoi(doc["fps"].GetString());
+		}
+	}
 
-        if(doc.HasMember("acodec")) {
-            if(doc["acodec"].IsString())
-                acodec = doc["acodec"].GetString();
-        }
+	if(doc.HasMember("acodec")) {
+		if(doc["acodec"].IsString())
+        		conf.acodec = doc["acodec"].GetString();
+	}
 
-        if(doc.HasMember("vcodec")) {
-            if(doc["vcodec"].IsString())
-                vcodec = doc["vcodec"].GetString();
-        }
+	if(doc.HasMember("vcodec")) {
+		if(doc["vcodec"].IsString())
+        		conf.vcodec = doc["vcodec"].GetString();
+	}
 
-        if(doc.HasMember("video_bitrate")) {
-            if(doc["video_bitrate"].IsInt())
-                conf.video_bitrate = doc["video_bitrate"].GetInt();
-            else
-                conf.video_bitrate = std::atoi(doc["video_bitrate"].GetString());
-        }
+	if(doc.HasMember("sink")) {
+		if(doc["sink"].IsString())
+        		conf.sink = doc["sink"].GetString();
+	}
 
-        if(doc.HasMember("audio_bitrate")) {
-            if(doc["audio_bitrate"].IsInt())
-                conf.audio_bitrate = doc["audio_bitrate"].GetInt();
-            else
-                conf.audio_bitrate = std::atoi(doc["audio_bitrate"].GetString());
-        }
+	if(doc.HasMember("video_bitrate")) {
+		if(doc["video_bitrate"].IsInt())
+			conf.video_bitrate = doc["video_bitrate"].GetInt();
+		else
+			conf.video_bitrate = std::atoi(doc["video_bitrate"].GetString());
+	}
 
-        if(doc.HasMember("width")) {
-            if(doc["width"].IsInt())
-                conf.width = doc["width"].GetInt();
-            else
-                conf.width = std::atoi(doc["width"].GetString());
-        }
+	if(doc.HasMember("audio_bitrate")) {
+		if(doc["audio_bitrate"].IsInt())
+			conf.audio_bitrate = doc["audio_bitrate"].GetInt();
+		else
+			conf.audio_bitrate = std::atoi(doc["audio_bitrate"].GetString());
+	}
 
-        if(doc.HasMember("height")) {
-            if(doc["height"].IsInt())
-                conf.height = doc["height"].GetInt();
-            else
-                conf.height = std::atoi(doc["height"].GetString());
-        }
-        response.send(Http::Code::Ok);
-        configure_pipeline(e, source, path, acodec, vcodec, response, conf);
-        magic(e, FILE_SINK, WEBM_MUX);
+	if(doc.HasMember("width")) {
+		if(doc["width"].IsInt())
+			conf.width = doc["width"].GetInt();
+		else
+			conf.width = std::atoi(doc["width"].GetString());
+	}
+
+	if(doc.HasMember("height")) {
+		if(doc["height"].IsInt())
+			conf.height = doc["height"].GetInt();
+		else
+			conf.height = std::atoi(doc["height"].GetString());
+	}
+	response.send(Http::Code::Ok);
+        configure_pipeline(e, response, conf);
+        magic(e, WEBM_MUX);
     }catch(...) {
         log_rest->error("Cannot parse json :<");
     }

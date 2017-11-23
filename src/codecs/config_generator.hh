@@ -8,37 +8,36 @@
 #include <string>
 #include <vector>
 #include <spdlog/spdlog.h>
-
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "pistache/http.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "codec_module.h"
-
 #ifdef __cplusplus
 };
-#endif
 
+#endif
 using std::string;
+
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include <pistache/http.h>
 
 struct config_struct {
-    int audio_bitrate;
-    int video_bitrate;
-    int fps;
-    int width;
-    int height;
+	int audio_bitrate;
+	int video_bitrate;
+	int fps;
+	int width;
+	int height;
+	string source;
+	string sink;
+	string acodec;
+	string vcodec;
+	string path;
 };
-void configure_pipeline(Elements &e, string source, string path, string acodec, string vcodec, Pistache::Http::ResponseWriter &resp, config_struct conf);
 
+void configure_pipeline(Elements &e, Pistache::Http::ResponseWriter &resp, config_struct conf);
 
 
 #endif //ODZGVISIONSYSTEM_CONFIG_GENERATOR_HH
