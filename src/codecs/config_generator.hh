@@ -23,7 +23,7 @@ using std::string;
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include <pistache/http.h>
-
+#include <gst/pbutils/pbutils.h>
 struct config_struct {
 	int audio_bitrate;
 	int video_bitrate;
@@ -42,6 +42,5 @@ struct config_struct {
 };
 
 void configure_pipeline(Elements &e, config_struct *conf);
-
 
 #endif //ODZGVISIONSYSTEM_CONFIG_GENERATOR_HH
