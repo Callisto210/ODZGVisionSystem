@@ -77,7 +77,7 @@ void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct c
         source_gst, acodec_gst, vcodec_gst, sink_gst);
 
 
-    e.pipeline = gst_pipeline_new("pipeline");
+    e.pipeline = gst_pipeline_new(conf.random.c_str());
 
     if (!acodec_gst.empty()) {
 	    e.aconvert = gst_element_factory_make("audioconvert", "aconvert");
@@ -197,17 +197,25 @@ void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct c
     	e.sink = gst_element_factory_make(sink_gst.c_str(), "sink");
 	if (e.sink != nullptr) {
 	    if (strncmp("filesink", sink_gst.c_str(), 4) == 0) {
-		g_object_set (e.sink, "location", "transcoded.webm", NULL);
+	    	if(!conf.location.empty())
+			g_object_set (e.sink, "location", conf.location.c_str(), NULL);
 	    }
 	    if (strncmp("udpsink", sink_gst.c_str(), 3) == 0) {
-		g_object_set (e.sink, "host", "127.0.0.1", NULL);
-		g_object_set (e.sink, "port", 8080, NULL);
+	    	if(!conf.host.empty())
+			g_object_set (e.sink, "host", conf.host.c_str(), NULL);
+		if(conf.port != -1)
+			g_object_set (e.sink, "port", conf.port, NULL);
 	    }
 	    if (strncmp("shout2send", sink_gst.c_str(), 7) == 0) {
 		g_object_set (e.sink, "ip", "127.0.0.1", NULL);
 		g_object_set (e.sink, "port", 8000, NULL);
 		g_object_set (e.sink, "password", "ala123", NULL);
-		g_object_set (e.sink, "mount", "/stream.webm", NULL);
+		if (!conf.random.empty()) {
+			string loc("/");
+			loc += conf.random;
+			loc += ".webm";
+			g_object_set (e.sink, "mount", loc.c_str(), NULL);
+		}
 	    }
 	    gst_bin_add(GST_BIN(e.pipeline), e.sink);
 	}

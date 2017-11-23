@@ -54,6 +54,7 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
     conf.video_bitrate = -1;
     conf.width = -1;
     conf.height = -1;
+    conf.port = -1;
 
     try {
         doc.Parse(config.c_str());
@@ -65,6 +66,15 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 		}
 		else {
 		    conf.fps = std::atoi(doc["fps"].GetString());
+		}
+	}
+
+        if(doc.HasMember("port")) {
+		if(doc["port"].IsInt()) {
+		    conf.port = doc["port"].GetInt();
+		}
+		else {
+		    conf.port = std::atoi(doc["port"].GetString());
 		}
 	}
 
@@ -109,6 +119,25 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 			conf.height = doc["height"].GetInt();
 		else
 			conf.height = std::atoi(doc["height"].GetString());
+	}
+
+	if(doc.HasMember("host")) {
+		if(doc["host"].IsString())
+        		conf.host = doc["host"].GetString();
+	}
+
+	if(doc.HasMember("location")) {
+		if(doc["location"].IsString())
+        		conf.location = doc["location"].GetString();
+	}
+
+	if(doc.HasMember("random")) {
+		if(doc["random"].IsString())
+        		conf.random = doc["random"].GetString();
+	}
+	if (conf.random.empty()) {	
+		response.send(Http::Code::Bad_Request);
+		return;
 	}
 	response.send(Http::Code::Ok);
         configure_pipeline(e, response, conf);

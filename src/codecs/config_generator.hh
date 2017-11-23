@@ -30,11 +30,15 @@ struct config_struct {
 	int fps;
 	int width;
 	int height;
+	int port;
+	string random;
 	string source;
 	string sink;
 	string acodec;
 	string vcodec;
 	string path;
+	string host;
+	string location;
 };
 
 void configure_pipeline(Elements &e, Pistache::Http::ResponseWriter &resp, config_struct conf);
