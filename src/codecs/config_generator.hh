@@ -44,12 +44,13 @@ struct pads_struct {
 	rapidjson::Document::AllocatorType *alloc;
 	rapidjson::Value *audio;
 	rapidjson::Value *video;
+    rapidjson::Value *obj;
 	int videon;
 	int audion;
 };
 
 void configure_pipeline(Elements &e, Pistache::Http::ResponseWriter &resp, config_struct conf);
-static void print_tag_foreach (const GstTagList *tags, const gchar *tag, rapidjson::Value *data);
+static void print_tag_foreach (const GstTagList *tags, const gchar *tag, gpointer data);
 static void print_stream_info (GstDiscovererStreamInfo *info, gint depth,pads_struct *data);
 static void print_topology (GstDiscovererStreamInfo *info, gint depth,pads_struct *data);
 static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, pads_struct *data);
