@@ -108,10 +108,7 @@ void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct c
 	pads_struct data;
     GError *err = NULL;
     memset (&data, 0, sizeof (data));
-    //data.videon = 0;
-    //data.audion = 0;
     data.response = &resp;
-    g_print ("Discovering '%s'\n", conf.path.c_str());
     data.discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
     if (!data.discoverer) {
         g_print ("Error creating discoverer instance: %s\n", err->message);
@@ -506,9 +503,6 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     data->doc->AddMember(data_count, obj , *data->alloc);
     data->doc->AddMember(audio, *data->audio, *data->alloc);
     data->doc->AddMember(video, *data->video, *data->alloc);
-
-
-    g_print ("\n");
 }
 
 /* This function is called when the discoverer has finished examining
