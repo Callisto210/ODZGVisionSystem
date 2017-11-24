@@ -110,7 +110,7 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 		else
 			conf.height = std::atoi(doc["height"].GetString());
 	}
-	response.send(Http::Code::Ok);
+	//response.send(Http::Code::Ok);
         configure_pipeline(e, response, conf);
         magic(e, WEBM_MUX);
     }catch(...) {

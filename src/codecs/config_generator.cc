@@ -107,9 +107,10 @@ void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct c
 	/* Get info about streams */
 	pads_struct data;
     GError *err = NULL;
-    //memset (&data, 0, sizeof (data));
-    data.videon = 0;
-    data.audion = 0;
+    memset (&data, 0, sizeof (data));
+    //data.videon = 0;
+    //data.audion = 0;
+    data.response = &resp;
     g_print ("Discovering '%s'\n", conf.path.c_str());
     data.discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
     if (!data.discoverer) {
@@ -137,7 +138,7 @@ void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct c
     /* Free resources */
     g_object_unref (data.discoverer);
     g_main_loop_unref (data.loop);
-//	s.response = new Http::ResponseWriter(resp);
+
 //	//s.e = &e;
 //
 //	GstBus *bus = gst_element_get_bus(e.pipeline);
@@ -323,14 +324,13 @@ no_more_pads_cb (GstElement *e, pads_struct *ptr)
 /* Print information regarding a stream */
 static void print_stream_info (GstDiscovererStreamInfo *info, gint depth,pads_struct *data) {
     gchar *desc = NULL;
-    gchar *streamid = NULL;
+
     GstCaps *caps;
     const GstTagList *tags;
-    Value *push;
+    //Value *push;
     Value obj(kObjectType);
     caps = gst_discoverer_stream_info_get_caps (info);
 
-    Document::AllocatorType& alloc = data->doc->GetAllocator();
     if (caps) {
         if (gst_caps_is_fixed (caps))
             desc = gst_pb_utils_get_codec_description (caps);
@@ -339,67 +339,43 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth,pads_st
         gst_caps_unref (caps);
     }
     if(g_strcmp0("audio",gst_discoverer_stream_info_get_stream_type_nick (info))==0){
-        g_print("1\n");
         Value str;
         Value name;
         name.SetString(StringRef("codec"));
-        push = data->audio;
-        char buffer[40];
-        int len = sprintf(buffer, "%s", data->audion); // dynamically created string.
-        g_print("2\n");
-       // if(desc) {
+        //push = data->audio;
         if(desc)
             str.SetString(StringRef(g_str_to_ascii(desc, NULL)));
         else
             str.SetString(StringRef(g_str_to_ascii("", NULL)));
-        g_print("3\n");
-     //   } else{
-      //      str.SetString("",alloc);
-     //   }
-
-        obj.AddMember(name, str, alloc);
+        obj.AddMember(name, str, *data->alloc);
         name.SetString(StringRef("streamid"));
         str.SetString(StringRef(g_str_to_ascii(gst_discoverer_stream_info_get_stream_id(info),NULL)));
-        obj.AddMember(name,str,alloc);
-        g_print("4\n");
+        obj.AddMember(name,str,*data->alloc);
 
-        //data->audio->AddMember(Value(buffer,len, *data->alloc), obj, *data->alloc);
         data->audio->PushBack(obj,*data->alloc);
         data->audion++;
-        g_print("5\n");
 
     }
     if(g_strcmp0("video",gst_discoverer_stream_info_get_stream_type_nick (info))==0){
-        char buffer[40];
-        int len = sprintf(buffer, "%s", data->videon); // dynamically created string.
-        g_print("6\n");
-        push = data->video;
+        //push = data->video;
         Value str;
 
         Value name;
-     //   if(desc) {
         if(desc)
             str.SetString(StringRef(g_str_to_ascii(desc, NULL)));
         else
             str.SetString(StringRef(g_str_to_ascii("", NULL)));
-        g_print("7\n");
-        //} else{
-       //     str.SetString("",alloc);
-     //   }
+
         name.SetString(StringRef("codec"));
-        g_print("8\n");
-        obj.AddMember(name, str, alloc);
-        g_print("9\n");
+        obj.AddMember(name, str, *data->alloc);
         name.SetString(StringRef("streamid"));
         str.SetString(StringRef(g_str_to_ascii(gst_discoverer_stream_info_get_stream_id(info),NULL)));
-        obj.AddMember(name, str, alloc);
-        //data->video->AddMember(Value(buffer,len, *data->alloc), obj, *data->alloc);
+        obj.AddMember(name, str, *data->alloc);
         data->video->PushBack(obj,*data->alloc);
         data->videon++;
-        g_print("10\n");
 
     }
-    g_print ("%*s%s: %s\n", 2 * depth, " ", gst_discoverer_stream_info_get_stream_type_nick (info), (desc ? desc : ""));
+    //g_print ("%*s%s: %s\n", 2 * depth, " ", gst_discoverer_stream_info_get_stream_type_nick (info), (desc ? desc : ""));
 
     if (desc) {
         g_free (desc);
@@ -446,18 +422,15 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     GstDiscovererStreamInfo *sinfo;
     data->doc = new Document;
     data->doc->SetObject();
-    g_print("HeRe");
     data->alloc = &(*data->doc).GetAllocator();
-    g_print("Tutaj");
+
 
 
     data->audio = new Value;
     data->video = new Value;
     data->audio->SetArray();
     data->video->SetArray();
-//    Document doc;
-//    Document::AllocatorType& alloc = doc.GetAllocator();
-//    doc.SetObject();
+
     uri = gst_discoverer_info_get_uri (info);
     result = gst_discoverer_info_get_result (info);
     switch (result) {
@@ -496,7 +469,7 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 
     /* If we got no error, show the retrieved information */
 
-    g_print ("\nDuration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
+//    g_print ("\nDuration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
 //    tags = gst_discoverer_info_get_tags (info);
 //    if (tags) {
@@ -504,15 +477,15 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 //        gst_tag_list_foreach (tags, print_tag_foreach, GINT_TO_POINTER (1));
 //    }
 
-    g_print ("Seekable: %s\n", (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
+ //   g_print ("Seekable: %s\n", (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
 
-    g_print ("\n");
+ //   g_print ("\n");
 
     sinfo = gst_discoverer_info_get_stream_info (info);
     if (!sinfo)
         return;
 
-    g_print ("Stream information:\n");
+//    g_print ("Stream information:\n");
 
     print_topology (sinfo, 1,data);
 
@@ -528,22 +501,12 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     audio.SetString(StringRef("audio"),*data->alloc);
     Value video ;
     video.SetString(StringRef("video"),*data->alloc);
-    g_print("11\n");
     obj.AddMember(audio_n, Value(data->audion), *data->alloc);
-    g_print("12\n");
     obj.AddMember(video_n, Value(data->videon), *data->alloc);
-    g_print("13\n");
     data->doc->AddMember(data_count, obj , *data->alloc);
-    g_print("14\n");
     data->doc->AddMember(audio, *data->audio, *data->alloc);
-    g_print("15\n");
     data->doc->AddMember(video, *data->video, *data->alloc);
-    g_print("16\n");
 
-    StringBuffer strbuf;
-    Writer<StringBuffer> writer(strbuf);
-    data->doc->Accept(writer);
-    g_print("%s\n", strbuf.GetString());
 
     g_print ("\n");
 }
@@ -552,6 +515,10 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
  * all the URIs we provided.*/
 static void on_finished_cb (GstDiscoverer *discoverer, pads_struct *data) {
     g_print ("Finished discovering\n");
-
+    StringBuffer strbuf;
+    Writer<StringBuffer> writer(strbuf);
+    data->doc->Accept(writer);
+    g_print("%s\n", strbuf.GetString());
+    data->response->send(Http::Code::Ok, strbuf.GetString());
     g_main_loop_quit (data->loop);
 }
