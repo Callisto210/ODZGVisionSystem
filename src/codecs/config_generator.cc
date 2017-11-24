@@ -107,7 +107,9 @@ void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct c
 	/* Get info about streams */
 	pads_struct data;
     GError *err = NULL;
-    memset (&data, 0, sizeof (data));
+    //memset (&data, 0, sizeof (data));
+    data.videon = 0;
+    data.audion = 0;
     g_print ("Discovering '%s'\n", conf.path.c_str());
     data.discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
     if (!data.discoverer) {
@@ -281,9 +283,10 @@ no_more_pads_cb (GstElement *e, pads_struct *ptr)
 		gchar *pad_stream_id = GST_PAD_NAME(pad);
 		Value obj(kObjectType);
 		Value str(kObjectType);
-
+        Value str2(kObjectType);
 		str.SetString(pad_stream_id, alloc);
-		obj.AddMember("name", str, alloc);//(char *)pad_stream_id);
+        str2.SetString("name",alloc);
+		obj.AddMember(str2, str, alloc);//(char *)pad_stream_id);
 
 		array.PushBack(obj, alloc);
 		g_free(pad_stream_id);
@@ -291,7 +294,7 @@ no_more_pads_cb (GstElement *e, pads_struct *ptr)
 	g_value_unset(&item);
 	gst_iterator_free(pads_iter);
 
-	doc.AddMember("streams", array, alloc);
+	ptr->doc->AddMember("streams", array, alloc);
 
 	StringBuffer strbuf;
 	Writer<StringBuffer> writer(strbuf);
@@ -299,31 +302,35 @@ no_more_pads_cb (GstElement *e, pads_struct *ptr)
 	g_print("%s\n", strbuf.GetString());
 	ptr->response->send(Http::Code::Ok, strbuf.GetString());
 }
-static void print_tag_foreach (const GstTagList *tags, const gchar *tag, gpointer user_data) {
-    GValue val = { 0, };
-    gchar *str;
-    gint depth = GPOINTER_TO_INT (user_data);
-
-    gst_tag_list_copy_value (&val, tags, tag);
-
-    if (G_VALUE_HOLDS_STRING (&val))
-        str = g_value_dup_string (&val);
-    else
-        str = gst_value_serialize (&val);
-
-    g_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
-    g_free (str);
-
-    g_value_unset (&val);
-}
+//static void print_tag_foreach (const GstTagList *tags, const gchar *tag, Value *data) {
+//    GValue val = { 0, };
+//    gchar *str;
+//    //gint depth = GPOINTER_TO_INT (user_data);
+//
+//    gst_tag_list_copy_value (&val, tags, tag);
+//
+//    if (G_VALUE_HOLDS_STRING (&val))
+//        str = g_value_dup_string (&val);
+//    else
+//        str = gst_value_serialize (&val);
+//    if(g_strcmp0("bitrate",gst_discoverer_stream_info_get_stream_type_nick (info))==0)
+//    g_print ("%*s%s: %s\n", 2 * 2, " ", gst_tag_get_nick (tag), str);
+//    g_free (str);
+//
+//    g_value_unset (&val);
+//}
 
 /* Print information regarding a stream */
 static void print_stream_info (GstDiscovererStreamInfo *info, gint depth,pads_struct *data) {
     gchar *desc = NULL;
+    gchar *streamid = NULL;
     GstCaps *caps;
     const GstTagList *tags;
+    Value *push;
+    Value obj(kObjectType);
     caps = gst_discoverer_stream_info_get_caps (info);
-    Document::AllocatorType& alloc = data->doc.GetAllocator();
+
+    Document::AllocatorType& alloc = data->doc->GetAllocator();
     if (caps) {
         if (gst_caps_is_fixed (caps))
             desc = gst_pb_utils_get_codec_description (caps);
@@ -332,31 +339,64 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth,pads_st
         gst_caps_unref (caps);
     }
     if(g_strcmp0("audio",gst_discoverer_stream_info_get_stream_type_nick (info))==0){
-        Value str(kObjectType);
-        Value obj(kObjectType);
-        Value name(kObjectType);
-        name.SetString("codec", alloc);
-        if(desc) {
-            str.SetString(desc, alloc);
-        } else{
-            str.SetString("",alloc);
-        }
+        g_print("1\n");
+        Value str;
+        Value name;
+        name.SetString(StringRef("codec"));
+        push = data->audio;
+        char buffer[40];
+        int len = sprintf(buffer, "%s", data->audion); // dynamically created string.
+        g_print("2\n");
+       // if(desc) {
+        if(desc)
+            str.SetString(StringRef(g_str_to_ascii(desc, NULL)));
+        else
+            str.SetString(StringRef(g_str_to_ascii("", NULL)));
+        g_print("3\n");
+     //   } else{
+      //      str.SetString("",alloc);
+     //   }
+
         obj.AddMember(name, str, alloc);
-        data->audio.AddMember(Value(data->audion++), obj, alloc);
+        name.SetString(StringRef("streamid"));
+        str.SetString(StringRef(g_str_to_ascii(gst_discoverer_stream_info_get_stream_id(info),NULL)));
+        obj.AddMember(name,str,alloc);
+        g_print("4\n");
+
+        //data->audio->AddMember(Value(buffer,len, *data->alloc), obj, *data->alloc);
+        data->audio->PushBack(obj,*data->alloc);
+        data->audion++;
+        g_print("5\n");
 
     }
     if(g_strcmp0("video",gst_discoverer_stream_info_get_stream_type_nick (info))==0){
-        Value str(kObjectType);
-        Value obj(kObjectType);
-        Value name(kObjectType);
-        if(desc) {
-            str.SetString(desc, alloc);
-        } else{
-            str.SetString("",alloc);
-        }
-        name.SetString("codec", alloc);
+        char buffer[40];
+        int len = sprintf(buffer, "%s", data->videon); // dynamically created string.
+        g_print("6\n");
+        push = data->video;
+        Value str;
+
+        Value name;
+     //   if(desc) {
+        if(desc)
+            str.SetString(StringRef(g_str_to_ascii(desc, NULL)));
+        else
+            str.SetString(StringRef(g_str_to_ascii("", NULL)));
+        g_print("7\n");
+        //} else{
+       //     str.SetString("",alloc);
+     //   }
+        name.SetString(StringRef("codec"));
+        g_print("8\n");
         obj.AddMember(name, str, alloc);
-        data->video.AddMember(Value(data->videon++), obj, alloc);
+        g_print("9\n");
+        name.SetString(StringRef("streamid"));
+        str.SetString(StringRef(g_str_to_ascii(gst_discoverer_stream_info_get_stream_id(info),NULL)));
+        obj.AddMember(name, str, alloc);
+        //data->video->AddMember(Value(buffer,len, *data->alloc), obj, *data->alloc);
+        data->video->PushBack(obj,*data->alloc);
+        data->videon++;
+        g_print("10\n");
 
     }
     g_print ("%*s%s: %s\n", 2 * depth, " ", gst_discoverer_stream_info_get_stream_type_nick (info), (desc ? desc : ""));
@@ -365,12 +405,11 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth,pads_st
         g_free (desc);
         desc = NULL;
     }
-
-    tags = gst_discoverer_stream_info_get_tags (info);
-    if (tags) {
-        g_print ("%*sTags:\n", 2 * (depth + 1), " ");
-        gst_tag_list_foreach (tags, print_tag_foreach, GINT_TO_POINTER (depth + 2));
-    }
+//    tags = gst_discoverer_stream_info_get_tags (info);
+//    if (tags) {
+//        g_print ("%*sTags:\n", 2 * (depth + 1), " ");
+//        gst_tag_list_foreach (tags, print_tag_foreach, &obj);
+//    }
 }
 
 /* Print information regarding a stream and its substreams, if any */
@@ -405,16 +444,17 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     const gchar *uri;
     const GstTagList *tags;
     GstDiscovererStreamInfo *sinfo;
-    Document doc;
+    data->doc = new Document;
+    data->doc->SetObject();
     g_print("HeRe");
-    Document::AllocatorType& alloc = data->doc.GetAllocator();
+    data->alloc = &(*data->doc).GetAllocator();
     g_print("Tutaj");
 
 
-    data->audio = data->audio.SetObject();
-    data->video = data->video.SetObject();
-    data->audion =0 ;
-    data->videon = 0;
+    data->audio = new Value;
+    data->video = new Value;
+    data->audio->SetArray();
+    data->video->SetArray();
 //    Document doc;
 //    Document::AllocatorType& alloc = doc.GetAllocator();
 //    doc.SetObject();
@@ -479,24 +519,30 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     gst_discoverer_stream_info_unref (sinfo);
     Value obj(kObjectType);
     Value audio_n ;
-    audio_n.SetString("audio_n",alloc);
+    audio_n.SetString(StringRef("audio_n"),*data->alloc);
     Value video_n ;
-    video_n.SetString("video_n",alloc);
+    video_n.SetString(StringRef("video_n"),*data->alloc);
     Value data_count ;
-    data_count.SetString("data_count",alloc);
+    data_count.SetString(StringRef("data_count"),*data->alloc);
     Value audio ;
-    audio_n.SetString("audio",alloc);
+    audio.SetString(StringRef("audio"),*data->alloc);
     Value video ;
-    audio_n.SetString("video",alloc);
-    obj.AddMember(audio_n, Value(data->audion), alloc);
-    obj.AddMember(video_n, Value(data->videon), alloc);
-    data->doc.AddMember(data_count,obj , alloc);
-    data->doc.AddMember(audio, data->audio, alloc);
-    data->doc.AddMember(video, data->video, alloc);
+    video.SetString(StringRef("video"),*data->alloc);
+    g_print("11\n");
+    obj.AddMember(audio_n, Value(data->audion), *data->alloc);
+    g_print("12\n");
+    obj.AddMember(video_n, Value(data->videon), *data->alloc);
+    g_print("13\n");
+    data->doc->AddMember(data_count, obj , *data->alloc);
+    g_print("14\n");
+    data->doc->AddMember(audio, *data->audio, *data->alloc);
+    g_print("15\n");
+    data->doc->AddMember(video, *data->video, *data->alloc);
+    g_print("16\n");
 
     StringBuffer strbuf;
     Writer<StringBuffer> writer(strbuf);
-    data->doc.Accept(writer);
+    data->doc->Accept(writer);
     g_print("%s\n", strbuf.GetString());
 
     g_print ("\n");
