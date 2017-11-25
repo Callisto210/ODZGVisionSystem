@@ -26,9 +26,7 @@
               </button>
               <ul class="dropdown-menu" id="menuList" role="menu">
                 <li><a  id ="text1" href="#" data-toggle="modal"
-                        data-target="#input_stream">Add Input Stream</a></li>
-                <li><a id ="text2"href="#" data-toggle="modal"
-                       data-target="#output_stream">Add Output Stream</a></li>
+                        data-target="#input_stream">Add Streams Parameters</a></li>
                 <li class="divider"></li>
               </ul>
             </div>
@@ -43,19 +41,59 @@
                     <h2 class="text-center">Choose source</h2>
 
                     <div>
-                        <label class="col-lg-2">Sources</label>
-                        <select class="col-lg-9" id="source" requireds>
-                            <option value="" disabled selected style="display:none;">Sources</option>
+                        <label class="col-lg-2">Sink</label>
+                        <select class="col-lg-9" id="sink" requireds>
+                            <option value="" disabled selected style="display:none;">Choose sink</option>
                             <option value="file">File</option>
-                            <option value="socket">Socket</option>
-                            <option value="device">Device</option>
+                            <option value="udp">UDP</option>
+                            <option value="icecast">Icecast</option>
                         </select>
                     </div>
                   <!-- fieldsets -->
                     <div><label class="col-lg-2">Path</label>
                       <input class="col-lg-9" name="file" id="file" required /></div>
 
+                    <div>
+                        <label class="col-lg-2">fps</label>
+                        <input class="col-lg-4" id="fps" type="number"  >
+                    </div>
+                    <div>
+                        <label class="col-lg-2">Width</label>
+                        <input class="col-lg-4" id="width" type="number"  >
+                    </div>
+                    <div>
+                        <label class="col-lg-2">Height</label>
+                        <input class="col-lg-4" id="height" type="number"  >
+                    </div>
+                    <div>
+                        <label class="col-lg-2">Audio bit rate</label>
+                        <input class="col-lg-4" id="audio_bitrate" type="number"  >
+                    </div>
+                    <div>
+                        <label class="col-lg-2" >Audio codec</label>
+                        <select class="col-lg-4" id="acodec" requireds>
+                            <option value="" disabled selected style="display:none;">Choose audio codec</option>
+                            <option value="opus">opus</option>
+                            <option value="aac">aac</option>
+                            <option value="lame">lame</option>
+                            <option value="vorbis">vorbis</option>
+                        </select>
+                    </div>
 
+                    <div>
+                        <label class="col-lg-2">Video bit rate</label>
+                        <input class="col-lg-4" id="video_bitrate" type="number" >
+                    </div>
+                    <div>
+                        <label class="col-lg-2">Video codec</label>
+                        <select class="col-lg-4" id="vcodec" requireds>
+                            <option value="" disabled selected style="display:none;">Choose video codec</option>
+                            <option value="vp8">vp8</option>
+                            <option value="vp9">vp9</option>
+                            <option value="h264">h264</option>
+                            <option value="theora">theora</option>
+                        </select>
+                    </div>
 
               <input type="submit" name="submit" class="submit action-button" value="Submit" />
 
@@ -67,50 +105,6 @@
 
             </div>
 
-            <div class="modal" id="output_stream">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <!-- multistep form -->
-                  <form id="outputform">
-                      <h2 class="fs-title">Choose parameters</h2>
-
-
-                      <div>
-                 <label class="col-lg-2" >Audio codec</label>
-                          <select class="col-lg-4" id="audioCodec" requireds>
-                              <option value="" disabled selected style="display:none;">Choose audio codecs</option>
-                              <option value="opus">opus</option>
-                              <option value="aac">aac</option>
-                              <option value="lame">lame</option>
-                              <option value="vorbis">vorbis</option>
-                          </select>
-                      </div>
-					  <div>
-                          <label class="col-lg-2">Bit rate</label>
-                          <input class="col-lg-4" id="bitRateAudio" type="number"  value="0">
-                      </div>
-               <div>
-                 <label class="col-lg-2">Video codec</label>
-                   <select class="col-lg-4" id="videoCodec" requireds>
-                       <option value="" disabled selected style="display:none;">Choose video codecs</option>
-                       <option value="vp8">vp8</option>
-                       <option value="vp9">vp9</option>
-                       <option value="h264">h264</option>
-                       <option value="theora">theora</option>
-                   </select>                 </div>
-                  <div>
-                    <label class="col-lg-2">Bit rate</label>
-                    <input class="col-lg-4" id="bitRate" type="number" requireds>
-                  </div>
-                      <div>
-                          <label class="col-lg-2">fps</label>
-                          <input class="col-lg-4" id="fps" type="number" requireds>
-                      </div>
-                      <input type="submit" name="submit" class="submit action-button" value="Submit" />
-
-                  </form>
-
-                </div>
               </div>
 
             </div>
@@ -130,8 +124,7 @@
   <script src="../js/SendingStream1.js"></script>
   <script src="../js/handleStream1Form.js"></script>
             <script src="../js/Stream2Data.js"></script>
-            <script src="../js/SendingStream2.js"></script>
-            <script src="../js/handleStream2Form.js"></script>
+
 
   </body>
  
