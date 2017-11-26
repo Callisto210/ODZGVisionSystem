@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" xmlns:display="http://www.w3.org/1999/xhtml">
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -42,7 +42,7 @@
 
                     <div>
                         <label class="col-lg-2">Sink</label>
-                        <select class="col-lg-9" id="sink" requireds>
+                        <select class="col-lg-9" id="sink" required>
                             <option value="" disabled selected style="display:none;">Choose sink</option>
                             <option value="file">File</option>
                             <option value="udp">UDP</option>
@@ -50,9 +50,24 @@
                         </select>
                     </div>
                   <!-- fieldsets -->
-                    <div><label class="col-lg-2">Path</label>
-                      <input class="col-lg-9" name="file" id="file" required /></div>
+                    <div id="file_div" style="display: none;">
+                        <label class="col-lg-2">Path</label>
+                      <input class="col-lg-9" name="file" id="file" />
+                    </div>
 
+                    <div id="udp_div" style="display: none;">
+                        <div>
+                            <label class="col-lg-2">host</label>
+                            <input class="col-lg-4" id="host" type="text"  >
+                        </div>
+                        <div>
+                            <label class="col-lg-2">port</label>
+                            <input class="col-lg-4" id="port" type="number"  >
+                        </div></div>
+                    <div id="icecast_udp" style="display: none;">
+                        <label class="col-lg-2">Ip</label>
+                        <input class="col-lg-9"  type="text" id="ip" />
+                    </div>
                     <div>
                         <label class="col-lg-2">fps</label>
                         <input class="col-lg-4" id="fps" type="number"  >
@@ -71,8 +86,8 @@
                     </div>
                     <div>
                         <label class="col-lg-2" >Audio codec</label>
-                        <select class="col-lg-4" id="acodec" requireds>
-                            <option value="" disabled selected style="display:none;">Choose audio codec</option>
+                        <select class="col-lg-4" id="acodec" required>
+                            <option  disabled selected style="display:none;">Choose audio codec</option>
                             <option value="opus">opus</option>
                             <option value="aac">aac</option>
                             <option value="lame">lame</option>
@@ -86,7 +101,7 @@
                     </div>
                     <div>
                         <label class="col-lg-2">Video codec</label>
-                        <select class="col-lg-4" id="vcodec" requireds>
+                        <select class="col-lg-4" id="vcodec" required>
                             <option value="" disabled selected style="display:none;">Choose video codec</option>
                             <option value="vp8">vp8</option>
                             <option value="vp9">vp9</option>
@@ -123,7 +138,7 @@
   <script src="../js/Stream1Data.js"></script>
   <script src="../js/SendingStream1.js"></script>
   <script src="../js/handleStream1Form.js"></script>
-            <script src="../js/Stream2Data.js"></script>
+            <script src="../js/handleSink.js"></script>
 
 
   </body>
