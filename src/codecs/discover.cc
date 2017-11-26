@@ -104,7 +104,14 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth, pads_s
             desc = gst_caps_to_string (caps);
         gst_caps_unref (caps);
     }
-    if(g_strcmp0("audio",gst_discoverer_stream_info_get_stream_type_nick (info))==0){
+    if(GST_IS_DISCOVERER_AUDIO_INFO(info)){
+        GstDiscovererAudioInfo *ainfo = GST_DISCOVERER_AUDIO_INFO(info);
+        //gchar strss[10];
+
+        //g_print ("%d", gst_discoverer_audio_info_get_bitrate (ainfo) );
+        //g_print(GUINT_TO_POINTER(gst_discoverer_audio_info_get_bitrate (ainfo)));
+        //g_free(strss);
+
         Value str;
         Value name;
         name.SetString(StringRef("audio"));
@@ -112,11 +119,23 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth, pads_s
             str.SetString(StringRef(g_str_to_ascii(desc, NULL)));
         else
             str.SetString(StringRef(g_str_to_ascii("", NULL)));
+        /* Get audio stream parameters */
         obj.AddMember(name, str, *data->alloc);
         name.SetString(StringRef("streamid"));
         str.SetString(StringRef(g_str_to_ascii(gst_discoverer_stream_info_get_stream_id(info),NULL)));
         obj.AddMember(name,str,*data->alloc);
-        data->obj = &obj;
+        name.SetString(StringRef("bitrate"));
+        obj.AddMember(name,Value(gst_discoverer_audio_info_get_bitrate (ainfo)),*data->alloc);
+        name.SetString(StringRef("channels"));
+        obj.AddMember(name,Value(gst_discoverer_audio_info_get_channels (ainfo)),*data->alloc);
+        name.SetString(StringRef("depth"));
+        obj.AddMember(name,Value(gst_discoverer_audio_info_get_depth (ainfo)),*data->alloc);
+        name.SetString(StringRef("max_bitrate"));
+        obj.AddMember(name,Value(gst_discoverer_audio_info_get_max_bitrate (ainfo)),*data->alloc);
+        name.SetString(StringRef("sample_rate"));
+        obj.AddMember(name,Value(gst_discoverer_audio_info_get_sample_rate (ainfo)),*data->alloc);
+        Value tagobj(kObjectType);
+        data->obj = &tagobj;
         data->audion++;
         /* If there are any tags, add them */
         tags = gst_discoverer_stream_info_get_tags (info);
@@ -124,31 +143,56 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth, pads_s
             //g_print ("%*sTags:\n", 2 * (depth + 1), " ");
             gst_tag_list_foreach (tags, print_tag_foreach, (gpointer) data);
         }
-        data->audio->PushBack(*data->obj,*data->alloc);
+        name.SetString(StringRef("tags"));
+        obj.AddMember(name,*data->obj,*data->alloc);
+
+        data->audio->PushBack(obj,*data->alloc);
 
     }
-    if(g_strcmp0("video",gst_discoverer_stream_info_get_stream_type_nick (info))==0){
+    if(GST_IS_DISCOVERER_VIDEO_INFO(info)){
+        GstDiscovererVideoInfo *vinfo = GST_DISCOVERER_VIDEO_INFO(info);
         Value str;
-
         Value name;
         if(desc)
             str.SetString(StringRef(g_str_to_ascii(desc, NULL)));
         else
             str.SetString(StringRef(g_str_to_ascii("", NULL)));
-
+        /* Get video stream parameters */
         name.SetString(StringRef("video"));
         obj.AddMember(name, str, *data->alloc);
         name.SetString(StringRef("streamid"));
         str.SetString(StringRef(g_str_to_ascii(gst_discoverer_stream_info_get_stream_id(info),NULL)));
         obj.AddMember(name, str, *data->alloc);
-        data->obj = &obj;
+        name.SetString(StringRef("bitrate"));
+        obj.AddMember(name,Value(gst_discoverer_video_info_get_bitrate(vinfo)),*data->alloc);
+        name.SetString(StringRef("depth"));
+        obj.AddMember(name,Value(gst_discoverer_video_info_get_depth(vinfo)),*data->alloc);
+        name.SetString(StringRef("height"));
+        obj.AddMember(name,Value(gst_discoverer_video_info_get_height(vinfo)),*data->alloc);
+        name.SetString(StringRef("witdh"));
+        obj.AddMember(name,Value(gst_discoverer_video_info_get_width(vinfo)),*data->alloc);
+        name.SetString(StringRef("max_bitrate"));
+        obj.AddMember(name,Value(gst_discoverer_video_info_get_max_bitrate(vinfo)),*data->alloc);
+        name.SetString(StringRef("fps"));
+        obj.AddMember(name,Value((gfloat)gst_discoverer_video_info_get_framerate_num(vinfo)/(gfloat)gst_discoverer_video_info_get_framerate_denom(vinfo)),*data->alloc);
+//        name.SetString(StringRef("fps_denom"));
+//        obj.AddMember(name,Value(),*data->alloc);
+        name.SetString(StringRef("par_num"));
+        obj.AddMember(name,Value(gst_discoverer_video_info_get_par_denom (vinfo)),*data->alloc);
+        name.SetString(StringRef("par_denom"));
+        obj.AddMember(name,Value(gst_discoverer_video_info_get_par_num (vinfo)),*data->alloc);
+        Value tagobj(kObjectType);
+        data->obj = &tagobj;
         data->videon++;
         tags = gst_discoverer_stream_info_get_tags (info);
         /* If there are any tags, add them */
         if (tags) {
             gst_tag_list_foreach (tags, print_tag_foreach, (gpointer) data);
         }
-        data->video->PushBack(*data->obj,*data->alloc);
+        name.SetString(StringRef("tags"));
+        obj.AddMember(name,*data->obj,*data->alloc);
+
+        data->video->PushBack(obj,*data->alloc);
 
     }
     //g_print ("%*s%s: %s\n", 2 * depth, " ", gst_discoverer_stream_info_get_stream_type_nick (info), (desc ? desc : ""));
