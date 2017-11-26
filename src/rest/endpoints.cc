@@ -1,6 +1,7 @@
 #include "endpoints.hh"
 
 #include <config_generator.hh>
+#include <discover.hh>
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
@@ -37,7 +38,7 @@ void Endpoints::setup_routes() {
 
     Routes::Post(router, "/input", Routes::bind(&Endpoints::put_input_config, this));
     Routes::Get(router, "/home", Routes::bind(&Endpoints::home, this));
-    Routes::Get(router, "/info", Routes::bind(&Endpoints::info, this));
+    Routes::Post(router, "/info", Routes::bind(&Endpoints::discover, this));
 }
 
 void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWriter response) {
@@ -124,9 +125,25 @@ void Endpoints::home(const Rest::Request& request, Http::ResponseWriter response
     response.send(Http::Code::Ok);
 }
 
-void Endpoints::info(const Rest::Request& request, Http::ResponseWriter response) {
-    log_rest->info("GET /info");
-    response.send(Http::Code::Ok, "info");
+void Endpoints::discover(const Rest::Request& request, Http::ResponseWriter response) {
+    auto config = request.body();
+//    log_rest->info("put /config at id: {}", id);
+    log_rest->info("POST: /info -- {}", config);
+    //response.send(Http::Code::Ok, "info");
+    Document doc;
+    string source;
+    string uri;
+
+    try {
+        doc.Parse(config.c_str());
+        source = doc["source"].GetString();
+        uri = doc["uri"].GetString();
+        discover_uri(response,uri,source);
+    }
+    catch (...){
+        log_rest->error("Cannot parse json :<");
+    }
+
 }
 
 
