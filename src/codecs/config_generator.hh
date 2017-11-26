@@ -38,9 +38,10 @@ struct config_struct {
 	string vcodec;
 	string host;
 	string location;
+	string state;
 };
 
-void configure_pipeline(Elements &e, config_struct conf);
+void configure_pipeline(Elements &e, config_struct *conf);
 
 
 #endif //ODZGVISIONSYSTEM_CONFIG_GENERATOR_HH
