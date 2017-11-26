@@ -129,16 +129,13 @@ void Endpoints::discover(const Rest::Request& request, Http::ResponseWriter resp
     auto config = request.body();
 //    log_rest->info("put /config at id: {}", id);
     log_rest->info("POST: /info -- {}", config);
-    //response.send(Http::Code::Ok, "info");
     Document doc;
-    string source;
     string uri;
 
     try {
         doc.Parse(config.c_str());
-        source = doc["source"].GetString();
         uri = doc["uri"].GetString();
-        discover_uri(response,uri,source);
+        discover_uri(response,uri);
     }
     catch (...){
         log_rest->error("Cannot parse json :<");

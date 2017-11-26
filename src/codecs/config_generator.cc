@@ -102,7 +102,7 @@ void configure_pipeline(Elements &e, Http::ResponseWriter &resp, config_struct c
     gst_element_link (e.src, e.decode);
 
     g_object_set (e.src, "location", conf.path.c_str(), nullptr);
-	
+
 
 
     if (!vcodec_gst.empty()) {

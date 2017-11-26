@@ -24,7 +24,7 @@ struct pads_struct {
     int videon;
     int audion;
 };
-void discover_uri(Pistache::Http::ResponseWriter &resp, std::string source, std::string uri);
+void discover_uri(Pistache::Http::ResponseWriter &resp,std::string uri);
 static void print_tag_foreach (const GstTagList *tags, const gchar *tag, gpointer data);
 static void print_stream_info (GstDiscovererStreamInfo *info, gint depth,pads_struct *data);
 static void print_topology (GstDiscovererStreamInfo *info, gint depth,pads_struct *data);

@@ -9,7 +9,7 @@ namespace spd = spdlog;
 
 
 
-void discover_uri(Http::ResponseWriter &resp, string uri, string source){
+void discover_uri(Http::ResponseWriter &resp, string uri){
 
     /* Get info about streams */
     pads_struct data;
@@ -28,14 +28,11 @@ void discover_uri(Http::ResponseWriter &resp, string uri, string source){
         goto exit;
         //return;
     }
+    /* Connecting signals */
     g_signal_connect (data.discoverer, "discovered", G_CALLBACK (on_discovered_cb), &data);
     g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb), &data);
     gst_discoverer_start (data.discoverer);
-    if(strncmp("file", source.c_str(),4)==0){
-        uri.insert(0,"file://");
-    }
     if (!gst_discoverer_discover_uri_async (data.discoverer, uri.c_str())) {
-
         error.SetString(StringRef("Failed to start discovering URI"));
         g_print ("Failed to start discovering URI '%s'\n", uri.c_str());
         g_object_unref (data.discoverer);
@@ -43,6 +40,7 @@ void discover_uri(Http::ResponseWriter &resp, string uri, string source){
         //return;
     }
     data.loop = g_main_loop_new (NULL, FALSE);
+    /* Starting loop, needed to work properly */
     g_main_loop_run (data.loop);
 
     /* Stop the discoverer process */
@@ -54,9 +52,9 @@ void discover_uri(Http::ResponseWriter &resp, string uri, string source){
     return;
 
     exit:
-    Value errors;
-    errors.SetString(StringRef("error"));
-    data.doc->AddMember(errors, error, *data.alloc);
+    Value errorsmsg;
+    errorsmsg.SetString(StringRef("error"));
+    data.doc->AddMember(errorsmsg, error, *data.alloc);
     StringBuffer strbuf;
     Writer<StringBuffer> writer(strbuf);
     data.doc->Accept(writer);
@@ -65,6 +63,7 @@ void discover_uri(Http::ResponseWriter &resp, string uri, string source){
 
 }
 static void print_tag_foreach (const GstTagList *tags, const gchar *tag, gpointer data) {
+    /* Add tags to doc, name taken form tags */
     GValue val = { 0, };
     gchar *str;
     //gint depth = GPOINTER_TO_INT (user_data);
@@ -76,11 +75,11 @@ static void print_tag_foreach (const GstTagList *tags, const gchar *tag, gpointe
         str = g_value_dup_string (&val);
     else
         str = gst_value_serialize (&val);
-    Value bit;
-    bit.SetString(StringRef(g_str_to_ascii(gst_tag_get_nick (tag),NULL)));
-    Value rate;
-    rate.SetString(StringRef(g_str_to_ascii(str,NULL)));
-    datas->obj->AddMember(bit,rate,*datas->alloc);
+    Value name;
+    name.SetString(StringRef(g_str_to_ascii(gst_tag_get_nick (tag),NULL)));
+    Value msg;
+    msg.SetString(StringRef(g_str_to_ascii(str,NULL)));
+    datas->obj->AddMember(name,msg,*datas->alloc);
 
     //g_print ("%*s%s: %s\n", 2 * 2, " ", gst_tag_get_nick (tag), str);
     g_free (str);
@@ -90,6 +89,7 @@ static void print_tag_foreach (const GstTagList *tags, const gchar *tag, gpointe
 
 /* Print information regarding a stream */
 static void print_stream_info (GstDiscovererStreamInfo *info, gint depth, pads_struct *data) {
+    /* Add stream information to json if it's audio or video */
     gchar *desc = NULL;
 
     GstCaps *caps;
@@ -117,8 +117,8 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth, pads_s
         str.SetString(StringRef(g_str_to_ascii(gst_discoverer_stream_info_get_stream_id(info),NULL)));
         obj.AddMember(name,str,*data->alloc);
         data->obj = &obj;
-        //data->audio->PushBack(obj,*data->alloc);
         data->audion++;
+        /* If there are any tags, add them */
         tags = gst_discoverer_stream_info_get_tags (info);
         if (tags) {
             //g_print ("%*sTags:\n", 2 * (depth + 1), " ");
@@ -142,9 +142,9 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth, pads_s
         str.SetString(StringRef(g_str_to_ascii(gst_discoverer_stream_info_get_stream_id(info),NULL)));
         obj.AddMember(name, str, *data->alloc);
         data->obj = &obj;
-        //data->video->PushBack(obj,*data->alloc);
         data->videon++;
         tags = gst_discoverer_stream_info_get_tags (info);
+        /* If there are any tags, add them */
         if (tags) {
             gst_tag_list_foreach (tags, print_tag_foreach, (gpointer) data);
         }
@@ -160,7 +160,7 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth, pads_s
 
 }
 
-/* Print information regarding a stream and its substreams, if any */
+/* Add information regarding a stream and its substreams, if any */
 static void print_topology (GstDiscovererStreamInfo *info, gint depth,pads_struct *data) {
     GstDiscovererStreamInfo *next;
 
@@ -226,7 +226,6 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 
             s = gst_discoverer_info_get_misc (info);
             str = gst_structure_to_string (s);
-            //g_strconcat()
             g_print ("Missing plugins: %s\n", str);
             errors.SetString(StringRef(g_strconcat("Missing plugins ", str, NULL)));
             g_free (str);
@@ -250,7 +249,7 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 
     g_print ("Duration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
-    tags = gst_discoverer_info_get_tags (info);
+//    tags = gst_discoverer_info_get_tags (info);
 //    Value tag(kObjectType);
 //    if (tags) {
 //        //g_print ("Tags:\n");
