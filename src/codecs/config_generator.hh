@@ -32,11 +32,10 @@ struct config_struct {
 	int height;
 	int port;
 	string random;
-	string source;
+	string uri;
 	string sink;
 	string acodec;
 	string vcodec;
-	string path;
 	string host;
 	string location;
 };

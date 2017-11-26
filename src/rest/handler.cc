@@ -14,8 +14,12 @@ void streaming_handler::operator()() {
 
     try {
         doc.Parse(config.c_str());
-        conf.source = doc["source"].GetString();
-        conf.path = doc["path"].GetString();
+
+	if(doc.HasMember("uri")) {
+		if(doc["uri"].IsString())
+        		conf.uri = doc["uri"].GetString();
+	}
+
         if(doc.HasMember("fps")) {
 		if(doc["fps"].IsInt()) {
 		    conf.fps = doc["fps"].GetInt();
@@ -91,7 +95,7 @@ void streaming_handler::operator()() {
 		if(doc["random"].IsString())
         		conf.random = doc["random"].GetString();
 	}
-	if (conf.random.empty()) {	
+	if (conf.random.empty() || conf.uri.empty()) {	
 		return;
 	}
         configure_pipeline(e, conf);

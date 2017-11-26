@@ -15,7 +15,6 @@ gboolean autoplug_continue_cb(GstBin *bin, GstPad *pad,
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _elements {
     GstElement *pipeline;
-    GstElement *src;
     GstElement *decode;
 
     GstElement *aconvert;

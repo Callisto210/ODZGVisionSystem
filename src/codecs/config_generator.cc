@@ -35,10 +35,6 @@ static map<string, string> vcodec_map = {
 	{"theora", "theoraenc"}
 };
 
-static map <string, string> source_map = {
-        {"file", "filesrc"}
-};
-
 static map <string, string> sink_map = {
         {"file", "filesink"},
 	{"udp", "udpsink"},
@@ -69,12 +65,11 @@ void configure_pipeline(Elements &e, config_struct conf)
 
     string acodec_gst = acodec_map[conf.acodec];
     string vcodec_gst = vcodec_map[conf.vcodec];
-    string source_gst = source_map[conf.source];
     string sink_gst = sink_map[conf.sink];
 
 
-    log_config->debug("Elements opts: source: {} acodec: {} vcodec: {} sink: {}",
-        source_gst, acodec_gst, vcodec_gst, sink_gst);
+    log_config->debug("Elements opts: acodec: {} vcodec: {} sink: {}",
+        acodec_gst, vcodec_gst, sink_gst);
 
 
     e.pipeline = gst_pipeline_new(conf.random.c_str());
@@ -96,14 +91,10 @@ void configure_pipeline(Elements &e, config_struct conf)
 			     NULL);
     }
 
-    e.src = gst_element_factory_make(source_gst.c_str(), "filesource");
-    gst_bin_add(GST_BIN(e.pipeline), e.src);
-    e.decode = gst_element_factory_make("decodebin", "source");
+    e.decode = gst_element_factory_make("uridecodebin", "source");
     gst_bin_add(GST_BIN(e.pipeline), e.decode);
     
-    gst_element_link (e.src, e.decode);
-
-    g_object_set (e.src, "location", conf.path.c_str(), nullptr);
+    g_object_set (e.decode, "uri", conf.uri.c_str(), nullptr);
 
 #if 0
 	/* Get info about streams */

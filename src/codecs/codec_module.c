@@ -216,9 +216,7 @@ int elements_has_null_field(Elements* data)
 	char *reason = NULL;
 
 	if(data != NULL)
-	if(!data->src)
-		reason = "source";
-	else if(!data->decode)
+	if(!data->decode)
 		reason = "decode";
 	else if(!data->aconvert)
 		goto skip_audio;
