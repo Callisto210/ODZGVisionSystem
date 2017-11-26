@@ -18,5 +18,6 @@ target_link_libraries(Main
         pthread 
         ${GST_PKG_LDFLAGS}
         ${jsmn}
+	gstpbutils-1.0
         )
 install(TARGETS Main RUNTIME DESTINATION bin)
