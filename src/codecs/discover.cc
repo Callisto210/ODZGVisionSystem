@@ -272,6 +272,15 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
             str = gst_structure_to_string (s);
             g_print ("Missing plugins: %s\n", str);
             errors.SetString(StringRef(g_strconcat("Missing plugins ", str, NULL)));
+            gint i = 0;
+            const gchar **installer_details =
+                    gst_discoverer_info_get_missing_elements_installer_details (info);
+
+            while (installer_details[i]) {
+                g_print(" (%s)\n", installer_details[i]);
+
+                i++;
+            }
             g_free (str);
             break;
         }
@@ -291,7 +300,7 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 
     /* If we got no error, show the retrieved information */
 
-    g_print ("Duration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
+//    g_print ("Duration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
 //    tags = gst_discoverer_info_get_tags (info);
 //    Value tag(kObjectType);
