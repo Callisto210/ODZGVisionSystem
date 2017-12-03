@@ -366,7 +366,9 @@ int elements_has_null_field(Elements* data)
 {
 	char *reason = NULL;
     int null_count = 0;
-    if(data != NULL) {
+    if(data == NULL)
+        return (1);
+
     if(!data->src) {
         print_null_element("src");
         null_count++;
@@ -392,6 +394,7 @@ int elements_has_null_field(Elements* data)
     if(!data->vconvert) {
         print_null_element("vconvert");
         null_count++;
+    }
     if(!data->vqueue) {
         print_null_element("vqueue");
         null_count++;
@@ -406,8 +409,8 @@ int elements_has_null_field(Elements* data)
         print_null_element("sink");
         null_count++;
     }
-	if(reason) {
-		g_print("%s element can't be created\n", reason);
+    if(null_count) {
+        //g_print("%s element can't be created\n", reason);
 		return (1);
 	}
 	else
