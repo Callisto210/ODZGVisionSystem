@@ -12,7 +12,6 @@ SendingStream1 = function (SendStream1) {
     console.log(SendStream1);
     $.ajax({
         url: "/data/html/index.html",
-		//"http://localhost:8090/input",
         type: 'POST',
         contentType: "application/json",
         data: JSON.stringify(SendStream1),
@@ -22,3 +21,4 @@ SendingStream1 = function (SendStream1) {
 
 
 }
+

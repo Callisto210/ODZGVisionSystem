@@ -5,3 +5,4 @@ main
 cmake-build*/
 .idea/
 *.bak/
+*/.idea/
