@@ -1,5 +1,6 @@
 var Stream1Data= function () {
 
+    this.uri=$('#uri').val();
     this.type=$('#sink').val();
     if ( $('#file').val()!==""){this.path= $("#file").val()}
     if ( $("#host").val()!==""){this.host= $("#host").val()}

@@ -38,12 +38,13 @@
               <div class="modal-content">
                 <!-- multistep form -->
                 <form id="msform">
-                    <h2 class="text-center">Choose source</h2>
-
+                    <h2 class="text-center">FILL THE FORM</h2>
+                    <div><label class="col-lg-2">URI</label>
+                        <input class="col-lg-9" id="uri" name="uri" type="text" required /></div>
                     <div>
                         <label class="col-lg-2">Sink</label>
                         <select class="col-lg-9" id="sink" required>
-                            <option value="" disabled selected style="display:none;">Choose sink</option>
+                            <option value="" disabled selected style="display:none;">Choose SINK</option>
                             <option value="file">File</option>
                             <option value="udp">UDP</option>
                             <option value="icecast">Icecast</option>
@@ -70,19 +71,19 @@
                     </div>
                     <div>
                         <label class="col-lg-2">fps</label>
-                        <input class="col-lg-4" id="fps" type="number"  >
+                        <input class="col-lg-4" id="fps" type="number" min="1"  >
                     </div>
                     <div>
                         <label class="col-lg-2">Width</label>
-                        <input class="col-lg-4" id="width" type="number"  >
+                        <input class="col-lg-4" id="width" type="number" min="1"  >
                     </div>
                     <div>
                         <label class="col-lg-2">Height</label>
-                        <input class="col-lg-4" id="height" type="number"  >
+                        <input class="col-lg-4" id="height" type="number" min="1"  >
                     </div>
                     <div>
                         <label class="col-lg-2">Audio bit rate</label>
-                        <input class="col-lg-4" id="audio_bitrate" type="number"  >
+                        <input class="col-lg-4" id="audio_bitrate" type="number" min="1" >
                     </div>
                     <div>
                         <label class="col-lg-2" >Audio codec</label>
@@ -97,7 +98,7 @@
 
                     <div>
                         <label class="col-lg-2">Video bit rate</label>
-                        <input class="col-lg-4" id="video_bitrate" type="number" >
+                        <input class="col-lg-4" id="video_bitrate" type="number" min="1">
                     </div>
                     <div>
                         <label class="col-lg-2">Video codec</label>
@@ -156,6 +157,7 @@
   <script src="../js/Stream1Data.js"></script>
   <script src="../js/SendingStream1.js"></script>
   <script src="../js/handleStream1Form.js"></script>
+            <script src="../js/handleCodec.js"></script>
             <script src="../js/handleSink.js"></script>
 
 
