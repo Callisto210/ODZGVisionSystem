@@ -3,7 +3,7 @@ handleSink =$(document).ready(function () {
         if( $('#sink').val()=="file"){
             clean();
             $('#file_div').show();
-            $("#file").prop('required',true);
+            $("#loaction").prop('required',true);
 
         }
         if( $('#sink').val()=="udp"){
@@ -23,7 +23,7 @@ handleSink =$(document).ready(function () {
 });
 
 function clean() {
-    $("#file").val('');
+    $("#location").val('');
     $("#port").val('');
     $("#host").val('');
     $("#ip").val('');
@@ -33,6 +33,6 @@ function clean() {
     $("#port").prop('required',false);
     $("#host").prop('required',false);
     $("#ip").prop('required',false);
-    $("#file").prop('required',false);
+    $("#location").prop('required',false);
 
 }

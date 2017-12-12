@@ -1,8 +1,8 @@
 var Stream1Data= function () {
 
     this.uri=$('#uri').val();
-    this.type=$('#sink').val();
-    if ( $('#file').val()!==""){this.path= $("#file").val()}
+    this.sink=$('#sink').val();
+    if ( $('#location').val()!==""){this.location= $("#location").val()}
     if ( $("#host").val()!==""){this.host= $("#host").val()}
     if ( $("#port").val()!==""){this.port= $("#port").val()}
     if ( $("#ip").val()!==""){this.ip= $("#ip").val()}
