@@ -1,4 +1,4 @@
-andleForm =$(document).ready(function () {
+handleForm =$(document).ready(function () {
     $('#msform').submit(function () {
         SendingStream(new StreamData());
         console.log('handle')
