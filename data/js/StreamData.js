@@ -1,4 +1,4 @@
-var Stream1Data= function () {
+var StreamData= function () {
 
     this.uri=$('#uri').val();
     this.sink=$('#sink').val();

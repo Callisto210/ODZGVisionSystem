@@ -10,17 +10,17 @@ onError = function (random) {
    console.log('error');
 }
 
-SendingStream1 = function (Stream1Data) {
+SendingStream = function (StreamData) {
     console.log('ajax');
 
-    console.log(Stream1Data);
+    console.log(StreamData);
     $.ajax({
         url: "/data/html/index.html",
         type: 'POST',
         contentType: "application/json",
-        data: JSON.stringify(Stream1Data),
-        success: onSuccess(Stream1Data.random),
-        error: onError(Stream1Data.random)
+        data: JSON.stringify(StreamData),
+        success: onSuccess(StreamData.random),
+        error: onError(StreamData.random)
     })
 
 }

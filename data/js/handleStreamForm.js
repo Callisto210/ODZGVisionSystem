@@ -1,6 +1,6 @@
-handleForm =$(document).ready(function () {
+andleForm =$(document).ready(function () {
     $('#msform').submit(function () {
-        SendingStream1(new Stream1Data());
+        SendingStream(new StreamData());
         console.log('handle')
         return false;
 

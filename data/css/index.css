@@ -107,12 +107,6 @@ h1 {
     cursor: pointer;
 }
 
-/*.form {*/
-	/*align: center;*/
-	/*bottom: 25%;*/
-	/*left: 25%;*/
-	/*size: 25%;*/
-/*}*/
     #outputform fieldset:not(:first-of-type) {
         display: none;
     }
@@ -187,6 +181,9 @@ h1 {
     color: #666;
     margin-bottom: 20px;
 }
-
+body.(modal fade){
+width: 400px;
+height: 400px;
+}
 
 }
