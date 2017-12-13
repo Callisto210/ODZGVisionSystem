@@ -38,7 +38,7 @@
               <div class="modal-content">
                 <!-- multistep form -->
                 <form id="msform">
-                    <h2 class="text-center">FILL THE FORM</h2>
+                    <h2 class="text-center">ODZGVision FORM</h2>
                     <div><label class="col-lg-2">URI</label>
                         <input class="col-lg-9" id="uri" name="uri" type="text" required /></div>
                     <div>
@@ -63,7 +63,7 @@
                         </div>
                         <div>
                             <label class="col-lg-2">PORT</label>
-                            <input class="col-lg-4" id="port" type="number"  >
+                            <input class="col-lg-4" id="port" type="number" min="1" >
                         </div></div>
                     <div id="icecast_udp" style="display: none;">
                         <label class="col-lg-2">IP</label>
@@ -82,11 +82,11 @@
                         <input class="col-lg-4" id="height" type="number" min="1"  >
                     </div>
                     <div>
-                        <label class="col-lg-2">Audio bit rate</label>
+                        <label class="col-lg-2">AUDIO bit rate</label>
                         <input class="col-lg-4" id="audio_bitrate" type="number" min="1" >
                     </div>
                     <div>
-                        <label class="col-lg-2" >Audio codec</label>
+                        <label class="col-lg-2" >AUDIO codec</label>
                         <select class="col-lg-4" id="acodec" required>
                             <option  disabled selected style="display:none;">Choose audio codec</option>
                             <option value="opus">opus</option>
@@ -97,11 +97,11 @@
                     </div>
 
                     <div>
-                        <label class="col-lg-2">Video bit rate</label>
+                        <label class="col-lg-2">VIDEO bit rate</label>
                         <input class="col-lg-4" id="video_bitrate" type="number" min="1">
                     </div>
                     <div>
-                        <label class="col-lg-2">Video codec</label>
+                        <label class="col-lg-2">VIDEO codec</label>
                         <select class="col-lg-4" id="vcodec" required>
                             <option value="" disabled selected style="display:none;">Choose video codec</option>
                             <option value="vp8">vp8</option>
