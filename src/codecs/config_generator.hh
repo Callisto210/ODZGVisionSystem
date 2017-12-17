@@ -8,15 +8,15 @@
 #include <string>
 #include <vector>
 #include <spdlog/spdlog.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
-#include "codec_module.h"
-#ifdef __cplusplus
-};
+#include "codec_module.hh"
+//#ifdef __cplusplus
+//};
 
-#endif
+//#endif
 using std::string;
 
 #include "rapidjson/stringbuffer.h"
@@ -24,22 +24,6 @@ using std::string;
 #include "rapidjson/writer.h"
 #include <pistache/http.h>
 #include <gst/pbutils/pbutils.h>
-struct config_struct {
-	int audio_bitrate;
-	int video_bitrate;
-	int fps;
-	int width;
-	int height;
-	int port;
-	string random;
-	string uri;
-	string sink;
-	string acodec;
-	string vcodec;
-	string host;
-	string location;
-	string state;
-};
 
 void configure_pipeline(Elements &e, config_struct *conf);
 

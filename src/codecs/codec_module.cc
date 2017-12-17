@@ -1,16 +1,20 @@
+extern "C" {
 #include <gst/gst.h>
 #include <gst/gstbin.h>
+}
 #include "jsmn/jsmn.h"
 #include <string.h>
-#include "codec_module.h"
+#include "codec_module.hh"
 
 #define WEBM
 
-int magic(Elements data, e_mux_t mux_type) {
+int magic(Elements data, e_mux_t mux_type, config_struct conf) {
 	GstBus *bus;
 	GstMessage *msg;
 	GstStateChangeReturn ret;
 	gboolean terminate = FALSE;
+
+	data.ptr = &conf;
 
 	char* mux_str = get_mux_str(mux_type);
 
@@ -102,7 +106,7 @@ int magic(Elements data, e_mux_t mux_type) {
 	bus = gst_element_get_bus (data.pipeline);
 	do {
 		msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
-				GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+				(GstMessageType)(GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS));
 
 		/* Parse message */
 		if (msg != NULL) {
@@ -154,6 +158,7 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	GstCaps *new_pad_caps = NULL;
 	GstStructure *new_pad_struct = NULL;
 	const gchar *new_pad_type = NULL;
+	config_struct *conf = (config_struct *)data->ptr;
 
 	g_print ("Received new pad '%s' from '%s':\n", GST_PAD_NAME (new_pad), GST_ELEMENT_NAME (src));
 

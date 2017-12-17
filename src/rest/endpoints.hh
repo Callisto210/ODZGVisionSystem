@@ -11,9 +11,9 @@
 #include <rapidjson/document.h>
 #include <spdlog/spdlog.h>
 #include <pistache/endpoint.h>
-extern "C" {
-#include "codec_module.h"
-};
+//extern "C" {
+#include "codec_module.hh"
+//};
 //using namespace Net;
 using namespace Pistache;
 namespace spd = spdlog;

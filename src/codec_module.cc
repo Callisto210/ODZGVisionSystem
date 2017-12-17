@@ -4,9 +4,9 @@
 #include <thread>
 #include <vector>
 #include "app_config.hh"
-extern "C" {
-#include "codecs/codec_module.h"
-}
+//extern "C" {
+#include "codecs/codec_module.hh"
+//}
 namespace spd = spdlog;
 using namespace Pistache;
 

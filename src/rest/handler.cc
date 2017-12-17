@@ -51,6 +51,16 @@ void streaming_handler::operator()() {
         		conf->vcodec = doc["vcodec"].GetString();
 	}
 
+	if(doc.HasMember("audio_stream")) {
+		if(doc["audio_stream"].IsString())
+        		conf->audio_stream = doc["audio_stream"].GetString();
+	}
+
+	if(doc.HasMember("video_stream")) {
+		if(doc["video_stream"].IsString())
+        		conf->video_stream = doc["video_stream"].GetString();
+	}
+
 	if(doc.HasMember("sink")) {
 		if(doc["sink"].IsString())
         		conf->sink = doc["sink"].GetString();
@@ -109,7 +119,7 @@ void streaming_handler::operator()() {
 	conf->state = "transcoding";
 	mtx.unlock();
 
-        magic(e, WEBM_MUX);
+        magic(e, WEBM_MUX, *conf);
 
 	mtx.lock();
 	info.erase(conf->random);
