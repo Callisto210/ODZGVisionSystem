@@ -85,6 +85,10 @@
                         <label class="col-lg-2">AUDIO bit rate</label>
                         <input class="col-lg-4" id="audio_bitrate" type="number" min="1" >
                     </div>
+                    <div><label class="col-lg-2">AUDIO stream</label>
+                        <input class="col-lg-9" id="audio_stream" name="audio_stream" type="text" />
+                    </div>
+
                     <div>
                         <label class="col-lg-2" >AUDIO codec</label>
                         <select class="col-lg-4" id="acodec" required>
@@ -95,11 +99,11 @@
                             <option value="vorbis">vorbis</option>
                         </select>
                     </div>
-
                     <div>
                         <label class="col-lg-2">VIDEO bit rate</label>
                         <input class="col-lg-4" id="video_bitrate" type="number" min="1">
                     </div>
+
                     <div>
                         <label class="col-lg-2">VIDEO codec</label>
                         <select class="col-lg-4" id="vcodec" required>
@@ -109,6 +113,9 @@
                             <option value="h264">h264</option>
                             <option value="theora">theora</option>
                         </select>
+                    </div>
+                    <div><label class="col-lg-2">VIDEO stream</label>
+                        <input class="col-lg-9" id="video_stream" name="video_stream" type="text" />
                     </div>
 
               <input type="submit" name="submit" class="submit action-button" value="Submit" />

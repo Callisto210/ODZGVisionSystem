@@ -181,7 +181,7 @@ h1 {
     color: #666;
     margin-bottom: 20px;
 }
-body.(modal fade){
+body.modal-content{
 width: 400px;
 height: 400px;
 }
