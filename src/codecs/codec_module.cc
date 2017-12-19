@@ -158,6 +158,7 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	GstCaps *new_pad_caps = NULL;
 	GstStructure *new_pad_struct = NULL;
 	const gchar *new_pad_type = NULL;
+	const gchar *streamid = NULL;
 	config_struct *conf = (config_struct *)data->ptr;
 
 	g_print ("Received new pad '%s' from '%s':\n", GST_PAD_NAME (new_pad), GST_ELEMENT_NAME (src));
@@ -166,24 +167,28 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	new_pad_caps = gst_pad_query_caps (new_pad, NULL);
 	new_pad_struct = gst_caps_get_structure (new_pad_caps, 0);
 	new_pad_type = gst_structure_get_name (new_pad_struct);
+	streamid = gst_pad_get_stream_id(new_pad);
 	g_print("new_pad_type: %s \n", new_pad_type);
-
-	
+	g_print("streamid: %s \n", streamid);
 
 	if (g_str_has_prefix (new_pad_type, "audio/x-raw")) {
-		if (data->aconvert != NULL)
-			sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
-		else {
-			g_print ("Audio not selected for transcoding. Skip \n");
-			goto exit;
+		if (conf->audio_stream.empty() || conf->audio_stream.compare(streamid) == 0) {
+			if (data->aconvert != NULL)
+				sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
+			else {
+				g_print ("Audio not selected for transcoding. Skip \n");
+				goto exit;
+			}
 		}
 	}
 	else if (g_str_has_prefix (new_pad_type, "video/x-raw")) {
-		if (data->vconvert != NULL)
-			sink_pad = gst_element_get_static_pad (data->vconvert, "sink");
-		else {
-			g_print ("Video not selected for transcoding. Skip \n");
-			goto exit;
+		if (conf->video_stream.empty() || conf->video_stream.compare(streamid) == 0) {
+			if (data->vconvert != NULL)
+				sink_pad = gst_element_get_static_pad (data->vconvert, "sink");
+			else {
+				g_print ("Video not selected for transcoding. Skip \n");
+				goto exit;
+			}
 		}
 	}
 
