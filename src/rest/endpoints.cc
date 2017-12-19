@@ -104,7 +104,9 @@ void Endpoints::setup_routes() {
     Routes::Options(router, "/input", Routes::bind(&Endpoints::input_options, this));
     Routes::Get(router, "/home", Routes::bind(&Endpoints::home, this));
     Routes::Post(router, "/info", Routes::bind(&Endpoints::discover, this));
+    Routes::Options(router, "/info", Routes::bind(&Endpoints::info_options, this));
     Routes::Get(router, "/now_transcoding", Routes::bind(&Endpoints::transcoding, this));
+    Routes::Options(router, "/now_transcoding", Routes::bind(&Endpoints::now_transcoding_options, this));
 }
 
 void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWriter response) {
@@ -124,6 +126,26 @@ void Endpoints::input_options(const Rest::Request &request, Http::ResponseWriter
 	response.headers().add<Http::Header::AccessControlAllowOrigin>(orig.value());
 	response.headers().add<AccessControlAllowHeaders>(headers.value());
 	response.headers().add<AccessControlAllowMethods>("POST");
+	response.send(Http::Code::Ok);
+}
+
+void Endpoints::info_options(const Rest::Request &request, Http::ResponseWriter response) {
+	auto orig = request.headers().getRaw("Origin");
+	auto headers = request.headers().getRaw("Access-Control-Request-Headers");
+	
+	response.headers().add<Http::Header::AccessControlAllowOrigin>(orig.value());
+	response.headers().add<AccessControlAllowHeaders>(headers.value());
+	response.headers().add<AccessControlAllowMethods>("POST");
+	response.send(Http::Code::Ok);
+}
+
+void Endpoints::now_transcoding_options(const Rest::Request &request, Http::ResponseWriter response) {
+	auto orig = request.headers().getRaw("Origin");
+	auto headers = request.headers().getRaw("Access-Control-Request-Headers");
+	
+	response.headers().add<Http::Header::AccessControlAllowOrigin>(orig.value());
+	response.headers().add<AccessControlAllowHeaders>(headers.value());
+	response.headers().add<AccessControlAllowMethods>("GET");
 	response.send(Http::Code::Ok);
 }
 
