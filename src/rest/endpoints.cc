@@ -7,16 +7,78 @@
 #include "rapidjson/writer.h"
 #include <handler.hh>
 
+#include <pistache/net.h>
+#include <pistache/http.h>
+#include <pistache/peer.h>
+#include <pistache/http_headers.h>
+#include <pistache/cookie.h>
+#include <pistache/endpoint.h>
 #include <thread>
 
+using namespace Pistache;
+using namespace Rest;
 using std::string;
 using std::thread;
 using rapidjson::Document;
 //using namespace Net;
 namespace spd = spdlog;
 
+class AccessControlAllowMethods : public Http::Header::Header {
+public:
+
+  NAME("Access-Control-Allow-Methods")
+
+  AccessControlAllowMethods() { }
+
+  AccessControlAllowMethods(const char* methods)
+    : methods_(methods)
+  { }
+
+  AccessControlAllowMethods(const std::string& methods)
+    : methods_(methods)
+  { }
+
+  void parse(const std::string& data) {}
+  void write(std::ostream& os) const {
+  	os << methods_;
+  }
+
+  std::string methods() const { return methods_; }
+
+private:
+  std::string methods_;
+};
+
+class AccessControlAllowHeaders : public Http::Header::Header {
+public:
+
+  NAME("Access-Control-Allow-Headers")
+
+  AccessControlAllowHeaders() { }
+
+  AccessControlAllowHeaders(const char* headers)
+    : headers_(headers)
+  { }
+
+  AccessControlAllowHeaders(const std::string& headers)
+    : headers_(headers)
+  { }
+
+  void parse(const std::string& data) {}
+  void write(std::ostream& os) const {
+  	os << headers_;
+  }
+
+  std::string headers() const { return headers_; }
+
+private:
+  std::string headers_;
+};
+
 void Endpoints::init(size_t threads) {
     log_rest->info("Starting endpoints.");
+    Http::Header::Registry::registerHeader<AccessControlAllowMethods>();
+    Http::Header::Registry::registerHeader<AccessControlAllowHeaders>();
     auto opts = Http::Endpoint::options()
         .threads(threads)
         .flags(Tcp::Options::InstallSignalHandler | Tcp::Options::ReuseAddr);
@@ -37,9 +99,9 @@ void Endpoints::shutdown() {
 
 
 void Endpoints::setup_routes() {
-    using namespace Rest;
 
     Routes::Post(router, "/input", Routes::bind(&Endpoints::put_input_config, this));
+    Routes::Options(router, "/input", Routes::bind(&Endpoints::input_options, this));
     Routes::Get(router, "/home", Routes::bind(&Endpoints::home, this));
     Routes::Post(router, "/info", Routes::bind(&Endpoints::discover, this));
     Routes::Get(router, "/now_transcoding", Routes::bind(&Endpoints::transcoding, this));
@@ -53,6 +115,16 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 	streaming_handler handle_streaming_request(config);
 	thread stream(handle_streaming_request);
 	stream.detach();
+}
+
+void Endpoints::input_options(const Rest::Request &request, Http::ResponseWriter response) {
+	auto orig = request.headers().getRaw("Origin");
+	auto headers = request.headers().getRaw("Access-Control-Request-Headers");
+	
+	response.headers().add<Http::Header::AccessControlAllowOrigin>(orig.value());
+	response.headers().add<AccessControlAllowHeaders>(headers.value());
+	response.headers().add<AccessControlAllowMethods>("POST");
+	response.send(Http::Code::Ok);
 }
 
 void Endpoints::home(const Rest::Request& request, Http::ResponseWriter response) {

@@ -36,6 +36,7 @@ public:
 private:
     void setup_routes();
     void put_input_config(const Rest::Request &request, Http::ResponseWriter response);
+    void input_options(const Rest::Request &request, Http::ResponseWriter response);
     void home(const Rest::Request& request, Http::ResponseWriter response);
     void discover(const Rest::Request& request, Http::ResponseWriter response);
     void transcoding(const Rest::Request& request, Http::ResponseWriter response);
