@@ -352,6 +352,7 @@ static void on_finished_cb (GstDiscoverer *discoverer, pads_struct *data) {
     Writer<StringBuffer> writer(strbuf);
     data->doc->Accept(writer);
     //g_print("%s\n", strbuf.GetString());
+
     if(!data->doc->HasMember("error"))
         data->response->send(Http::Code::Ok, strbuf.GetString());
     else

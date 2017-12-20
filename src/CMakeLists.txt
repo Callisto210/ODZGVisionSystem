@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.1)
 
-file(GLOB MAIN codec_module.cc)
+file(GLOB MAIN codec_modules.cc)
 file(GLOB REST rest/*.cc)
 file(GLOB CODECS_CXX codecs/*.cc)
 file(GLOB CODECS_C codecs/*.c)

@@ -138,6 +138,7 @@ h1 {
         box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
     }
 
+
 #msform fieldset:not(:first-of-type) {
     display: none;
 }
@@ -168,6 +169,8 @@ h1 {
 #msform .action-button:hover, #msform .action-button:focus {
     box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
 }
+
+
 /*headings*/
 .fs-title {
     font-size: 15px;

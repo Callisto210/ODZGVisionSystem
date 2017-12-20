@@ -158,6 +158,8 @@ void Endpoints::discover(const Rest::Request& request, Http::ResponseWriter resp
     auto config = request.body();
 //    log_rest->info("put /config at id: {}", id);
     log_rest->info("POST: /info -- {}", config);
+    auto orig = request.headers().getRaw("Origin");
+    response.headers().add<Http::Header::AccessControlAllowOrigin>(orig.value());
     Document doc;
     string uri;
 
