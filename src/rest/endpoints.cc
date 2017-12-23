@@ -130,12 +130,14 @@ void Endpoints::path(const Rest::Request& request, Http::ResponseWriter response
         doc.Parse(body.data());
         if (doc.HasParseError()) {
             log_rest->warn("Error when parsing path from {}", body);
+            response.send(Http::Code::Bad_Request, "<p>Malformated json file</p>", MIME(Text, Html));
             return;
         }
         if (doc.HasMember("path") && doc["path"].IsString()) {
             pathname = doc["path"].GetString();
             log_rest->debug("Path name {} .", pathname);
         } else {
+            response.send(Http::Code::No_Content, "<h1>No path parameter in Json</h1>",MIME(Text, Html));
             return;
         }
         if (doc.HasMember("ext") && doc["ext"].IsArray()) {
@@ -154,7 +156,8 @@ void Endpoints::path(const Rest::Request& request, Http::ResponseWriter response
         log_rest->debug("Ext list size: {}", ext.size());
     } catch(std::exception& e) {
         log_rest->error(e.what());
-        response.send(Http::Code::Bad_Request, "Malformated json file");
+        response.send(Http::Code::Bad_Request, "Malformated json file", MIME(Text, Html));
+        return;
     }
 
     if (!pathname.empty()) {
