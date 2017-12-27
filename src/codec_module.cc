@@ -8,11 +8,12 @@
 #include "app_config.hh"
 extern "C" {
 #include <gst/gst.h>
-#include "codecs/codec_module.h"
 }
+#include "codecs/codec_module.hh"
 namespace spd = spdlog;
 using namespace Pistache;
 
+#include "test_main.hh"
 static GMainLoop *loop;
 static bool loop_bool = true;
 void sigterm_handler(int signo)
@@ -87,6 +88,7 @@ int main(int argc, char** argv)
         main_log->error(std::string("Error") + e.what());
     } catch(...) {
         main_log->warn("Catched an exception.");
+        
     }
     main_log->debug("Unref main loop");
     g_main_loop_unref(loop);

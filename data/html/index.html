@@ -13,7 +13,7 @@
 
   </head>
   <body>
-            <h1>ODZVisionSystem</h1>
+            <h1>ODZGVisionSystem</h1>
 <!--
               <div class="column-sm-4">
 
@@ -39,12 +39,13 @@
               <div class="modal-content">
                 <!-- multistep form -->
                 <form id="msform">
-                    <h2 class="text-center">Choose source</h2>
-
+                    <h2 class="text-center">ODZGVision FORM</h2>
+                    <div><label class="col-lg-2">URI</label>
+                        <input class="col-lg-9" id="uri" name="uri" type="text" required /></div>
                     <div>
                         <label class="col-lg-2">Sink</label>
-                        <select class="col-lg-9" id="sink" required>
-                            <option value="" disabled selected style="display:none;">Choose sink</option>
+                        <select class="col-lg-9" id="sink" name="sink" required>
+                            <option value="" disabled selected style="display:none;">Choose SINK</option>
                             <option value="file">File</option>
                             <option value="udp">UDP</option>
                             <option value="icecast">Icecast</option>
@@ -52,41 +53,45 @@
                     </div>
                   <!-- fieldsets -->
                     <div id="file_div" style="display: none;">
-                        <label class="col-lg-2">Path</label>
-                      <input class="col-lg-9" name="file" id="file" />
+                        <label class="col-lg-2">PATH</label>
+                      <input class="col-lg-9" name="location" id="location" />
                     </div>
 
                     <div id="udp_div" style="display: none;">
                         <div>
-                            <label class="col-lg-2">host</label>
+                            <label class="col-lg-2">HOST</label>
                             <input class="col-lg-4" id="host" type="text"  >
                         </div>
                         <div>
-                            <label class="col-lg-2">port</label>
-                            <input class="col-lg-4" id="port" type="number"  >
+                            <label class="col-lg-2">PORT</label>
+                            <input class="col-lg-4" id="port" type="number" min="1" >
                         </div></div>
                     <div id="icecast_udp" style="display: none;">
-                        <label class="col-lg-2">Ip</label>
+                        <label class="col-lg-2">IP</label>
                         <input class="col-lg-9"  type="text" id="ip" />
                     </div>
                     <div>
                         <label class="col-lg-2">fps</label>
-                        <input class="col-lg-4" id="fps" type="number"  >
+                        <input class="col-lg-4" id="fps" type="number" min="1"  >
                     </div>
                     <div>
                         <label class="col-lg-2">Width</label>
-                        <input class="col-lg-4" id="width" type="number"  >
+                        <input class="col-lg-4" id="width" type="number" min="1"  >
                     </div>
                     <div>
                         <label class="col-lg-2">Height</label>
-                        <input class="col-lg-4" id="height" type="number"  >
+                        <input class="col-lg-4" id="height" type="number" min="1"  >
                     </div>
                     <div>
-                        <label class="col-lg-2">Audio bit rate</label>
-                        <input class="col-lg-4" id="audio_bitrate" type="number"  >
+                        <label class="col-lg-2">AUDIO bit rate</label>
+                        <input class="col-lg-4" id="audio_bitrate" type="number" min="1" >
                     </div>
+                    <div><label class="col-lg-2">AUDIO stream</label>
+                        <input class="col-lg-9" id="audio_stream" name="audio_stream" type="text" />
+                    </div>
+
                     <div>
-                        <label class="col-lg-2" >Audio codec</label>
+                        <label class="col-lg-2" >AUDIO codec</label>
                         <select class="col-lg-4" id="acodec" required>
                             <option  disabled selected style="display:none;">Choose audio codec</option>
                             <option value="opus">opus</option>
@@ -97,11 +102,12 @@
                     </div>
 
                     <div>
-                        <label class="col-lg-2">Video bit rate</label>
-                        <input class="col-lg-4" id="video_bitrate" type="number" >
+                        <label class="col-lg-2">VIDEO bit rate</label>
+                        <input class="col-lg-4" id="video_bitrate" type="number" min="1">
                     </div>
+
                     <div>
-                        <label class="col-lg-2">Video codec</label>
+                        <label class="col-lg-2">VIDEO codec</label>
                         <select class="col-lg-4" id="vcodec" required>
                             <option value="" disabled selected style="display:none;">Choose video codec</option>
                             <option value="vp8">vp8</option>
@@ -109,6 +115,9 @@
                             <option value="h264">h264</option>
                             <option value="theora">theora</option>
                         </select>
+                    </div>
+                    <div><label class="col-lg-2">VIDEO stream</label>
+                        <input class="col-lg-9" id="video_stream" name="video_stream" type="text" />
                     </div>
 
               <input type="submit" name="submit" class="submit action-button" value="Submit" />
@@ -130,12 +139,12 @@
 
                         <!-- Modal content-->
                         <div class="modal-content">
-                            <div class="modal-header">
+                            <div class="modal-header text-center">
                                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title text-center">PLAYER</h4>
+                                <h4 class="modal-title text-center"></h4>
                             </div>
                             <div class="modal-body">
-                                <video id="video" src="http://127.0.0.1:8000/random.webm;" type="video/ogg" controls autoplay></video>                            </div>
+                                <video id="video" src="" type="video/ogg" controls autoplay></video>                            </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                             </div>
@@ -152,15 +161,15 @@
             <script src="http://thecodeplayer.com/uploads/js/jquery-1.9.1.min.js" type="text/javascript"></script>
             <!-- jQuery easing plugin -->
             <script src="http://thecodeplayer.com/uploads/js/jquery.easing.min.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
-  <script src="js/Stream1Data.js" type="text/javascript"></script>
-  <script src="js/SendingStream1.js" type="text/javascript"></script>
-  <script src="js/handleStream1Form.js"  type="text/javascript"></script>
-            <script src="js/Stream2Data.js" type="text/javascript"></script>
-            <script src="js/SendingStream2.js" type="text/javascript"></script>
-            <script src="js/handleStream2Form.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+  <script src="js/StreamData.js"></script>
+  <script src="js/SendingStream.js"></script>
+  <script src="js/handleStreamForm.js"></script>
+  <script src="js/handleCodec.js"></script>
+  <script src="js/handleSink.js"></script>
+
 
   </body>
-
+ 
 </html>

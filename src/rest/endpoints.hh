@@ -2,15 +2,18 @@
 #define __REST_HH
 
 #include <iostream>
+#include <string>
+
 #include <pistache/peer.h>
 #include <pistache/http.h>
 #include <pistache/router.h>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
 #include <spdlog/spdlog.h>
 #include <pistache/endpoint.h>
 #include "pistache/net.h"
-extern "C" {
-#include "codec_module.h"
-};
+#include "codec_module.hh"
+
 //using namespace Net;
 using namespace Pistache;
 namespace spd = spdlog;
@@ -33,8 +36,13 @@ public:
 private:
     void setup_routes();
     void put_input_config(const Rest::Request &request, Http::ResponseWriter response);
+    void input_options(const Rest::Request &request, Http::ResponseWriter response);
+    void info_options(const Rest::Request &request, Http::ResponseWriter response);
+    void now_transcoding_options(const Rest::Request &request, Http::ResponseWriter response);
     void home(const Rest::Request& request, Http::ResponseWriter response);
-    void info(const Rest::Request& request, Http::ResponseWriter response);
+    void discover(const Rest::Request& request, Http::ResponseWriter response);
+    void transcoding(const Rest::Request& request, Http::ResponseWriter response);
+    void handle_streaming_request(std::string config);
     void path(const Rest::Request& request, Http::ResponseWriter response);
     std::shared_ptr<spdlog::logger> log_rest;
     std::shared_ptr<Http::Endpoint> httpEndpoint;

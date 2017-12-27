@@ -1,35 +1,28 @@
+extern "C" {
 #include <gst/gst.h>
 #include <gst/gstbin.h>
+}
 #include "jsmn/jsmn.h"
 #include <string.h>
-#include "codec_module.h"
+#include "codec_module.hh"
 
-
-#define ICECAST
+//#define ICECAST
 #define WEBM
-// #define HLSSINK
-// #define MPEGTS
 
-
-
-// void pad_added_handler (GstElement *src, GstPad *pad, Elements *data);
-
-int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
+int magic(Elements data, e_mux_t mux_type, config_struct conf) {
 	GstBus *bus;
 	GstMessage *msg;
 	GstStateChangeReturn ret;
 	gboolean terminate = FALSE;
 
-	char* mux_str = get_mux_str(mux_type);
-	char* sink_str = get_sink_str(sink_type);
+	data.ptr = &conf;
 
-    g_printerr("Mux is %s\n", mux_str);
-    g_printerr("Sink is %s\n", sink_str);
+	char* mux_str = get_mux_str(mux_type);
+	
+    	g_printerr("Mux is %s\n", mux_str);
 	data.muxer = gst_element_factory_make(mux_str, "muxer");
-	data.sink = gst_element_factory_make (sink_str, "sink");
 
 	free(mux_str);
-	free(sink_str);
 
 	if (elements_has_null_field(&data)) {
 		g_printerr ("Not all elements could be created.\n");
@@ -40,7 +33,6 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	 * point. We will do it later. */
 	gst_bin_add_many (GST_BIN (data.pipeline),
 	    data.muxer,
-	    data.sink,
 	    NULL);
 	    
 	if (!gst_element_link (data.muxer, data.sink)) {
@@ -92,15 +84,6 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	g_object_set (data.sink, "playlist-root", "http://localhost", NULL);
 	g_object_set (data.sink, "playlist-location", "/var/www/localhost/htdocs/playlist.m3u8", NULL);
 	g_object_set (data.sink, "location", "/var/www/localhost/htdocs/segment%05d.ts", NULL);
-#else
-#ifdef ICECAST
-	g_object_set (data.sink, "ip", "127.0.0.1", NULL);
-	g_object_set (data.sink, "port", 8000, NULL);
-	g_object_set (data.sink, "password", "ala123", NULL);
-	g_object_set (data.sink, "mount", "/stream.webm", NULL);
-#else
-	g_object_set (data.sink, "location", "transcoded.webm", NULL);
-#endif
 #endif
 #endif
 
@@ -125,7 +108,7 @@ int magic(Elements data, e_sink_t sink_type, e_mux_t mux_type) {
 	bus = gst_element_get_bus (data.pipeline);
 	do {
 		msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
-				GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+				(GstMessageType)(GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS));
 
 		/* Parse message */
 		if (msg != NULL) {
@@ -177,6 +160,8 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	GstCaps *new_pad_caps = NULL;
 	GstStructure *new_pad_struct = NULL;
 	const gchar *new_pad_type = NULL;
+	const gchar *streamid = NULL;
+	config_struct *conf = (config_struct *)data->ptr;
 
 	g_print ("Received new pad '%s' from '%s':\n", GST_PAD_NAME (new_pad), GST_ELEMENT_NAME (src));
 
@@ -184,24 +169,28 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	new_pad_caps = gst_pad_query_caps (new_pad, NULL);
 	new_pad_struct = gst_caps_get_structure (new_pad_caps, 0);
 	new_pad_type = gst_structure_get_name (new_pad_struct);
+	streamid = gst_pad_get_stream_id(new_pad);
 	g_print("new_pad_type: %s \n", new_pad_type);
-
-	
+	g_print("streamid: %s \n", streamid);
 
 	if (g_str_has_prefix (new_pad_type, "audio/x-raw")) {
-		if (data->aconvert != NULL)
-			sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
-		else {
-			g_print ("Audio not selected for transcoding. Skip \n");
-			goto exit;
+		if (conf->audio_stream.empty() || conf->audio_stream.compare(streamid) == 0) {
+			if (data->aconvert != NULL)
+				sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
+			else {
+				g_print ("Audio not selected for transcoding. Skip \n");
+				goto exit;
+			}
 		}
 	}
 	else if (g_str_has_prefix (new_pad_type, "video/x-raw")) {
-		if (data->vconvert != NULL)
-			sink_pad = gst_element_get_static_pad (data->vconvert, "sink");
-		else {
-			g_print ("Video not selected for transcoding. Skip \n");
-			goto exit;
+		if (conf->video_stream.empty() || conf->video_stream.compare(streamid) == 0) {
+			if (data->vconvert != NULL)
+				sink_pad = gst_element_get_static_pad (data->vconvert, "sink");
+			else {
+				g_print ("Video not selected for transcoding. Skip \n");
+				goto exit;
+			}
 		}
 	}
 
@@ -251,7 +240,8 @@ void configure_pipeline(const char *json)
 			((GstElement **)(&data))[i] = (GstElement *)NULL;
 
 	jsmn_init(&parser);
-
+	gst_init (NULL, NULL);
+	
 	/* Firstly prepare buffers */
 	for (unsigned int i=0; i<sizeof(path); i++)
 		path[i] = '\0';
@@ -357,63 +347,40 @@ void configure_pipeline(const char *json)
 	return;
 }
 
-static void print_null_element(const char* element) {
-    if(element != NULL) {
-        g_print("%s element cannot be created.\n", element);
-    }
-}
 int elements_has_null_field(Elements* data)
 {
 	char *reason = NULL;
-    int null_count = 0;
-    if(data == NULL)
-        return (1);
 
-    if(!data->src) {
-        print_null_element("src");
-        null_count++;
-    }
-    if(!data->decode) {
-        print_null_element("decode");
-        null_count++;
-    }
-    if(!data->aconvert)
+	if(data != NULL)
+	if(!data->src)
+		reason = "source";
+	else if(!data->decode)
+		reason = "decode";
+	else if(!data->aconvert)
 		goto skip_audio;
-    if(!data->aqueue) {
-        print_null_element("aqueue");
-        null_count++;
-    }
-    if(!data->acodec) {
-        print_null_element("acodec");
-        null_count++;
-    }
+	else if(!data->aqueue)
+		reason = "aqueue";
+	else if(!data->acodec)
+		reason = "acodec";
 	
 	skip_audio:
 	if(!data->vcodec)
 		goto skip_video;
-    if(!data->vconvert) {
-        print_null_element("vconvert");
-        null_count++;
-    }
-    if(!data->vqueue) {
-        print_null_element("vqueue");
-        null_count++;
-    }
+	else if(!data->vconvert)
+		reason = "vconvert";
+	else if(!data->vqueue)
+		reason = "vqueue";
 	
 	skip_video:
-    if(!data->muxer) {
-        print_null_element("muxer");
-        null_count++;
-    }
-    if(!data->sink) {
-        print_null_element("sink");
-        null_count++;
-    }
-    if(null_count) {
-        //g_print("%s element can't be created\n", reason);
+	if(!data->muxer)
+		reason = "muxer";
+	else if(!data->sink)
+		reason = "sink";
+
+	if(reason) {
+		g_print("%s element can't be created\n", reason);
 		return (1);
 	}
 	else
 		return (0);
-
 }
