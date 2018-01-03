@@ -20,9 +20,16 @@
     ignore = dirty
 [submodule "lib/gst-plugins-good"]
 	path = lib/gst-plugins-good
-    url = https://github.com/GStreamer/gst-plugins-good.git
+	url = https://github.com/GStreamer/gst-plugins-good.git
     ignore = dirty
 [submodule "lib/gst-plugins-base"]
 	path = lib/gst-plugins-base
     url = https://github.com/GStreamer/gst-plugins-base.git
     ignore = dirty
+[submodule "lib/gst-plugins-ugly"]
+	path = lib/gst-plugins-ugly
+    url = https://github.com/GStreamer/gst-plugins-ugly.git
+    ignore = dirty
+[submodule "lib/gst-plugins-bad"]
+	path = lib/gst-plugins-bad
+	url = https://github.com/GStreamer/gst-plugins-bad.git
