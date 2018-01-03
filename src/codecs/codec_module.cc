@@ -8,7 +8,7 @@ extern "C" {
 
 #define WEBM
 
-int magic(Elements data, e_mux_t mux_type, config_struct conf) {
+int magic(Elements data, config_struct conf) {
 	GstBus *bus;
 	GstMessage *msg;
 	GstStateChangeReturn ret;
@@ -16,29 +16,11 @@ int magic(Elements data, e_mux_t mux_type, config_struct conf) {
 
 	data.ptr = &conf;
 
-	char* mux_str = get_mux_str(mux_type);
-
-	data.muxer = gst_element_factory_make(mux_str, "muxer");
-
-	free(mux_str);
-
 	if (elements_has_null_field(&data)) {
 		g_printerr ("Not all elements could be created.\n");
 		return -1;
 	}
-
-	/* Build the pipeline. Note that we are NOT linking the source at this
-	 * point. We will do it later. */
-	gst_bin_add_many (GST_BIN (data.pipeline),
-	    data.muxer,
-	    NULL);
 	    
-	if (!gst_element_link (data.muxer, data.sink)) {
-		g_printerr ("Elements could not be linked.\n");
-		gst_object_unref (data.pipeline);
-		return -1;
-	}
-
 	GstPad *muxer_a_in, *muxer_v_in;
 	GstPad *acodec_out, *vcodec_out;
 
@@ -86,7 +68,6 @@ int magic(Elements data, e_mux_t mux_type, config_struct conf) {
 #endif
 
 #ifdef MP4MUX
-	g_object_set (data.muxer, "fragment-duration", 100, NULL);
 #endif
 
 

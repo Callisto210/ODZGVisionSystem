@@ -85,9 +85,6 @@
                         <label class="col-lg-2">AUDIO bit rate</label>
                         <input class="col-lg-4" id="audio_bitrate" type="number" min="1" >
                     </div>
-                    <div><label class="col-lg-2">AUDIO stream</label>
-                        <input class="col-lg-9" id="audio_stream" name="audio_stream" type="text" />
-                    </div>
 
                     <div>
                         <label class="col-lg-2" >AUDIO codec</label>
@@ -99,6 +96,11 @@
                             <option value="vorbis">vorbis</option>
                         </select>
                     </div>
+
+                    <div><label class="col-lg-2">AUDIO stream</label>
+                        <input class="col-lg-9" id="audio_stream" name="audio_stream" type="text" />
+                    </div>
+
                     <div>
                         <label class="col-lg-2">VIDEO bit rate</label>
                         <input class="col-lg-4" id="video_bitrate" type="number" min="1">
@@ -116,6 +118,16 @@
                     </div>
                     <div><label class="col-lg-2">VIDEO stream</label>
                         <input class="col-lg-9" id="video_stream" name="video_stream" type="text" />
+                    </div>
+                    <div>
+                        <label class="col-lg-2">Muxer</label>
+                        <select class="col-lg-4" id="mux" required>
+                            <option value="" disabled selected style="display:none;">Choose muxer</option>
+                            <option value="mp4">mp4</option>
+                            <option value="mpegts">mpegts</option>
+                            <option value="ogg">ogg</option>
+                            <option value="webm">webm</option>
+                        </select>
                     </div>
 
               <input type="submit" name="submit" class="submit action-button" value="Submit" />

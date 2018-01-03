@@ -25,6 +25,7 @@ struct config_struct {
 	string random;
 	string uri;
 	string sink;
+	string mux;
 	string acodec;
 	string vcodec;
 	string audio_stream;
@@ -56,7 +57,7 @@ int elements_has_null_field(Elements* elements);
 
 int test_pipeline();
 
-int magic(Elements data, e_mux_t mux_type, config_struct conf);
+int magic(Elements data, config_struct conf);
 
 void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data);
 #endif
