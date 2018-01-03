@@ -67,8 +67,8 @@ if(NOT GST_PKG_FOUND)
             --srcdir=${CMAKE_CURRENT_SOURCE_DIR}/gstreamer
             --disable-examples --disable-tests --disable-parse --disable-tools
             --disable-gtk-doc
-            BUILD_COMMAND ${MAKE} -j
-            INSTALL_COMMAND ${MAKE} install -j
+            BUILD_COMMAND ${MAKE} -j4
+            INSTALL_COMMAND ${MAKE} install -j4
             )
 
     ExternalProject_Add_Step(
@@ -94,8 +94,8 @@ if(NOT GST_VIDEO_FOUND)
             --with-pkg-config-path=${CMAKE_BINARY_DIR}/pkgconfig
             --disable-gtk-doc
             --prefix=<INSTALL_DIR>
-            BUILD_COMMAND ${MAKE} -j
-            INSTALL_COMMAND ${MAKE}  install -j
+            BUILD_COMMAND ${MAKE} -j4
+            INSTALL_COMMAND ${MAKE}  install -j4
             )
 
     ExternalProject_Add_Step(
@@ -103,7 +103,81 @@ if(NOT GST_VIDEO_FOUND)
             COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/lib/pkgconfig ${CMAKE_BINARY_DIR}/pkgconfig/
             DEPENDEES install
     )
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/pkgconfig DESTINATION lib)
 #    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib DESTINATION ${CMAKE_INSTALL_PREFIX} FILES_MATCHING PATTERN "*\.so*")
 endif()
+
+message(STATUS "GStreamer plugins good - installing")
+ExternalProject_Add(GST_GOOD
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-good
+        BINARY_DIR ${CMAKE_BINARY_DIR}/build
+        INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
+        CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-good/autogen.sh --noconfigure &&
+        ${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-good/configure
+        --srcdir=${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-good
+        --disable-examples --disable-tests
+        --with-pkg-config-path=${CMAKE_BINARY_DIR}/pkgconfig
+        --disable-gtk-doc
+        --prefix=<INSTALL_DIR>
+        BUILD_COMMAND ${MAKE} -j4
+        INSTALL_COMMAND ${MAKE}  install -j4
+        )
+
+ExternalProject_Add_Step(
+        GST_GOOD pkg
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/lib/pkgconfig ${CMAKE_BINARY_DIR}/pkgconfig/
+        DEPENDEES install
+)
+
+message(STATUS "GStreamer plugins bad - installing")
+ExternalProject_Add(GST_BAD
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-bad
+        BINARY_DIR ${CMAKE_BINARY_DIR}/build
+        INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
+        CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-bad/autogen.sh --noconfigure &&
+        ${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-bad/configure
+        --srcdir=${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-bad
+        --disable-examples --disable-tests
+        --with-pkg-config-path=${CMAKE_BINARY_DIR}/pkgconfig
+        --disable-gtk-doc
+        --prefix=<INSTALL_DIR>
+        BUILD_COMMAND ${MAKE} -j4
+        INSTALL_COMMAND ${MAKE}  install -j4
+        )
+
+ExternalProject_Add_Step(
+        GST_BAD pkg
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/lib/pkgconfig ${CMAKE_BINARY_DIR}/pkgconfig/
+        DEPENDEES install
+)
+
+
+
+message(STATUS "GStreamer plugins ugly - installing")
+ExternalProject_Add(GST_UGLY
+        SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-ugly
+        BINARY_DIR ${CMAKE_BINARY_DIR}/build
+        INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
+        CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-ugly/autogen.sh --noconfigure &&
+        ${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-ugly/configure
+        --srcdir=${CMAKE_CURRENT_SOURCE_DIR}/gst-plugins-ugly
+        --disable-examples --disable-tests
+        --with-pkg-config-path=${CMAKE_BINARY_DIR}/pkgconfig
+        --disable-gtk-doc
+        --prefix=<INSTALL_DIR>
+        BUILD_COMMAND ${MAKE} -j4
+        INSTALL_COMMAND ${MAKE}  install -j4
+        )
+
+ExternalProject_Add_Step(
+        GST_UGLY pkg
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/lib/pkgconfig ${CMAKE_BINARY_DIR}/pkgconfig/
+        DEPENDEES install
+)
+
+
+
+
+
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/pkgconfig DESTINATION lib)
 
