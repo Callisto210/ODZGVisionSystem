@@ -119,7 +119,8 @@ void streaming_handler::operator()() {
 	conf->state = "transcoding";
 	mtx.unlock();
 
-        magic(e, WEBM_MUX, *conf);
+    magic(e, WEBM_MUX, *conf);
+//    magic(e, MP4_MUX, *conf);
 
 	mtx.lock();
 	info.erase(conf->random);

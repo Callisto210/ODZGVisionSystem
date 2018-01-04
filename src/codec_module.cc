@@ -13,7 +13,6 @@ extern "C" {
 namespace spd = spdlog;
 using namespace Pistache;
 
-#include "test_main.hh"
 static GMainLoop *loop;
 static bool loop_bool = true;
 void sigterm_handler(int signo)
@@ -52,7 +51,6 @@ int main(int argc, char** argv)
     Endpoints api(addr);
 
     main_log->info("Listening on 0.0.0.0:{} ",port);
-
     try {
         if (signal(SIGINT, sigterm_handler) < 0)
             main_log->warn("Cannot set signal handler for SIGINT {}", std::strerror(errno));

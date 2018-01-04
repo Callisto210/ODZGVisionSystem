@@ -4,7 +4,6 @@
 extern "C" {
 #include <gst/gst.h>
 #include <gst/gstbin.h>
-#include <jsmn/jsmn.h>
 #include <string.h>
 #include "mux.h"
 #include "sink.h"

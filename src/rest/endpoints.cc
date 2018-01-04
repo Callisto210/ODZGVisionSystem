@@ -202,13 +202,15 @@ void Endpoints::discover(const Rest::Request& request, Http::ResponseWriter resp
     try {
         doc.Parse(config.c_str());
 	uri = json.get_string_param("uri");	
-        conf.fps = json.get_int_param("fps");
+    /*
+    conf.fps = json.get_int_param("fps");
         acodec = json.get_string_param("acodec");
         vcodec = json.get_string_param("vcodec");
         conf.video_bitrate = json.get_int_param("video_bitrate");
         conf.audio_bitrate = json.get_int_param("audio_bitrate");
         conf.width = json.get_int_param("width");
         conf.height = json.get_int_param("height");
+      */
 	 discover_uri(response,uri);
 /*
         response.send(Http::Code::Ok);

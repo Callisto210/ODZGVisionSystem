@@ -208,43 +208,4 @@ gboolean bus_watch_get_stream (GstBus* bus, GstMessage *msg, GstElement *pipelin
 
   gst_message_unref(msg);
   return TRUE;
-} 
-
-void
-no_more_pads_cb (GstElement *e, pads_struct *ptr)
-{
-	GstIterator *pads_iter;
-	Document doc;
-	Value array(kArrayType);
-	Document::AllocatorType& alloc = doc.GetAllocator();
-	GValue item = G_VALUE_INIT;
-
-	doc.SetObject();
-	g_print("In no_more_pads cb \n");
-
-	for (pads_iter = gst_element_iterate_src_pads(e);
-	     gst_iterator_next (pads_iter, &item) == GST_ITERATOR_OK;
-	     g_value_reset(&item))
-	{
-		GstPad *pad = GST_PAD(g_value_get_object(&item));
-		gchar *pad_stream_id = GST_PAD_NAME(pad);
-		Value obj(kObjectType);
-		Value str(kObjectType);
-
-		str.SetString(pad_stream_id, alloc);
-		obj.AddMember("name", str, alloc);//(char *)pad_stream_id);
-
-		array.PushBack(obj, alloc);
-		g_free(pad_stream_id);
-	}
-	g_value_unset(&item);
-	gst_iterator_free(pads_iter);
-
-	doc.AddMember("streams", array, alloc);
-
-	StringBuffer strbuf;
-	Writer<StringBuffer> writer(strbuf);
-	doc.Accept(writer);
-	g_print("%s\n", strbuf.GetString());
-	ptr->response->send(Http::Code::Ok, strbuf.GetString());
 }
