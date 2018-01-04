@@ -21,7 +21,7 @@ SendingStream = function (StreamData) {
 
     console.log(StreamData);
     $.ajax({
-        url: 'http://' + window.location.hostname + ':8090/input',
+        url: 'http://' + window.location.hostname + ':8090' +  '/input',
         type: 'POST',
         contentType: "application/json",
         data: JSON.stringify(StreamData),
