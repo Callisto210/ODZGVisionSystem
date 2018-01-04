@@ -1,4 +1,5 @@
 #include <handler.hh>
+#include <cxxabi.h>
 
 map<string, config_struct *> streaming_handler::info;
 mutex streaming_handler::mtx;
@@ -133,6 +134,8 @@ void streaming_handler::operator()() {
 	info.erase(conf->random);
 	mtx.unlock();
 
+    }catch(abi::__forced_unwind&) {
+    	throw;
     }catch(...) {
     	printf("it's a trap!\n");
     }
