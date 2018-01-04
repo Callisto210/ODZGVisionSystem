@@ -79,7 +79,10 @@ h1 {
     text-align: right;
     color: #FF7F50;
 }
-
+#text3 {
+    text-align: right;
+    color: #FF7F50;
+}
 #configformInputStream {
 
     border: 2px solid #888;
@@ -190,4 +193,20 @@ h1 {
 }
 
 
+}
+#myButton{
+    width: 100px;
+    background: #27AE60;
+    font-weight: bold;
+    color: white;
+    border: 0 none;
+    border-radius: 1px;
+    cursor: pointer;
+    padding: 10px 5px;
+    margin: 10px 5px;
+    align-self: center;
+
+}
+#myButton:hover, #myButton:focus {
+    box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
 }
