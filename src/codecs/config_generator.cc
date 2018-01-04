@@ -38,6 +38,13 @@ static map <string, string> sink_map = {
 	{"icecast", "shout2send"}
 };
 
+static map <string, string> mux_map = {
+	{"mp4", "mp4mux"},
+	{"mpegts", "mpegtsmux"},
+	{"webm", "webmmux"},
+	{"ogg", "oggmux"}
+};
+
 static void zero_elements(Elements& e) {
     memset(&e, 0, sizeof(Elements));
 }
@@ -63,7 +70,7 @@ void configure_pipeline(Elements &e, config_struct *conf)
     string acodec_gst = acodec_map[conf->acodec];
     string vcodec_gst = vcodec_map[conf->vcodec];
     string sink_gst = sink_map[conf->sink];
-
+    string mux_gst = mux_map[conf->mux];
 
     log_config->debug("Elements opts: acodec: {} vcodec: {} sink: {}",
         acodec_gst, vcodec_gst, sink_gst);
@@ -93,7 +100,7 @@ void configure_pipeline(Elements &e, config_struct *conf)
     
     g_object_set (e.decode, "uri", conf->uri.c_str(), nullptr);
 
- //   g_object_set (e.src, "location", path.c_str(), nullptr);
+
 
     if (!vcodec_gst.empty()) {
 	    if(conf->fps != -1) {
@@ -161,6 +168,19 @@ void configure_pipeline(Elements &e, config_struct *conf)
 		}
 
     }
+
+    if (!mux_gst.empty()) { 
+	e.muxer = gst_element_factory_make(mux_gst.c_str(), "muxer");
+    	if (e.muxer != nullptr) {
+	    if (strncmp("mp4mux", mux_gst.c_str(), 6) == 0) {
+		g_object_set (e.muxer, "fragment-duration", 100, NULL);
+	    }
+	    gst_bin_add(GST_BIN(e.pipeline), e.muxer);
+	} else {
+		log_config->error("Can't find muxer");
+	}
+    }
+
     if (!sink_gst.empty()) {
     	e.sink = gst_element_factory_make(sink_gst.c_str(), "sink");
 	if (e.sink != nullptr) {
@@ -186,26 +206,7 @@ void configure_pipeline(Elements &e, config_struct *conf)
 		}
 	    }
 	    gst_bin_add(GST_BIN(e.pipeline), e.sink);
+	    gst_element_link(e.muxer, e.sink);
 	}
     }
-}
-
-gboolean bus_watch_get_stream (GstBus* bus, GstMessage *msg, GstElement *pipeline)
-{
-  switch (GST_MESSAGE_TYPE (msg)) {
-    case GST_MESSAGE_ASYNC_DONE:
-      gst_message_unref(msg);
-      return FALSE;
-    case GST_MESSAGE_EOS:
-      gst_element_set_state(GST_ELEMENT(pipeline),GST_STATE_NULL);
-      gst_message_unref(msg);
-      return FALSE;
-    case GST_MESSAGE_TAG: //TODO collect tags
-      break;
-    default:
-      break;
-  }
-
-  gst_message_unref(msg);
-  return TRUE;
 }

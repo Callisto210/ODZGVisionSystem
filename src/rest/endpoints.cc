@@ -124,7 +124,6 @@ void Endpoints::shutdown() {
 
 
 void Endpoints::setup_routes() {
-    using namespace Rest;
 
     Routes::Post(router, "/input", Routes::bind(&Endpoints::put_input_config, this));
     Routes::Options(router, "/input", Routes::bind(&Endpoints::input_options, this));
@@ -183,42 +182,19 @@ void Endpoints::home(const Rest::Request& request, Http::ResponseWriter response
 
 void Endpoints::discover(const Rest::Request& request, Http::ResponseWriter response) {
     auto config = request.body();
-    log_rest->debug("POST /input : {}", config);
+//    log_rest->info("put /config at id: {}", id);
+    log_rest->info("POST: /info -- {}", config);
+    auto orig = request.headers().getRaw("Origin");
+    response.headers().add<Http::Header::AccessControlAllowOrigin>(orig.value());
     Document doc;
     string uri;
     JsonHandler json(&doc);
-/*
-    Elements e;
-    string acodec, vcodec, source, path;
-    config_struct conf;
-    
 
-    conf.fps = -1;
-    conf.audio_bitrate = -1;
-    conf.video_bitrate = -1;
-    conf.width = -1;
-    conf.height = -1;
-*/
     try {
         doc.Parse(config.c_str());
 	uri = json.get_string_param("uri");	
-    /*
-    conf.fps = json.get_int_param("fps");
-        acodec = json.get_string_param("acodec");
-        vcodec = json.get_string_param("vcodec");
-        conf.video_bitrate = json.get_int_param("video_bitrate");
-        conf.audio_bitrate = json.get_int_param("audio_bitrate");
-        conf.width = json.get_int_param("width");
-        conf.height = json.get_int_param("height");
-      */
+
 	 discover_uri(response,uri);
-/*
-        response.send(Http::Code::Ok);
-            configure_pipeline(e, source, path, acodec, vcodec, response, conf);
-            magic(e, ICECAST, WEBM_MUX);
-            log_rest->debug("Parsing json completed successfully.");
-            log_rest->debug("Do the magic");
-*/
     }catch(...) {
         log_rest->error("Cannot parse json :<");
         response.send(Http::Code::Bad_Request);
@@ -227,14 +203,12 @@ void Endpoints::discover(const Rest::Request& request, Http::ResponseWriter resp
 
 }
 
-
-
-
 void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter response) {
 	Document doc;
 	Value array(kArrayType);
 	Document::AllocatorType& alloc = doc.GetAllocator();
-
+    auto orig = request.headers().getRaw("Origin");
+    response.headers().add<Http::Header::AccessControlAllowOrigin>(orig.value());
 	doc.SetObject();
 
 	streaming_handler::mtx.lock();
