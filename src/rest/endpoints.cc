@@ -14,6 +14,7 @@
 #include <pistache/cookie.h>
 #include <pistache/endpoint.h>
 #include <thread>
+#include <pthread.h>
 
 using namespace Pistache;
 using namespace Rest;
@@ -107,6 +108,8 @@ void Endpoints::setup_routes() {
     Routes::Options(router, "/info", Routes::bind(&Endpoints::info_options, this));
     Routes::Get(router, "/now_transcoding", Routes::bind(&Endpoints::transcoding, this));
     Routes::Options(router, "/now_transcoding", Routes::bind(&Endpoints::now_transcoding_options, this));
+    Routes::Post(router, "/kill", Routes::bind(&Endpoints::kill, this));
+    Routes::Options(router, "/kill", Routes::bind(&Endpoints::kill_options, this));
 }
 
 void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWriter response) {
@@ -114,8 +117,15 @@ void Endpoints::put_input_config(const Rest::Request &request, Http::ResponseWri
 	log_rest->info("POST: /input -- {}", config);
 	response.send(Http::Code::Ok);
 
+	Document doc;
+	string random;
+
+        doc.Parse(config.c_str());
+        random = doc["random"].GetString();
+
 	streaming_handler handle_streaming_request(config);
 	thread stream(handle_streaming_request);
+	threads[random] = stream.native_handle();
 	stream.detach();
 }
 
@@ -267,4 +277,40 @@ void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter r
 	doc.Accept(writer);
 	g_print("%s\n", strbuf.GetString());
 	response.send(Http::Code::Ok, strbuf.GetString());
+}
+
+void Endpoints::kill(const Rest::Request& request, Http::ResponseWriter response) {
+    auto config = request.body();
+    log_rest->info("POST: /kill -- {}", config);
+    response.send(Http::Code::Ok);
+    
+    Document doc;
+    string random;
+
+   streaming_handler::mtx.lock();
+
+    try {
+        doc.Parse(config.c_str());
+        random = doc["random"].GetString();
+	pthread_cancel(threads[random]);
+	threads.erase(random);
+	streaming_handler::info.erase(random);
+	
+    }
+    catch (...){
+        log_rest->error("Cannot parse json :<");
+    }
+
+    streaming_handler::mtx.unlock();
+
+}
+
+void Endpoints::kill_options(const Rest::Request &request, Http::ResponseWriter response) {
+	auto orig = request.headers().getRaw("Origin");
+	auto headers = request.headers().getRaw("Access-Control-Request-Headers");
+	
+	response.headers().add<Http::Header::AccessControlAllowOrigin>(orig.value());
+	response.headers().add<AccessControlAllowHeaders>(headers.value());
+	response.headers().add<AccessControlAllowMethods>("POST");
+	response.send(Http::Code::Ok);
 }
