@@ -2,6 +2,7 @@ var StreamData= function () {
 
     this.uri=$('#uri').val();
     this.sink=$('#sink').val();
+    this.mux=$('#mux').val();
     if ( $('#location').val()!==""){this.location= $("#location").val()}
     if ( $("#host").val()!==""){this.host= $("#host").val()}
     if ( $("#port").val()!==""){this.port= $("#port").val()}

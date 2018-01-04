@@ -66,6 +66,11 @@ void streaming_handler::operator()() {
         		conf->sink = doc["sink"].GetString();
 	}
 
+	if(doc.HasMember("mux")) {
+		if(doc["mux"].IsString())
+        		conf->mux = doc["mux"].GetString();
+	}
+
 	if(doc.HasMember("video_bitrate")) {
 		if(doc["video_bitrate"].IsInt())
 			conf->video_bitrate = doc["video_bitrate"].GetInt();
@@ -108,7 +113,10 @@ void streaming_handler::operator()() {
 		if(doc["random"].IsString())
         		conf->random = doc["random"].GetString();
 	}
-	if (conf->random.empty() || conf->uri.empty()) {	
+	if (conf->random.empty()
+	    || conf->uri.empty()
+	    || conf->sink.empty()
+	    || conf->mux.empty()) {	
 		return;
 	}
 	conf->state = "stopped";
@@ -119,7 +127,7 @@ void streaming_handler::operator()() {
 	conf->state = "transcoding";
 	mtx.unlock();
 
-        magic(e, WEBM_MUX, *conf);
+        magic(e, *conf);
 
 	mtx.lock();
 	info.erase(conf->random);
