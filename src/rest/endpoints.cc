@@ -178,7 +178,8 @@ void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter r
 	Document doc;
 	Value array(kArrayType);
 	Document::AllocatorType& alloc = doc.GetAllocator();
-
+    auto orig = request.headers().getRaw("Origin");
+    response.headers().add<Http::Header::AccessControlAllowOrigin>(orig.value());
 	doc.SetObject();
 
 	streaming_handler::mtx.lock();

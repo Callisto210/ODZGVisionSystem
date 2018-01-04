@@ -31,6 +31,8 @@
                         data-target="#input_stream">Add Streams Parameters</a></li>
                   <li><a  id ="text2" href="#" data-toggle="modal"
                           data-target="#info_stream">Information about stream</a></li>
+                  <li><a  id ="text3" href="#" data-toggle="modal"
+                          data-target="#transcoding">Currently transcoding</a></li>
                 <li class="divider"></li>
               </ul>
             </div>
@@ -49,6 +51,20 @@
                 </div>
                 </div>
             </div>
+
+          <div class="modal" id="transcoding">
+              <div class="modal-dialog">
+                  <div class="modal-content">
+                      <h2 class="text-center">ODZGVision Transcoding</h2>
+                      <div class="container" id="transcontainer">
+                          <div class="panel-group" id="accordion1"></div>
+                      </div>
+                  </div>
+                  <button type="button" id="myButton" data-loading-text="Refreshing..." class="btn btn-primary" autocomplete="off">
+                      Refresh
+                  </button>
+              </div>
+          </div>
 
 
             <div class="modal" id="input_stream">
