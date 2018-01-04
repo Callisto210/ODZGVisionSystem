@@ -52,7 +52,6 @@ TransStream = function () {
                 resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "HEIGHT</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["height"] +"</p></div></div>")
                 resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "AUDIO_BITRATE</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["audio_bitrate"] +"</p></div></div>")
                 resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "VIDEO_BITRATE</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["video_bitrate"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "VIDEO_BITRATE</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["video_bitrate"] +"</p></div></div>")
                 resultHtml.append("<button type=\"button\" class=\"btn btn-danger\" onclick=\"KillMe('"+data["transcoding"][i]["random"] +"')\">Kill</button> ")
                 resultHtml.append("</div>")
                 resultHtmls.append(resultHtml)
@@ -78,10 +77,12 @@ KillMe= function(data){
     $.ajax({
         url: 'http://' + window.location.hostname + ':8090' + '/kill',
         dataType: 'json',
-        type: 'get',
+        type: 'post',
         contentType: "application/json",
         data: JSON.stringify(s),
-        success: function( data, textStatus, jQxhr ){TransStream},
+        success: function( data, textStatus, jQxhr ){
+            TransStream()
+        },
         error: function( jqXhr, textStatus, errorThrown ){
             alert(textStatus)
         }
