@@ -76,8 +76,32 @@ void configure_pipeline(Elements &e, config_struct *conf)
     log_config->debug("Elements opts: acodec: {} vcodec: {} sink: {}",
         acodec_gst, vcodec_gst, sink_gst);
 
+    
+    GstElementFactory* vaapi_factory;
+    vaapi_factory = gst_element_factory_find("bcmdec");
+    gst_plugin_feature_set_rank(GST_PLUGIN_FEATURE(vaapi_factory), GST_RANK_NONE);
+    
+
+    
+    GstElementFactory* vdp_factory;
+    vaapi_factory = gst_element_factory_find("vdpdecoder");
+    gst_plugin_feature_set_rank(GST_PLUGIN_FEATURE(vdp_factory), GST_RANK_NONE);
+
+
 
     e.pipeline = gst_pipeline_new(conf->random.c_str());
+
+
+    GstRegistry* reg = gst_registry_get();
+
+    GstPluginFeature* vaapi_decode = gst_registry_lookup_feature(reg, "bcmdec");
+    gst_plugin_feature_set_rank(vaapi_decode, GST_RANK_NONE);
+    gst_object_unref(vaapi_decode);
+
+    GstPluginFeature* vdp_decode = gst_registry_lookup_feature(reg, "vdpdecoder");
+    gst_plugin_feature_set_rank(vdp_decode, GST_RANK_NONE);
+    gst_object_unref(vdp_decode);
+
 
     if (!acodec_gst.empty()) {
 	    e.aconvert = gst_element_factory_make("audioconvert", "aconvert");
