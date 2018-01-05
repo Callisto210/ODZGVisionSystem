@@ -2,7 +2,6 @@ extern "C" {
 #include <gst/gst.h>
 #include <gst/gstbin.h>
 }
-#include "jsmn/jsmn.h"
 #include <string.h>
 #include "codec_module.hh"
 
@@ -20,7 +19,7 @@ int magic(Elements data, config_struct conf) {
 		g_printerr ("Not all elements could be created.\n");
 		return -1;
 	}
-	    
+	  
 	GstPad *muxer_a_in, *muxer_v_in;
 	GstPad *acodec_out, *vcodec_out;
 
@@ -65,9 +64,6 @@ int magic(Elements data, config_struct conf) {
 	g_object_set (data.sink, "playlist-location", "/var/www/localhost/htdocs/playlist.m3u8", NULL);
 	g_object_set (data.sink, "location", "/var/www/localhost/htdocs/segment%05d.ts", NULL);
 #endif
-#endif
-
-#ifdef MP4MUX
 #endif
 
 
@@ -204,7 +200,7 @@ exit:
 
 int elements_has_null_field(Elements* data)
 {
-	char *reason = NULL;
+    string reason;
 
 	if(data != NULL)
 	if(!data->decode)
@@ -215,7 +211,7 @@ int elements_has_null_field(Elements* data)
 		reason = "aqueue";
 	else if(!data->acodec)
 		reason = "acodec";
-	
+
 	skip_audio:
 	if(!data->vcodec)
 		goto skip_video;
@@ -230,8 +226,8 @@ int elements_has_null_field(Elements* data)
 	else if(!data->sink)
 		reason = "sink";
 
-	if(reason) {
-		g_print("%s element can't be created\n", reason);
+    if(reason.length() > 0) {
+        g_print("%s element can't be created\n", reason.c_str());
 		return (1);
 	}
 	else

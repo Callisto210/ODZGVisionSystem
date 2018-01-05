@@ -7,8 +7,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
-#include <endpoints.hh>
-
+#include "rest/endpoints.hh"
 using std::string;
 using std::map;
 using namespace rapidjson;

@@ -7,9 +7,9 @@
 static std::vector<spdlog::sink_ptr> sinks;
 static std::vector<std::string> log_names;
 
-void init_sinks()
+void init_log_sinks()
 {
-    log_names = {"main", "filter", "config"};
+    log_names = {"main", "filter", "config", "rest"};
     sinks.push_back(std::make_shared<spdlog::sinks::ansicolor_stderr_sink_mt>());
     sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>("logfile.txt", 15, 29));
 }

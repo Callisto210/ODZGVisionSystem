@@ -4,11 +4,12 @@
 extern "C" {
 #include <gst/gst.h>
 #include <gst/gstbin.h>
+#include <string.h>
 #include "mux.h"
 #include "sink.h"
 }
-#include <jsmn/jsmn.h>
-#include <string.h>
+
+
 #include <string>
 
 gboolean autoplug_continue_cb(GstBin *bin, GstPad *pad,

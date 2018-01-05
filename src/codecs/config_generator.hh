@@ -8,22 +8,18 @@
 #include <string>
 #include <vector>
 #include <spdlog/spdlog.h>
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
-
 #include "codec_module.hh"
-//#ifdef __cplusplus
-//};
-
-//#endif
-using std::string;
 
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include <pistache/http.h>
+extern "C" {
 #include <gst/pbutils/pbutils.h>
+}
+
+
+using std::string;
 
 void configure_pipeline(Elements &e, config_struct *conf);
 
