@@ -114,7 +114,7 @@ void Endpoints::start() {
         httpEndpoint->serveThreaded();
     }catch(std::runtime_error& e) {
         log_rest->error(e.what());
-        kill(getpid(), SIGINT);
+        ::kill(getpid(), SIGINT);
     }
 }
 
