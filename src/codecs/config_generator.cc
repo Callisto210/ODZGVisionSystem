@@ -85,9 +85,7 @@ static void configure_audio(Elements &e, audio_config_struct *conf) {
 
 	e.audio[e.n_audio].ptr = conf;
 	e.n_audio++;
-
 }
-
 
 /* This function transforms video configuration into usable part of pipeline */
 static int configure_video(Elements &e, video_config_struct *conf) {
@@ -227,8 +225,26 @@ void configure_pipeline(Elements &e, config_struct *conf)
     string sink_gst = sink_map[conf->sink];
     string mux_gst = mux_map[conf->mux];
 
+    GstElementFactory* vaapi_factory;
+    vaapi_factory = gst_element_factory_find("bcmdec");
+    gst_plugin_feature_set_rank(GST_PLUGIN_FEATURE(vaapi_factory), GST_RANK_NONE);
+    
+    GstElementFactory* vdp_factory;
+    vaapi_factory = gst_element_factory_find("vdpdecoder");
+    gst_plugin_feature_set_rank(GST_PLUGIN_FEATURE(vdp_factory), GST_RANK_NONE);
+
     e.pipeline = gst_pipeline_new(conf->random.c_str());
- 
+
+    GstRegistry* reg = gst_registry_get();
+
+    GstPluginFeature* vaapi_decode = gst_registry_lookup_feature(reg, "bcmdec");
+    gst_plugin_feature_set_rank(vaapi_decode, GST_RANK_NONE);
+    gst_object_unref(vaapi_decode);
+
+    GstPluginFeature* vdp_decode = gst_registry_lookup_feature(reg, "vdpdecoder");
+    gst_plugin_feature_set_rank(vdp_decode, GST_RANK_NONE);
+    gst_object_unref(vdp_decode);
+
     e.decode = gst_element_factory_make("uridecodebin", "source");
     gst_bin_add(GST_BIN(e.pipeline), e.decode);
     
