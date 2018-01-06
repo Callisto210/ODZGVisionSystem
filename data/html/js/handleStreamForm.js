@@ -1,7 +1,9 @@
 handleForm =$(document).ready(function () {
+
             $('#msform').submit(function () {
-        SendingStream(new StreamData());
-        console.log('handle')
+                console.log('handle')
+
+                SendingStream(new StreamData());
         return false;
 
     })
