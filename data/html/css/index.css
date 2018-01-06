@@ -16,14 +16,11 @@
     border: 1px solid #C0C0C0;
     /*width: 80%;*/
     /*width: 400px;*/
-    height: auto;
+    height: 600;
     font-size: 80%;
     text-align: center;
 
 }
-
-
-
 
 body {
     background-image: url("streaming.jpg");
@@ -52,8 +49,8 @@ h1 {
     background-color: transparent;
     color: #FF7F50;
 
-
 }
+
 #smallButton {
 
     left: auto;
@@ -63,6 +60,7 @@ h1 {
     background-color: transparent;
     color: #FF7F50;
 }
+
 #menuList {
     padding: 10px 10px 10px 10px;
     text-align: center;
@@ -71,27 +69,34 @@ h1 {
     color: #FF7F50;
 
 }
+
 #text1 {
     text-align: right;
     color: #FF7F50;
 }
+
 #text2 {
     text-align: right;
     color: #FF7F50;
 }
-
+#text3 {
+    text-align: right;
+    color: #FF7F50;
+}
 #configformInputStream {
 
     border: 2px solid #888;
     margin-top: 20px!important;
     margin: auto;
 }
+
 #configform {
 
     border: 2px solid #888;
     margin-top: 20px!important;
     margin: auto;
 }
+
 /* The Close Button */
 .close {
     color: #aaaaaa;
@@ -138,9 +143,11 @@ h1 {
         box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
     }
 
+
 #msform fieldset:not(:first-of-type) {
     display: none;
 }
+
 /*inputs*/
 #msform input, #msform textarea {
     padding: 10px;
@@ -153,6 +160,7 @@ h1 {
     color: #2C3E50;
     font-size: 13px;
 }
+
 /*buttons*/
 #msform .action-button {
     width: 100px;
@@ -165,9 +173,11 @@ h1 {
     padding: 10px 5px;
     margin: 10px 5px;
 }
+
 #msform .action-button:hover, #msform .action-button:focus {
     box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
 }
+
 /*headings*/
 .fs-title {
     font-size: 15px;
@@ -181,9 +191,22 @@ h1 {
     color: #666;
     margin-bottom: 20px;
 }
-body.modal-content{
-width: 400px;
-height: 400px;
-}
 
+
+}
+#myButton{
+    width: 100px;
+    background: #27AE60;
+    font-weight: bold;
+    color: white;
+    border: 0 none;
+    border-radius: 1px;
+    cursor: pointer;
+    padding: 10px 5px;
+    margin: 10px 5px;
+    align-self: center;
+
+}
+#myButton:hover, #myButton:focus {
+    box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
 }

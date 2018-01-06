@@ -1,8 +1,14 @@
-onSuccess = function (random) {
-    var string=window.location.host;
-    var result=string.concat('/',random,'.webm');
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-    $('#video').attr("src",result);
+onSuccess = async function (random) {
+    var string='http://' + window.location.hostname;
+    var result=string.concat(':8000/',random,'.webm');
+
+    await sleep(1000);
+
+    $('#video').attr("src",result).attr("width", 750).attr("height", 600);
     $('#myModal').modal();
 ;}
 
@@ -15,7 +21,7 @@ SendingStream = function (StreamData) {
 
     console.log(StreamData);
     $.ajax({
-        url: "/data/html/index.html",
+        url: 'http://' + window.location.hostname + ':8090' +  '/input',
         type: 'POST',
         contentType: "application/json",
         data: JSON.stringify(StreamData),
