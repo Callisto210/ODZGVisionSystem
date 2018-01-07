@@ -1,5 +1,7 @@
 var StreamData= function () {
 
+    this.date=$('#date').val();
+    this.time=$('#time').val();
     this.uri=$('#uri').val();
     this.sink=$('#sink').val();
     this.mux=$('#mux').val();
