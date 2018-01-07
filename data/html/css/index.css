@@ -178,6 +178,14 @@ h1 {
     box-shadow: 0 0 0 2px white, 0 0 0 3px #27AE60;
 }
 
+#add_stream1 {
+    margin-bottom: 10px;
+}
+
+#add_stream2 {
+    margin-bottom: 10px;
+}
+
 /*headings*/
 .fs-title {
     font-size: 15px;
