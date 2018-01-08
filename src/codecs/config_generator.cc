@@ -62,26 +62,30 @@ static void configure_audio(Elements &e, audio_config_struct *conf) {
 	}
 
 	/* Set convert */ 
-	    e.audio.aconvert = gst_element_factory_make("audioconvert", "aconvert");
-	    e.audio.aqueue = gst_element_factory_make("queue", "aqueue");
-	    audio_last = e.audio.aconvert;
-	    gst_bin_add_many(GST_BIN(e.pipeline), e.audio.aconvert, e.audio.aqueue, NULL);
+	    e.audio[e.n_audio].aconvert = gst_element_factory_make("audioconvert", "aconvert");
+	    e.audio[e.n_audio].aqueue = gst_element_factory_make("queue", "aqueue");
+	    audio_last = e.audio[e.n_audio].aconvert;
+	    gst_bin_add_many(GST_BIN(e.pipeline), e.audio[e.n_audio].aconvert, e.audio[e.n_audio].aqueue, NULL);
 
 	/* Create audio encoder element */
-	    e.audio.acodec = gst_element_factory_make(acodec_gst.c_str(), "acodec");
-	    if (e.audio.acodec != nullptr) {
+	    e.audio[e.n_audio].acodec = gst_element_factory_make(acodec_gst.c_str(), "acodec");
+	    if (e.audio[e.n_audio].acodec != nullptr) {
 		if (conf->audio_bitrate != -1) {
 		//lamemp3enc takes bitrate in kbit/s
 			if (strncmp("lamemp3enc", acodec_gst.c_str(), 10) == 0)
-				g_object_set(e.audio.acodec, "bitrate", (conf->audio_bitrate/8)*8, NULL);
+				g_object_set(e.audio[e.n_audio].acodec, "bitrate", (conf->audio_bitrate/8)*8, NULL);
 			else	
-				g_object_set(e.audio.acodec, "bitrate", ((conf->audio_bitrate*1000)/8)*8, NULL);
+				g_object_set(e.audio[e.n_audio].acodec, "bitrate", ((conf->audio_bitrate*1000)/8)*8, NULL);
 		}
-		gst_bin_add(GST_BIN(e.pipeline), e.audio.acodec);
-		gst_element_link_many (audio_last, e.audio.acodec, e.audio.aqueue, NULL);
+		gst_bin_add(GST_BIN(e.pipeline), e.audio[e.n_audio].acodec);
+		gst_element_link_many (audio_last, e.audio[e.n_audio].acodec, e.audio[e.n_audio].aqueue, NULL);
 		} else {
 			log_config->error("Can't find audio codec\n");
 		}
+
+	e.audio[e.n_audio].ptr = conf;
+	e.n_audio++;
+
 }
 
 
@@ -98,12 +102,12 @@ static void configure_video(Elements &e, video_config_struct *conf) {
 	}
 
 	/* Set convert */
-	    e.video.vconvert = gst_element_factory_make("videoconvert", "vconvert");
-	    e.video.vqueue = gst_element_factory_make("queue", "vqueue");
-	    video_last = e.video.vconvert;
+	    e.video[e.n_video].vconvert = gst_element_factory_make("videoconvert", "vconvert");
+	    e.video[e.n_video].vqueue = gst_element_factory_make("queue", "vqueue");
+	    video_last = e.video[e.n_video].vconvert;
 	    gst_bin_add_many(GST_BIN(e.pipeline),
-			     e.video.vconvert,
-			     e.video.vqueue,
+			     e.video[e.n_video].vconvert,
+			     e.video[e.n_video].vqueue,
 			     NULL);
 
 	/* Set fps & scale */
@@ -135,23 +139,26 @@ static void configure_video(Elements &e, video_config_struct *conf) {
 	    }
 
 	/* Create encoding element */
-	    e.video.vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
-	    if (e.video.vcodec != nullptr) {
+	    e.video[e.n_video].vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
+	    if (e.video[e.n_video].vcodec != nullptr) {
 		if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0) {
-			g_object_set(e.video.vcodec, "threads", 6, NULL);
+			g_object_set(e.video[e.n_video].vcodec, "threads", 6, NULL);
 			if (conf->video_bitrate != -1)
-				g_object_set(e.video.vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
+				g_object_set(e.video[e.n_video].vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
 		}	
 		if(strncmp("vp9enc", vcodec_gst.c_str(), 6) == 0) {
-			g_object_set(e.video.vcodec, "threads", 6, NULL);
+			g_object_set(e.video[e.n_video].vcodec, "threads", 6, NULL);
 			if (conf->video_bitrate != -1)
-				g_object_set(e.video.vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
+				g_object_set(e.video[e.n_video].vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
 		}
-		gst_bin_add(GST_BIN(e.pipeline), e.video.vcodec);
-		gst_element_link_many (video_last, e.video.vcodec, e.video.vqueue, NULL);
+		gst_bin_add(GST_BIN(e.pipeline), e.video[e.n_video].vcodec);
+		gst_element_link_many (video_last, e.video[e.n_video].vcodec, e.video[e.n_video].vqueue, NULL);
 	    } else {
 			log_config->error("Can't find video codec");
 	    }
+
+	e.video[e.n_video].ptr = conf;
+	e.n_video++;
 
 }
 
@@ -160,8 +167,6 @@ void configure_pipeline(Elements &e, config_struct *conf)
     if(log_config == nullptr) {
         log_config = spdlog::get("config");
     }
-    log_config->debug("uri {}, acodec: {}, vcodec: {}, sink: {}",
-                      conf->uri, conf->audio.acodec, conf->video.vcodec, conf->sink);
 
     static bool configured = false;
 
@@ -180,8 +185,14 @@ void configure_pipeline(Elements &e, config_struct *conf)
     
     g_object_set (e.decode, "uri", conf->uri.c_str(), nullptr);
 
-    configure_audio(e, &conf->audio);
-    configure_video(e, &conf->video);
+    e.n_audio = 0;
+    e.n_video = 0;
+
+    for (int i=0; i < conf->n_audio; i++)
+    	configure_audio(e, &conf->audio[i]);
+    
+    for (int i=0; i < conf->n_video; i++) 
+    	configure_video(e, &conf->video[i]);
 
     if (!mux_gst.empty()) { 
 	e.muxer = gst_element_factory_make(mux_gst.c_str(), "muxer");
