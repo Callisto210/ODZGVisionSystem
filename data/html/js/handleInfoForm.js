@@ -1,7 +1,7 @@
 handleInfoForm =$(document).ready(function () {
     $('#outputform').submit(function () {
         InfoStream(new InfoData());
-        console.log('handle')
+        console.log('information')
         return false;
 
     })
@@ -10,10 +10,9 @@ handleInfoForm =$(document).ready(function () {
 });
 
 $('#myButton').on('click', function () {
-    console.log('handle')
+    console.log('refresh')
     var $btn = $(this).button('loading')
     TransStream()
-    // business logic...
     $btn.button('reset')
 
 });
@@ -38,21 +37,40 @@ TransStream = function () {
             for (i = 0; i < data["transcoding"].length; i++) {
                 var resultHtmls = $("<div class=\"panel panel-default\"><div class=\"panel-heading\"><h5 class=\"panel-title\"><a data-toggle=\"collapse\" href=\"#trans"+i+"\">Transcoding: "+ data["transcoding"][i]["random"] +"</a></h5></div>");
                 var resultHtml=  $("<div id=\"trans"+i+"\"class=\"panel-collapse collapse\">");
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "URI</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["uri"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "PORT</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["port"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "FPS</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["fps"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "ACODEC</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["acodec"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "VCODEC</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["vcodec"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "AUDIO_STREAM</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["audio_stream"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "VIDEO_STREAM</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["video_stream"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "SINK</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["sink"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "HOST</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["host"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "LOCATION</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["location"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "WIDTH</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["width"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "HEIGHT</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["height"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "AUDIO_BITRATE</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["audio_bitrate"] +"</p></div></div>")
-                resultHtml.append("<div class=\"row\"><div class=\"col-sm-2\">" +  "VIDEO_BITRATE</div> <div class=\"col-sm-9\">"+"<p>"+data["transcoding"][i]["video_bitrate"] +"</p></div></div>")
-                resultHtml.append("<button type=\"button\" class=\"btn btn-danger\" onclick=\"KillMe('"+data["transcoding"][i]["random"] +"')\">Kill</button> ")
+                if(data["transcoding"][i].hasOwnProperty("state")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "STATE</div> <div class=\"col-sm-9\">" +  data["transcoding"][i]["state"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("uri")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "URI</div> <div class=\"col-sm-9\">" +  data["transcoding"][i]["uri"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("port")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "PORT</div> <div class=\"col-sm-9\">" +  data["transcoding"][i]["port"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("acodec")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "ACODEC</div> <div class=\"col-sm-9\">" +  data["transcoding"][i]["acodec"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("vcodec")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "VCODEC</div> <div class=\"col-sm-9\">" + data["transcoding"][i]["vcodec"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("host")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "HOST</div> <div class=\"col-sm-9\">" + data["transcoding"][i]["host"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("location")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "LOCATION</div> <div class=\"col-sm-9\">" +  data["transcoding"][i]["location"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("width")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "WIDTH</div> <div class=\"col-sm-9\">" + data["transcoding"][i]["width"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("height")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "HEIGHT</div> <div class=\"col-sm-9\">" +  data["transcoding"][i]["height"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("audio_bitrate")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "AUDIO_BITRATE</div> <div class=\"col-sm-9\">" +  data["transcoding"][i]["audio_bitrate"] + "</div></div>")
+                }
+                if(data["transcoding"][i].hasOwnProperty("video_bitrate")) {
+                    resultHtml.append("<div class=\"row\"><div class=\"col-sm-3\">" + "VIDEO_BITRATE</div> <div class=\"col-sm-9\">" +  data["transcoding"][i]["video_bitrate"] + "</div></div>")
+                }
+                resultHtml.append("<button type=\"button\" class=\"btn btn-danger\" onclick=\"CancelMe('"+data["transcoding"][i]["random"] +"')\">Cancel</button> ")
                 resultHtml.append("</div>")
                 resultHtmls.append(resultHtml)
                 resultHtmls.append("</div>")
@@ -71,7 +89,7 @@ TransStream = function () {
 
 };
 
-KillMe= function(data){
+CancelMe= function(data){
     var s = {random: data}
     console.log(s)
     $.ajax({
