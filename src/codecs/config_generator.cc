@@ -51,7 +51,7 @@ static void zero_elements(Elements& e) {
 }
 
 /* This function transforms audio configuration into usable part of pipeline */
-void configure_audio(Elements &e, audio_config_struct *conf) {
+static void configure_audio(Elements &e, audio_config_struct *conf) {
 
 	string acodec_gst = acodec_map[conf->acodec];
   	GstElement* audio_last = nullptr;
@@ -62,23 +62,23 @@ void configure_audio(Elements &e, audio_config_struct *conf) {
 	}
 
 	/* Set convert */ 
-	    e.aconvert = gst_element_factory_make("audioconvert", "aconvert");
-	    e.aqueue = gst_element_factory_make("queue", "aqueue");
-	    audio_last = e.aconvert;
-	    gst_bin_add_many(GST_BIN(e.pipeline), e.aconvert, e.aqueue, NULL);
+	    e.audio.aconvert = gst_element_factory_make("audioconvert", "aconvert");
+	    e.audio.aqueue = gst_element_factory_make("queue", "aqueue");
+	    audio_last = e.audio.aconvert;
+	    gst_bin_add_many(GST_BIN(e.pipeline), e.audio.aconvert, e.audio.aqueue, NULL);
 
 	/* Create audio encoder element */
-	    e.acodec = gst_element_factory_make(acodec_gst.c_str(), "acodec");
-	    if (e.acodec != nullptr) {
+	    e.audio.acodec = gst_element_factory_make(acodec_gst.c_str(), "acodec");
+	    if (e.audio.acodec != nullptr) {
 		if (conf->audio_bitrate != -1) {
 		//lamemp3enc takes bitrate in kbit/s
 			if (strncmp("lamemp3enc", acodec_gst.c_str(), 10) == 0)
-				g_object_set(e.acodec, "bitrate", (conf->audio_bitrate/8)*8, NULL);
+				g_object_set(e.audio.acodec, "bitrate", (conf->audio_bitrate/8)*8, NULL);
 			else	
-				g_object_set(e.acodec, "bitrate", ((conf->audio_bitrate*1000)/8)*8, NULL);
+				g_object_set(e.audio.acodec, "bitrate", ((conf->audio_bitrate*1000)/8)*8, NULL);
 		}
-		gst_bin_add(GST_BIN(e.pipeline), e.acodec);
-		gst_element_link_many (audio_last, e.acodec, e.aqueue, NULL);
+		gst_bin_add(GST_BIN(e.pipeline), e.audio.acodec);
+		gst_element_link_many (audio_last, e.audio.acodec, e.audio.aqueue, NULL);
 		} else {
 			log_config->error("Can't find audio codec\n");
 		}
@@ -86,7 +86,7 @@ void configure_audio(Elements &e, audio_config_struct *conf) {
 
 
 /* This function transforms video configuration into usable part of pipeline */
-void configure_video(Elements &e, video_config_struct *conf) {
+static void configure_video(Elements &e, video_config_struct *conf) {
 
 	string vcodec_gst = vcodec_map[conf->vcodec];
 	GstElement* video_last = nullptr;
@@ -98,12 +98,12 @@ void configure_video(Elements &e, video_config_struct *conf) {
 	}
 
 	/* Set convert */
-	    e.vconvert = gst_element_factory_make("videoconvert", "vconvert");
-	    e.vqueue = gst_element_factory_make("queue", "vqueue");
-	    video_last = e.vconvert;
+	    e.video.vconvert = gst_element_factory_make("videoconvert", "vconvert");
+	    e.video.vqueue = gst_element_factory_make("queue", "vqueue");
+	    video_last = e.video.vconvert;
 	    gst_bin_add_many(GST_BIN(e.pipeline),
-			     e.vconvert,
-			     e.vqueue,
+			     e.video.vconvert,
+			     e.video.vqueue,
 			     NULL);
 
 	/* Set fps & scale */
@@ -135,20 +135,20 @@ void configure_video(Elements &e, video_config_struct *conf) {
 	    }
 
 	/* Create encoding element */
-	    e.vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
-	    if (e.vcodec != nullptr) {
+	    e.video.vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
+	    if (e.video.vcodec != nullptr) {
 		if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0) {
-			g_object_set(e.vcodec, "threads", 6, NULL);
+			g_object_set(e.video.vcodec, "threads", 6, NULL);
 			if (conf->video_bitrate != -1)
-				g_object_set(e.vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
+				g_object_set(e.video.vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
 		}	
 		if(strncmp("vp9enc", vcodec_gst.c_str(), 6) == 0) {
-			g_object_set(e.vcodec, "threads", 6, NULL);
+			g_object_set(e.video.vcodec, "threads", 6, NULL);
 			if (conf->video_bitrate != -1)
-				g_object_set(e.vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
+				g_object_set(e.video.vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
 		}
-		gst_bin_add(GST_BIN(e.pipeline), e.vcodec);
-		gst_element_link_many (video_last, e.vcodec, e.vqueue, NULL);
+		gst_bin_add(GST_BIN(e.pipeline), e.video.vcodec);
+		gst_element_link_many (video_last, e.video.vcodec, e.video.vqueue, NULL);
 	    } else {
 			log_config->error("Can't find video codec");
 	    }

@@ -23,11 +23,11 @@ int magic(Elements data, config_struct conf) {
 	GstPad *muxer_a_in, *muxer_v_in;
 	GstPad *acodec_out, *vcodec_out;
 
-	if (data.acodec != NULL) {
+	if (data.audio.acodec != NULL) {
 		muxer_a_in = gst_element_get_request_pad(data.muxer, "audio_%u");
 		g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (muxer_a_in));
 
-		acodec_out = gst_element_get_static_pad(data.aqueue, "src");
+		acodec_out = gst_element_get_static_pad(data.audio.aqueue, "src");
 		g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (acodec_out));
 
 		if (gst_pad_link (acodec_out, muxer_a_in) != GST_PAD_LINK_OK) {
@@ -37,11 +37,11 @@ int magic(Elements data, config_struct conf) {
 		}
 	}
 
-	if (data.vcodec != NULL) {
+	if (data.video.vcodec != NULL) {
 		muxer_v_in = gst_element_get_request_pad(data.muxer, "video_%u");
 		g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (muxer_v_in));
 		
-		vcodec_out = gst_element_get_static_pad(data.vqueue, "src");
+		vcodec_out = gst_element_get_static_pad(data.video.vqueue, "src");
 		g_print ("Obtained request pad %s for video branch.\n", gst_pad_get_name (vcodec_out));
 		
 		
@@ -150,8 +150,8 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 
 	if (g_str_has_prefix (new_pad_type, "audio/x-raw")) {
 		if (conf->audio.audio_stream.empty() || conf->audio.audio_stream.compare(streamid) == 0) {
-			if (data->aconvert != NULL)
-				sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
+			if (data->audio.aconvert != NULL)
+				sink_pad = gst_element_get_static_pad (data->audio.aconvert, "sink");
 			else {
 				g_print ("Audio not selected for transcoding. Skip \n");
 				goto exit;
@@ -160,8 +160,8 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	}
 	else if (g_str_has_prefix (new_pad_type, "video/x-raw")) {
 		if (conf->video.video_stream.empty() || conf->video.video_stream.compare(streamid) == 0) {
-			if (data->vconvert != NULL)
-				sink_pad = gst_element_get_static_pad (data->vconvert, "sink");
+			if (data->video.vconvert != NULL)
+				sink_pad = gst_element_get_static_pad (data->video.vconvert, "sink");
 			else {
 				g_print ("Video not selected for transcoding. Skip \n");
 				goto exit;
@@ -205,19 +205,19 @@ int elements_has_null_field(Elements* data)
 	if(data != NULL)
 	if(!data->decode)
 		reason = "decode";
-	else if(!data->aconvert)
+	else if(!data->audio.aconvert)
 		goto skip_audio;
-	else if(!data->aqueue)
+	else if(!data->audio.aqueue)
 		reason = "aqueue";
-	else if(!data->acodec)
+	else if(!data->audio.acodec)
 		reason = "acodec";
 
 	skip_audio:
-	if(!data->vcodec)
+	if(!data->video.vcodec)
 		goto skip_video;
-	else if(!data->vconvert)
+	else if(!data->video.vconvert)
 		reason = "vconvert";
-	else if(!data->vqueue)
+	else if(!data->video.vqueue)
 		reason = "vqueue";
 	
 	skip_video:

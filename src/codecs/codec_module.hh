@@ -44,16 +44,24 @@ struct config_struct {
 };
 
 /* Structure to contain all our information, so we can pass it to callbacks */
+typedef struct _audio_elements {
+    GstElement *aconvert;
+    GstElement *acodec;
+    GstElement *aqueue;
+} Audio_Elements;
+
+typedef struct _video_elements {
+    GstElement *vconvert;
+    GstElement *vcodec;
+    GstElement *vqueue;
+} Video_Elements;
+
 typedef struct _elements {
     GstElement *pipeline;
     GstElement *decode;
 
-    GstElement *aconvert;
-    GstElement *vconvert;
-    GstElement *acodec;
-    GstElement *vcodec;
-    GstElement *aqueue;
-    GstElement *vqueue;
+    Audio_Elements audio;
+    Video_Elements video;
 
     GstElement* sink;
     GstElement* muxer;
