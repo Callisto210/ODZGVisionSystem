@@ -54,15 +54,15 @@ function clear() {
         $("#video_stream").val('');
         $("#height").val('');
         $("#width").val('');
-
-
-
+        if(!$('#pip_check').pop("checked"))
+        $("#pip_stream").val("");
 
     }
     $("#video_check").prop('required',true)
     $("#audio_check").prop('required',true)
     $("#acodec").prop('required',false);
     $("#vcodec").prop('required',false);
+    $("#pip_check").prop('required',false);
 
 }
 
@@ -70,6 +70,7 @@ function showVideo() {
 if($('#video_check').prop( "checked" )){
 
     $('#video_div').show()
+
 }else {
     $('#video_div').hide()
 
@@ -84,3 +85,4 @@ if($('#audio_check').prop( "checked" )){
 
 }
 }
+

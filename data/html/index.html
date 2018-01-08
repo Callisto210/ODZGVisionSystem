@@ -172,17 +172,18 @@
                             <label class="col-lg-2">Height</label>
                             <input class="col-lg-4" id="height" type="number" min="1"  >
                         </div>
-                        <div>
+                          <div>
                               <label class="custom-control custom-checkbox">
-                                <input  id="pip_check" type="checkbox" class="custom-control-input" onclick="this.form.elements['pip_id'].disabled = !this.checked" checked>
+                                <input  id="pip_check" type="checkbox" class="custom-control-input" onclick="this.form.elements['pip_stream'].disabled = !this.checked">
                                   <span class="custom-control-indicator"></span>
                                 <span class="custom-control-description">PiP Stream ID</span>
                             </label>
-                              <div><label class="col-lg-2">PiP Stream ID</label>
-                                  <input class="col-lg-9" id="pip_id" name="audio_stream" type="text" />
-                              </div>
 
-                        </div>
+                              <div><label class="col-lg-2">PiP Stream ID</label>
+                                  <input class="col-lg-9" id="pip_stream" name="pip_stream" type="text" disabled/>
+                              </div>
+                    </div>
+
                         <div class=" Col-lg-6 Col-lg-6"><button type="button" class="btn btn-info btn-sm" id="add_stream2">Add Video Stream</button></div>
                     </div>
 
