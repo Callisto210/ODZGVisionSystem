@@ -149,7 +149,7 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 	g_print("streamid: %s \n", streamid);
 
 	if (g_str_has_prefix (new_pad_type, "audio/x-raw")) {
-		if (conf->audio_stream.empty() || conf->audio_stream.compare(streamid) == 0) {
+		if (conf->audio.audio_stream.empty() || conf->audio.audio_stream.compare(streamid) == 0) {
 			if (data->aconvert != NULL)
 				sink_pad = gst_element_get_static_pad (data->aconvert, "sink");
 			else {
@@ -159,7 +159,7 @@ void pad_added_handler (GstElement *src, GstPad *new_pad, Elements *data) {
 		}
 	}
 	else if (g_str_has_prefix (new_pad_type, "video/x-raw")) {
-		if (conf->video_stream.empty() || conf->video_stream.compare(streamid) == 0) {
+		if (conf->video.video_stream.empty() || conf->video.video_stream.compare(streamid) == 0) {
 			if (data->vconvert != NULL)
 				sink_pad = gst_element_get_static_pad (data->vconvert, "sink");
 			else {

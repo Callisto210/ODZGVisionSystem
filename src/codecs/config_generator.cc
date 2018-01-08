@@ -7,7 +7,8 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
-#include "rest/endpoints.hh"
+#include <endpoints.hh>
+
 using std::string;
 using std::map;
 using namespace rapidjson;
@@ -49,43 +50,54 @@ static void zero_elements(Elements& e) {
     memset(&e, 0, sizeof(Elements));
 }
 
-void configure_pipeline(Elements &e, config_struct *conf)
-{
-    if(log_config == nullptr) {
-        log_config = spdlog::get("config");
-    }
-    log_config->debug("uri {}, acodec: {}, vcodec: {}, sink: {}",
-                      conf->uri, conf->acodec, conf->vcodec, conf->sink);
+/* This function transforms audio configuration into usable part of pipeline */
+void configure_audio(Elements &e, audio_config_struct *conf) {
 
-    static GstElement* audio_last = nullptr;
-    static GstElement* video_last = nullptr;
-    static GstElement* optional = nullptr;
-    static bool configured = false;
+	string acodec_gst = acodec_map[conf->acodec];
+  	GstElement* audio_last = nullptr;
 
-    if(!configured) {
-        configured = !configured;
- 	memset(&e, 0, sizeof(Elements));
-    }
+	if (acodec_gst.empty()) {
+		log_config->error("Something goes wrong around acodec\n");
+		return;
+	}
 
-    string acodec_gst = acodec_map[conf->acodec];
-    string vcodec_gst = vcodec_map[conf->vcodec];
-    string sink_gst = sink_map[conf->sink];
-    string mux_gst = mux_map[conf->mux];
-
-    log_config->debug("Elements opts: acodec: {} vcodec: {} sink: {}",
-        acodec_gst, vcodec_gst, sink_gst);
-
-
-    e.pipeline = gst_pipeline_new(conf->random.c_str());
-
-    if (!acodec_gst.empty()) {
+	/* Set convert */ 
 	    e.aconvert = gst_element_factory_make("audioconvert", "aconvert");
 	    e.aqueue = gst_element_factory_make("queue", "aqueue");
 	    audio_last = e.aconvert;
 	    gst_bin_add_many(GST_BIN(e.pipeline), e.aconvert, e.aqueue, NULL);
-    }
-   
-    if (!vcodec_gst.empty()) {
+
+	/* Create audio encoder element */
+	    e.acodec = gst_element_factory_make(acodec_gst.c_str(), "acodec");
+	    if (e.acodec != nullptr) {
+		if (conf->audio_bitrate != -1) {
+		//lamemp3enc takes bitrate in kbit/s
+			if (strncmp("lamemp3enc", acodec_gst.c_str(), 10) == 0)
+				g_object_set(e.acodec, "bitrate", (conf->audio_bitrate/8)*8, NULL);
+			else	
+				g_object_set(e.acodec, "bitrate", ((conf->audio_bitrate*1000)/8)*8, NULL);
+		}
+		gst_bin_add(GST_BIN(e.pipeline), e.acodec);
+		gst_element_link_many (audio_last, e.acodec, e.aqueue, NULL);
+		} else {
+			log_config->error("Can't find audio codec\n");
+		}
+}
+
+
+/* This function transforms video configuration into usable part of pipeline */
+void configure_video(Elements &e, video_config_struct *conf) {
+
+	string vcodec_gst = vcodec_map[conf->vcodec];
+	GstElement* video_last = nullptr;
+	GstElement* optional = nullptr;
+
+	if (vcodec_gst.empty()) {
+		log_config->error("Something goes wrong around vcodec\n");
+		return;
+	}
+
+	/* Set convert */
 	    e.vconvert = gst_element_factory_make("videoconvert", "vconvert");
 	    e.vqueue = gst_element_factory_make("queue", "vqueue");
 	    video_last = e.vconvert;
@@ -93,16 +105,8 @@ void configure_pipeline(Elements &e, config_struct *conf)
 			     e.vconvert,
 			     e.vqueue,
 			     NULL);
-    }
 
-    e.decode = gst_element_factory_make("uridecodebin", "source");
-    gst_bin_add(GST_BIN(e.pipeline), e.decode);
-    
-    g_object_set (e.decode, "uri", conf->uri.c_str(), nullptr);
-
-
-
-    if (!vcodec_gst.empty()) {
+	/* Set fps & scale */
 	    if(conf->fps != -1) {
 		optional = gst_element_factory_make("videorate", "fps");
 		if (optional != NULL) {
@@ -129,26 +133,8 @@ void configure_pipeline(Elements &e, config_struct *conf)
 			}
 		}
 	    }
-    }
 
-    if (!acodec_gst.empty()) {
-	    e.acodec = gst_element_factory_make(acodec_gst.c_str(), "acodec");
-	    if (e.acodec != nullptr) {
-		if (conf->audio_bitrate != -1) {
-		//lamemp3enc takes bitrate in kbit/s
-			if (strncmp("lamemp3enc", acodec_gst.c_str(), 10) == 0)
-				g_object_set(e.acodec, "bitrate", (conf->audio_bitrate/8)*8, NULL);
-			else	
-				g_object_set(e.acodec, "bitrate", ((conf->audio_bitrate*1000)/8)*8, NULL);
-		}
-		gst_bin_add(GST_BIN(e.pipeline), e.acodec);
-		gst_element_link_many (audio_last, e.acodec, e.aqueue, NULL);
-	    } else {
-			log_config->error("Can't find audio codec");
-		}
-    }
-
-    if (!vcodec_gst.empty()) {
+	/* Create encoding element */
 	    e.vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
 	    if (e.vcodec != nullptr) {
 		if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0) {
@@ -165,9 +151,37 @@ void configure_pipeline(Elements &e, config_struct *conf)
 		gst_element_link_many (video_last, e.vcodec, e.vqueue, NULL);
 	    } else {
 			log_config->error("Can't find video codec");
-		}
+	    }
 
+}
+
+void configure_pipeline(Elements &e, config_struct *conf)
+{
+    if(log_config == nullptr) {
+        log_config = spdlog::get("config");
     }
+    log_config->debug("uri {}, acodec: {}, vcodec: {}, sink: {}",
+                      conf->uri, conf->audio.acodec, conf->video.vcodec, conf->sink);
+
+    static bool configured = false;
+
+    if(!configured) {
+        configured = !configured;
+ 	memset(&e, 0, sizeof(Elements));
+    }
+
+    string sink_gst = sink_map[conf->sink];
+    string mux_gst = mux_map[conf->mux];
+
+    e.pipeline = gst_pipeline_new(conf->random.c_str());
+ 
+    e.decode = gst_element_factory_make("uridecodebin", "source");
+    gst_bin_add(GST_BIN(e.pipeline), e.decode);
+    
+    g_object_set (e.decode, "uri", conf->uri.c_str(), nullptr);
+
+    configure_audio(e, &conf->audio);
+    configure_video(e, &conf->video);
 
     if (!mux_gst.empty()) { 
 	e.muxer = gst_element_factory_make(mux_gst.c_str(), "muxer");

@@ -239,15 +239,15 @@ void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter r
 			obj.AddMember("state", str, alloc);
 		}
 
-		if (!it->second->acodec.empty()) {
+		if (!it->second->audio.acodec.empty()) {
 			Value str(kObjectType);
-			str.SetString(it->second->acodec.c_str(), alloc);
+			str.SetString(it->second->audio.acodec.c_str(), alloc);
 			obj.AddMember("acodec", str, alloc);
 		}
 
-		if (!it->second->vcodec.empty()) {
+		if (!it->second->video.vcodec.empty()) {
 			Value str(kObjectType);
-			str.SetString(it->second->vcodec.c_str(), alloc);
+			str.SetString(it->second->video.vcodec.c_str(), alloc);
 			obj.AddMember("vcodec", str, alloc);
 		}
 		
@@ -269,15 +269,15 @@ void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter r
 			obj.AddMember("uri", str, alloc);
 		}
 		
-		if (it->second->audio_bitrate != -1) {
+		if (it->second->audio.audio_bitrate != -1) {
 			Value str(kObjectType);
-			str.SetInt(it->second->audio_bitrate);
+			str.SetInt(it->second->audio.audio_bitrate);
 			obj.AddMember("audio_bitrate", str, alloc);
 		}
 		
-		if (it->second->video_bitrate != -1) {
+		if (it->second->video.video_bitrate != -1) {
 			Value str(kObjectType);
-			str.SetInt(it->second->video_bitrate);
+			str.SetInt(it->second->video.video_bitrate);
 			obj.AddMember("video_bitrate", str, alloc);
 		}
 		if (it->second->port != -1) {
@@ -286,12 +286,12 @@ void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter r
 			obj.AddMember("port", str, alloc);
 		}
 		
-		if (it->second->width != -1 && it->second->height != -1) {
+		if (it->second->video.width != -1 && it->second->video.height != -1) {
 			Value str(kObjectType);
-			str.SetInt(it->second->width);
+			str.SetInt(it->second->video.width);
 			obj.AddMember("width", str, alloc);
 
-			str.SetInt(it->second->height);
+			str.SetInt(it->second->video.height);
 			obj.AddMember("height", str, alloc);
 		}
 

@@ -4,36 +4,43 @@
 extern "C" {
 #include <gst/gst.h>
 #include <gst/gstbin.h>
-#include <string.h>
 #include "mux.h"
 #include "sink.h"
 }
-
-
+#include <jsmn/jsmn.h>
+#include <string.h>
 #include <string>
 
 gboolean autoplug_continue_cb(GstBin *bin, GstPad *pad,
                               GstCaps *caps, gpointer user_data);
 using namespace std;
 
-struct config_struct {
+struct audio_config_struct {
 	int audio_bitrate;
+	string acodec;
+	string audio_stream;
+};
+
+struct video_config_struct {
 	int video_bitrate;
 	int fps;
 	int width;
 	int height;
+	string vcodec;
+	string video_stream;
+};
+
+struct config_struct {
 	int port;
 	string random;
 	string uri;
 	string sink;
 	string mux;
-	string acodec;
-	string vcodec;
-	string audio_stream;
-	string video_stream;
 	string host;
 	string location;
 	string state;
+	struct audio_config_struct audio;
+	struct video_config_struct video;
 };
 
 /* Structure to contain all our information, so we can pass it to callbacks */
