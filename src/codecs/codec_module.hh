@@ -39,8 +39,10 @@ struct config_struct {
 	string host;
 	string location;
 	string state;
-	struct audio_config_struct audio;
-	struct video_config_struct video;
+	int n_audio;
+	int n_video;
+	struct audio_config_struct audio[100];
+	struct video_config_struct video[100];
 };
 
 /* Structure to contain all our information, so we can pass it to callbacks */
@@ -48,20 +50,24 @@ typedef struct _audio_elements {
     GstElement *aconvert;
     GstElement *acodec;
     GstElement *aqueue;
+    audio_config_struct *ptr;
 } Audio_Elements;
 
 typedef struct _video_elements {
     GstElement *vconvert;
     GstElement *vcodec;
     GstElement *vqueue;
+    video_config_struct *ptr;
 } Video_Elements;
 
 typedef struct _elements {
     GstElement *pipeline;
     GstElement *decode;
 
-    Audio_Elements audio;
-    Video_Elements video;
+    int n_audio;
+    int n_video;
+    Audio_Elements audio[100];
+    Video_Elements video[100];
 
     GstElement* sink;
     GstElement* muxer;

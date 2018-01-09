@@ -239,18 +239,6 @@ void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter r
 			obj.AddMember("state", str, alloc);
 		}
 
-		if (!it->second->audio.acodec.empty()) {
-			Value str(kObjectType);
-			str.SetString(it->second->audio.acodec.c_str(), alloc);
-			obj.AddMember("acodec", str, alloc);
-		}
-
-		if (!it->second->video.vcodec.empty()) {
-			Value str(kObjectType);
-			str.SetString(it->second->video.vcodec.c_str(), alloc);
-			obj.AddMember("vcodec", str, alloc);
-		}
-		
 		if (!it->second->host.empty()) {
 			Value str(kObjectType);
 			str.SetString(it->second->host.c_str(), alloc);
@@ -269,30 +257,53 @@ void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter r
 			obj.AddMember("uri", str, alloc);
 		}
 		
-		if (it->second->audio.audio_bitrate != -1) {
-			Value str(kObjectType);
-			str.SetInt(it->second->audio.audio_bitrate);
-			obj.AddMember("audio_bitrate", str, alloc);
-		}
-		
-		if (it->second->video.video_bitrate != -1) {
-			Value str(kObjectType);
-			str.SetInt(it->second->video.video_bitrate);
-			obj.AddMember("video_bitrate", str, alloc);
-		}
 		if (it->second->port != -1) {
 			Value str(kObjectType);
 			str.SetInt(it->second->port);
 			obj.AddMember("port", str, alloc);
 		}
 		
-		if (it->second->video.width != -1 && it->second->video.height != -1) {
-			Value str(kObjectType);
-			str.SetInt(it->second->video.width);
-			obj.AddMember("width", str, alloc);
+		for (int i=0; i < it->second->n_audio; i++) {
+			if (!it->second->audio[i].acodec.empty()) {
+				Value str(kObjectType);
+				str.SetString(it->second->audio[i].acodec.c_str(), alloc);
+				obj.AddMember("acodec", str, alloc);
+			}
 
-			str.SetInt(it->second->video.height);
-			obj.AddMember("height", str, alloc);
+			if (it->second->audio[i].audio_bitrate != -1) {
+				Value str(kObjectType);
+				str.SetInt(it->second->audio[i].audio_bitrate);
+				obj.AddMember("audio_bitrate", str, alloc);
+			}
+
+			if (!it->second->audio[i].audio_stream.empty()) {
+				Value str(kObjectType);
+				str.SetString(it->second->audio[i].audio_stream.c_str(), alloc);
+				obj.AddMember("audio_stream", str, alloc);
+			}
+		}
+
+		for (int i=0; i < it->second->n_video; i++) {
+			if (!it->second->video[i].vcodec.empty()) {
+				Value str(kObjectType);
+				str.SetString(it->second->video[i].vcodec.c_str(), alloc);
+				obj.AddMember("vcodec", str, alloc);
+			}
+
+			if (it->second->video[i].video_bitrate != -1) {
+				Value str(kObjectType);
+				str.SetInt(it->second->video[i].video_bitrate);
+				obj.AddMember("video_bitrate", str, alloc);
+			}
+
+			if (it->second->video[i].width != -1 && it->second->video[i].height != -1) {
+				Value str(kObjectType);
+				str.SetInt(it->second->video[i].width);
+				obj.AddMember("width", str, alloc);
+
+				str.SetInt(it->second->video[i].height);
+				obj.AddMember("height", str, alloc);
+			}
 		}
 
 		array.PushBack(obj, alloc);
