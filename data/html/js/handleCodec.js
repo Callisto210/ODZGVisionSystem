@@ -17,31 +17,33 @@ showVideo();
 
     $('#audio_check').on('change', function() {
         requiredChange();
-showAudio()    })
+    showAudio()    })
 })
 
 function requiredChange(){
     clear();
     if( $('#video_check').prop( "checked" )){
-        $("#vcodec").prop('required',true);
+        if(all_video.length==0)$("#vcodec").prop('required',true);
         $("#audio_check").prop('required',false);
 
 
     }
     if($('#audio_check').prop( "checked" )){
-        $("#acodec").prop('required',true);
+        if(all_audio.length==0)$("#acodec").prop('required',true);
         $("#video_check").prop('required',false);
 
     }
     if (!($('#audio_check').prop( "checked" )||$('#video_check').prop( "checked" ))){
-        $("#video_check").prop('required',true)
-        $("#audio_check").prop('required',true)
+        if(all_audio.length==0 && all_video.length==0) {
+            $("#video_check").prop('required', true)
+            $("#audio_check").prop('required', true)
+        }
 
     }
 }
 
 function clear() {
-    if( !$('#audio_check_check').prop( "checked" )){
+    if( !$('#audio_check').prop( "checked" )){
         $("#acodec").val('');
         $("#audio_bitrate").val('');
         $("#audio_stream").val('');
@@ -54,7 +56,7 @@ function clear() {
         $("#video_stream").val('');
         $("#height").val('');
         $("#width").val('');
-        if(!$('#pip_check').pop("checked"))
+        if(!$('#pip_check').prop("checked"))
         $("#pip_stream").val("");
 
     }
