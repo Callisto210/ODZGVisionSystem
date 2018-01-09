@@ -262,50 +262,55 @@ void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter r
 			str.SetInt(it->second->port);
 			obj.AddMember("port", str, alloc);
 		}
-		
+        Value a_array(kArrayType);
 		for (int i=0; i < it->second->n_audio; i++) {
+            Value audio(kObjectType);
 			if (!it->second->audio[i].acodec.empty()) {
 				Value str(kObjectType);
 				str.SetString(it->second->audio[i].acodec.c_str(), alloc);
-				obj.AddMember("acodec", str, alloc);
+                audio.AddMember("acodec", str, alloc);
 			}
 
 			if (it->second->audio[i].audio_bitrate != -1) {
 				Value str(kObjectType);
 				str.SetInt(it->second->audio[i].audio_bitrate);
-				obj.AddMember("audio_bitrate", str, alloc);
+                audio.AddMember("audio_bitrate", str, alloc);
 			}
 
 			if (!it->second->audio[i].audio_stream.empty()) {
 				Value str(kObjectType);
 				str.SetString(it->second->audio[i].audio_stream.c_str(), alloc);
-				obj.AddMember("audio_stream", str, alloc);
+                audio.AddMember("audio_stream", str, alloc);
 			}
+            a_array.PushBack(audio,alloc);
 		}
-
+        obj.AddMember("audio", a_array,alloc);
+        Value v_array(kArrayType);
 		for (int i=0; i < it->second->n_video; i++) {
+            Value video(kObjectType);
 			if (!it->second->video[i].vcodec.empty()) {
 				Value str(kObjectType);
 				str.SetString(it->second->video[i].vcodec.c_str(), alloc);
-				obj.AddMember("vcodec", str, alloc);
+				video.AddMember("vcodec", str, alloc);
 			}
 
 			if (it->second->video[i].video_bitrate != -1) {
 				Value str(kObjectType);
 				str.SetInt(it->second->video[i].video_bitrate);
-				obj.AddMember("video_bitrate", str, alloc);
+                video.AddMember("video_bitrate", str, alloc);
 			}
 
 			if (it->second->video[i].width != -1 && it->second->video[i].height != -1) {
 				Value str(kObjectType);
 				str.SetInt(it->second->video[i].width);
-				obj.AddMember("width", str, alloc);
+                video.AddMember("width", str, alloc);
 
 				str.SetInt(it->second->video[i].height);
-				obj.AddMember("height", str, alloc);
+                video.AddMember("height", str, alloc);
 			}
+            v_array.PushBack(video,alloc);
 		}
-
+        obj.AddMember("video", v_array,alloc);
 		array.PushBack(obj, alloc);
 	}
 	streaming_handler::mtx.unlock();

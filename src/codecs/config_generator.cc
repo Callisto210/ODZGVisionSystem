@@ -62,13 +62,13 @@ static void configure_audio(Elements &e, audio_config_struct *conf) {
 	}
 
 	/* Set convert */ 
-	    e.audio[e.n_audio].aconvert = gst_element_factory_make("audioconvert", "aconvert");
-	    e.audio[e.n_audio].aqueue = gst_element_factory_make("queue", "aqueue");
+	    e.audio[e.n_audio].aconvert = gst_element_factory_make("audioconvert", NULL);
+	    e.audio[e.n_audio].aqueue = gst_element_factory_make("queue", NULL);
 	    audio_last = e.audio[e.n_audio].aconvert;
 	    gst_bin_add_many(GST_BIN(e.pipeline), e.audio[e.n_audio].aconvert, e.audio[e.n_audio].aqueue, NULL);
 
 	/* Create audio encoder element */
-	    e.audio[e.n_audio].acodec = gst_element_factory_make(acodec_gst.c_str(), "acodec");
+	    e.audio[e.n_audio].acodec = gst_element_factory_make(acodec_gst.c_str(), NULL);
 	    if (e.audio[e.n_audio].acodec != nullptr) {
 		if (conf->audio_bitrate != -1) {
 		//lamemp3enc takes bitrate in kbit/s
@@ -102,8 +102,8 @@ static void configure_video(Elements &e, video_config_struct *conf) {
 	}
 
 	/* Set convert */
-	    e.video[e.n_video].vconvert = gst_element_factory_make("videoconvert", "vconvert");
-	    e.video[e.n_video].vqueue = gst_element_factory_make("queue", "vqueue");
+	    e.video[e.n_video].vconvert = gst_element_factory_make("videoconvert", NULL);
+	    e.video[e.n_video].vqueue = gst_element_factory_make("queue", NULL);
 	    video_last = e.video[e.n_video].vconvert;
 	    gst_bin_add_many(GST_BIN(e.pipeline),
 			     e.video[e.n_video].vconvert,
@@ -112,7 +112,7 @@ static void configure_video(Elements &e, video_config_struct *conf) {
 
 	/* Set fps & scale */
 	    if(conf->fps != -1) {
-		optional = gst_element_factory_make("videorate", "fps");
+		optional = gst_element_factory_make("videorate", NULL);
 		if (optional != NULL) {
 			gst_bin_add(GST_BIN(e.pipeline), optional);
 			g_object_set(optional, "max-rate", conf->fps, NULL);
@@ -123,7 +123,7 @@ static void configure_video(Elements &e, video_config_struct *conf) {
 	    }
 
 	    if(conf->width != -1 && conf->height !=-1) {
-		optional = gst_element_factory_make("videoscale", "scale");
+		optional = gst_element_factory_make("videoscale", NULL);
 		if (optional != NULL) {
 			gst_bin_add(GST_BIN(e.pipeline), optional);
 			GstCaps * caps = gst_caps_new_simple ("video/x-raw",
@@ -139,7 +139,7 @@ static void configure_video(Elements &e, video_config_struct *conf) {
 	    }
 
 	/* Create encoding element */
-	    e.video[e.n_video].vcodec = gst_element_factory_make(vcodec_gst.c_str(), "vcodec");
+	    e.video[e.n_video].vcodec = gst_element_factory_make(vcodec_gst.c_str(), NULL);
 	    if (e.video[e.n_video].vcodec != nullptr) {
 		if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0) {
 			g_object_set(e.video[e.n_video].vcodec, "threads", 6, NULL);
