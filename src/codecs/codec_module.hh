@@ -26,6 +26,11 @@ struct video_config_struct {
 	int fps;
 	int width;
 	int height;
+	int x;
+	int y;
+	int pip_width;
+	int pip_height;
+	string pip_stream;
 	string vcodec;
 	string video_stream;
 };

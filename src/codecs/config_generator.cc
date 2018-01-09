@@ -90,24 +90,23 @@ static void configure_audio(Elements &e, audio_config_struct *conf) {
 
 
 /* This function transforms video configuration into usable part of pipeline */
-static void configure_video(Elements &e, video_config_struct *conf) {
+static int configure_video(Elements &e, video_config_struct *conf) {
 
 	string vcodec_gst = vcodec_map[conf->vcodec];
 	GstElement* video_last = nullptr;
 	GstElement* optional = nullptr;
+	int place;
 
-	if (vcodec_gst.empty()) {
-		log_config->error("Something goes wrong around vcodec\n");
-		return;
-	}
+	/* Get some place */
+	place = e.n_video++;
 
 	/* Set convert */
-	    e.video[e.n_video].vconvert = gst_element_factory_make("videoconvert", NULL);
-	    e.video[e.n_video].vqueue = gst_element_factory_make("queue", NULL);
-	    video_last = e.video[e.n_video].vconvert;
+	    e.video[place].vconvert = gst_element_factory_make("videoconvert", NULL);
+	    e.video[place].vqueue = gst_element_factory_make("queue", NULL);
+	    video_last = e.video[place].vconvert;
 	    gst_bin_add_many(GST_BIN(e.pipeline),
-			     e.video[e.n_video].vconvert,
-			     e.video[e.n_video].vqueue,
+			     e.video[place].vconvert,
+			     e.video[place].vqueue,
 			     NULL);
 
 	/* Set fps & scale */
@@ -137,28 +136,71 @@ static void configure_video(Elements &e, video_config_struct *conf) {
 			}
 		}
 	    }
+	
+	/* Handle PIP */
+	if (conf->x != -1 && conf->y != -1 &&
+	    conf->pip_width != -1 && conf->pip_height != -1 &&
+	    !conf->pip_stream.empty()) {
+		GstPad *comp_m_in, *comp_p_in;
+		GstPad *main_out, *pip_out;
+		optional = gst_element_factory_make("compositor", NULL);
+		if (optional != NULL) {
+			gst_bin_add(GST_BIN(e.pipeline), optional);
+			/* Add main image */
+			comp_m_in = gst_element_get_request_pad(optional, "sink_%u");
+			main_out = gst_element_get_static_pad(video_last, "src");
+			if (gst_pad_link (main_out, comp_m_in) != GST_PAD_LINK_OK)
+				g_printerr ("PIP, Main image, failed\n");
+
+			/* Add Pip image */
+			video_config_struct *pip_conf_str = new video_config_struct;
+			pip_conf_str->video_stream = conf->pip_stream;
+			pip_conf_str->fps = -1;
+			pip_conf_str->width = -1;
+			pip_conf_str->height = -1;
+			pip_conf_str->x = -1;
+			pip_conf_str->y = -1;
+			pip_conf_str->pip_width = -1;
+			int pip_idx = configure_video(e, pip_conf_str);
+			comp_p_in = gst_element_get_request_pad(optional, "sink_%u");
+			pip_out = gst_element_get_static_pad(e.video[pip_idx].vconvert, "src");
+
+			/* Set parameters */
+			g_object_set(comp_p_in, "xpos", conf->x, NULL);
+			g_object_set(comp_p_in, "ypos", conf->y, NULL);
+			g_object_set(comp_p_in, "width", conf->pip_width, NULL);
+			g_object_set(comp_p_in, "height", conf->pip_height, NULL);
+			
+			/* And pray it will work */
+			if (gst_pad_link (pip_out, comp_p_in) != GST_PAD_LINK_OK)
+				g_printerr ("PIP, PIP image, failed\n");
+
+			video_last = optional;
+		}
+	}
 
 	/* Create encoding element */
-	    e.video[e.n_video].vcodec = gst_element_factory_make(vcodec_gst.c_str(), NULL);
-	    if (e.video[e.n_video].vcodec != nullptr) {
+	if (!vcodec_gst.empty()) {
+	    e.video[place].vcodec = gst_element_factory_make(vcodec_gst.c_str(), NULL);
+	    if (e.video[place].vcodec != nullptr) {
 		if(strncmp("vp8enc", vcodec_gst.c_str(), 6) == 0) {
-			g_object_set(e.video[e.n_video].vcodec, "threads", 6, NULL);
+			g_object_set(e.video[place].vcodec, "threads", 6, NULL);
 			if (conf->video_bitrate != -1)
-				g_object_set(e.video[e.n_video].vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
+				g_object_set(e.video[place].vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
 		}	
 		if(strncmp("vp9enc", vcodec_gst.c_str(), 6) == 0) {
-			g_object_set(e.video[e.n_video].vcodec, "threads", 6, NULL);
+			g_object_set(e.video[place].vcodec, "threads", 6, NULL);
 			if (conf->video_bitrate != -1)
-				g_object_set(e.video[e.n_video].vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
+				g_object_set(e.video[place].vcodec, "target-bitrate", conf->video_bitrate*1000, NULL);
 		}
-		gst_bin_add(GST_BIN(e.pipeline), e.video[e.n_video].vcodec);
-		gst_element_link_many (video_last, e.video[e.n_video].vcodec, e.video[e.n_video].vqueue, NULL);
+		gst_bin_add(GST_BIN(e.pipeline), e.video[place].vcodec);
+		gst_element_link_many (video_last, e.video[place].vcodec, e.video[place].vqueue, NULL);
 	    } else {
 			log_config->error("Can't find video codec");
 	    }
-
-	e.video[e.n_video].ptr = conf;
-	e.n_video++;
+	}
+	e.video[place].ptr = conf;
+	return (place);
 
 }
 
