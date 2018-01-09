@@ -11,8 +11,6 @@ void streaming_handler::operator()() {
 
     conf->port = -1;
 
-    conf->n_audio = 1;
-    conf->n_video = 1;
 
     try {
         doc.Parse(config.c_str());
@@ -56,73 +54,80 @@ void streaming_handler::operator()() {
         		conf->random = doc["random"].GetString();
 	}
 
-	for (int i=0; i < conf->n_audio; i++) {
+	const Value& audio = doc["audio"];
+    	conf->n_audio = 0;
+	for (SizeType i=0; i < audio.Size(); i++) {
 
-		conf->audio[i].audio_bitrate = -1;
+		const Value& doc = audio[i];
+		conf->audio[conf->n_audio].audio_bitrate = -1;
 		
 		if(doc.HasMember("acodec")) {
 			if(doc["acodec"].IsString())
-				conf->audio[i].acodec = doc["acodec"].GetString();
+				conf->audio[conf->n_audio].acodec = doc["acodec"].GetString();
 		}
 
 		if(doc.HasMember("audio_stream")) {
 			if(doc["audio_stream"].IsString())
-				conf->audio[i].audio_stream = doc["audio_stream"].GetString();
+				conf->audio[conf->n_audio].audio_stream = doc["audio_stream"].GetString();
 		}
 
 		if(doc.HasMember("audio_bitrate")) {
 			if(doc["audio_bitrate"].IsInt())
-				conf->audio[i].audio_bitrate = doc["audio_bitrate"].GetInt();
+				conf->audio[conf->n_audio].audio_bitrate = doc["audio_bitrate"].GetInt();
 			else
-				conf->audio[i].audio_bitrate = std::atoi(doc["audio_bitrate"].GetString());
+				conf->audio[conf->n_audio].audio_bitrate = std::atoi(doc["audio_bitrate"].GetString());
 		}
-
+		conf->n_audio++;
 	}
 
-	for (int i=0; i < conf->n_video; i++) {
+	const Value& video = doc["video"];
+    	conf->n_video = 0;
+	for (SizeType i=0; i < video.Size(); i++) {
 
-		conf->video[i].fps = -1;
-		conf->video[i].video_bitrate = -1;
-		conf->video[i].width = -1;
-		conf->video[i].height = -1;
+		const Value& doc = video[i];
+		conf->video[conf->n_video].fps = -1;
+		conf->video[conf->n_video].video_bitrate = -1;
+		conf->video[conf->n_video].width = -1;
+		conf->video[conf->n_video].height = -1;
 
 		if(doc.HasMember("fps")) {
 			if(doc["fps"].IsInt())
-			    conf->video[i].fps = doc["fps"].GetInt();
+			    conf->video[conf->n_video].fps = doc["fps"].GetInt();
 			else
-			    conf->video[i].fps = std::atoi(doc["fps"].GetString());
+			    conf->video[conf->n_video].fps = std::atoi(doc["fps"].GetString());
 		}
 
 		if(doc.HasMember("vcodec")) {
 			if(doc["vcodec"].IsString())
-				conf->video[i].vcodec = doc["vcodec"].GetString();
+				conf->video[conf->n_video].vcodec = doc["vcodec"].GetString();
 		}
 
 		if(doc.HasMember("video_stream")) {
 			if(doc["video_stream"].IsString())
-				conf->video[i].video_stream = doc["video_stream"].GetString();
+				conf->video[conf->n_video].video_stream = doc["video_stream"].GetString();
 		}
 
 		if(doc.HasMember("video_bitrate")) {
 			if(doc["video_bitrate"].IsInt())
-				conf->video[i].video_bitrate = doc["video_bitrate"].GetInt();
+				conf->video[conf->n_video].video_bitrate = doc["video_bitrate"].GetInt();
 			else
-				conf->video[i].video_bitrate = std::atoi(doc["video_bitrate"].GetString());
+				conf->video[conf->n_video].video_bitrate = std::atoi(doc["video_bitrate"].GetString());
 		}
 
 		if(doc.HasMember("width")) {
 			if(doc["width"].IsInt())
-				conf->video[i].width = doc["width"].GetInt();
+				conf->video[conf->n_video].width = doc["width"].GetInt();
 			else
-				conf->video[i].width = std::atoi(doc["width"].GetString());
+				conf->video[conf->n_video].width = std::atoi(doc["width"].GetString());
 		}
 
 		if(doc.HasMember("height")) {
 			if(doc["height"].IsInt())
-				conf->video[i].height = doc["height"].GetInt();
+				conf->video[conf->n_video].height = doc["height"].GetInt();
 			else
-				conf->video[i].height = std::atoi(doc["height"].GetString());
+				conf->video[conf->n_video].height = std::atoi(doc["height"].GetString());
 		}
+		conf->n_video++;
 
 	}
 
