@@ -14,13 +14,16 @@ handleAudio =$(document).ready(function () {
             claeraudio()
             requiredChange()
             showAudio()
+            var mainList = $("#audio_map");
+
+
+
+
+            mainList.append("<p class=\"list-group-item-text\">"+data.acodec+"</p>");
+
         }
     })});
 
-handleShowAudio =$(document).ready(function () {
-    $('#show_stream1').on('click', function(){
-
-    })});
 
 
 handleVideo =$(document).ready(function () {
@@ -32,8 +35,15 @@ handleVideo =$(document).ready(function () {
             clearvideo()
             requiredChange()
             showVideo()
+            var mainList = document.getElementById("video_map");
 
-        }
+            var elem = document.createElement("li");
+            elem.innerHTML= "vcodec:"+data.vcodec
+
+            mainList.appendChild(elem);
+            }
+
+
     })});
 
 claeraudio = function () {
