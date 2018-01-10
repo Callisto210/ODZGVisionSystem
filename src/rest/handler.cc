@@ -89,6 +89,10 @@ void streaming_handler::operator()() {
 		conf->video[conf->n_video].video_bitrate = -1;
 		conf->video[conf->n_video].width = -1;
 		conf->video[conf->n_video].height = -1;
+		conf->video[conf->n_video].pip_width = -1;
+		conf->video[conf->n_video].pip_height = -1;
+		conf->video[conf->n_video].x = -1;
+		conf->video[conf->n_video].y = -1;
 
 		if(doc.HasMember("fps")) {
 			if(doc["fps"].IsInt())
@@ -126,6 +130,39 @@ void streaming_handler::operator()() {
 				conf->video[conf->n_video].height = doc["height"].GetInt();
 			else
 				conf->video[conf->n_video].height = std::atoi(doc["height"].GetString());
+		}
+
+		if(doc.HasMember("pip_width")) {
+			if(doc["pip_width"].IsInt())
+				conf->video[conf->n_video].pip_width = doc["pip_width"].GetInt();
+			else
+				conf->video[conf->n_video].pip_width = std::atoi(doc["pip_width"].GetString());
+		}
+
+		if(doc.HasMember("pip_height")) {
+			if(doc["pip_height"].IsInt())
+				conf->video[conf->n_video].pip_height = doc["pip_height"].GetInt();
+			else
+				conf->video[conf->n_video].pip_height = std::atoi(doc["pip_height"].GetString());
+		}
+
+		if(doc.HasMember("x")) {
+			if(doc["x"].IsInt())
+				conf->video[conf->n_video].x = doc["x"].GetInt();
+			else
+				conf->video[conf->n_video].x = std::atoi(doc["x"].GetString());
+		}
+
+		if(doc.HasMember("y")) {
+			if(doc["y"].IsInt())
+				conf->video[conf->n_video].y = doc["y"].GetInt();
+			else
+				conf->video[conf->n_video].y = std::atoi(doc["y"].GetString());
+		}
+
+		if(doc.HasMember("pip_stream")) {
+			if(doc["pip_stream"].IsString())
+				conf->video[conf->n_video].pip_stream = doc["pip_stream"].GetString();
 		}
 		conf->n_video++;
 
