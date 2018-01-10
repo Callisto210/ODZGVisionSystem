@@ -6,19 +6,30 @@ handleCodec =$(document).ready(function () {
 })});
 
 
-handleCodec =$(document).ready(function () {
+handleAudio =$(document).ready(function () {
     $('#add_stream1').on('click', function(){
-        all_audio.push(new audio_data())
-        claeraudio()
-        requiredChange()
-        showAudio()
+        if(!jQuery.isEmptyObject(new audio_data())){
+            all_audio.push(new audio_data())
+            claeraudio()
+            requiredChange()
+            showAudio()
+        }
     })});
-handleCodec =$(document).ready(function () {
+
+handleShowAudio =$(document).ready(function () {
+    $('#show_stream1').on('click', function(){
+
+    })});
+
+
+handleVideo =$(document).ready(function () {
     $('#add_stream2').on('click', function(){
-        all_video.push(new video_data())
-        clearvideo()
-        requiredChange()
-        showVideo()
+        if (!jQuery.isEmptyObject(new video_data())){
+            all_video.push(new video_data())
+            clearvideo()
+            requiredChange()
+            showVideo()
+        }
     })});
 
 claeraudio = function () {
