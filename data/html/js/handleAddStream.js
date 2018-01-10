@@ -83,8 +83,8 @@ video_data = function () {
         this.pip_stream=$("#pip_stream").val();
         this.pip_height=$("#pip_height").val();
         this.pip_width=$("#pip_width").val();
-        this.pip_x=$("#pip_x").val();
-        this.pip_y=$("#pip_y").val();
+        this.x=$("#pip_x").val();
+        this.y=$("#pip_y").val();
     }
 }
 
