@@ -125,11 +125,18 @@ static int configure_video(Elements &e, video_config_struct *conf) {
 		optional = gst_element_factory_make("videoscale", NULL);
 		if (optional != NULL) {
 			gst_bin_add(GST_BIN(e.pipeline), optional);
+			if (gst_element_link(video_last, optional)) {
+				video_last = optional;
+			}
+		}
+		optional = gst_element_factory_make("capsfilter", NULL);
+		if (optional != NULL) {
+			gst_bin_add(GST_BIN(e.pipeline), optional);
 			GstCaps * caps = gst_caps_new_simple ("video/x-raw",
 			    "width", G_TYPE_INT, conf->width,
 			    "height", G_TYPE_INT, conf->height,
 			    NULL);
-			gst_pad_set_caps(gst_element_get_static_pad (optional, "src"), caps);
+			g_object_set(optional, "caps", caps, NULL);
 			gst_caps_unref(caps);
 			if (gst_element_link(video_last, optional)) {
 				video_last = optional;

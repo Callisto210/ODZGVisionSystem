@@ -226,8 +226,8 @@ int elements_has_null_field(Elements* data)
 	}
 
 	for (int i=0; i < data->n_video && reason.empty(); i++) {
-		if(!data->video[i].vcodec) {
-			reason = "acodec";
+		if(!data->video[i].vcodec && !((video_config_struct *)data->video[i].ptr)->vcodec.empty()) {
+			reason = "vcodec";
 			break;
 		}
 		else if(!data->video[i].vconvert) {
