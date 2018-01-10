@@ -1,5 +1,10 @@
 #include <handler.hh>
 #include <cxxabi.h>
+#include <chrono>
+#include <iomanip>
+#include <iostream>
+#include <ctime>
+#include <sstream>
 
 map<string, config_struct *> streaming_handler::info;
 mutex streaming_handler::mtx;
@@ -14,6 +19,16 @@ void streaming_handler::operator()() {
 
     try {
         doc.Parse(config.c_str());
+
+	if(doc.HasMember("date")) {
+		if(doc["date"].IsString())
+        		conf->date = doc["date"].GetString();
+	}
+
+	if(doc.HasMember("time")) {
+		if(doc["time"].IsString())
+        		conf->time = doc["time"].GetString();
+	}
 
 	if(doc.HasMember("uri")) {
 		if(doc["uri"].IsString())
@@ -175,6 +190,17 @@ void streaming_handler::operator()() {
 		return;
 	}
 	conf->state = "stopped";
+
+	if (!conf->date.empty() && !conf->time.empty()) {
+		string dt = conf->date + " " + conf->time;
+		istringstream ss(dt.c_str());
+		struct tm when;
+		cout << dt << endl;
+		ss >> get_time(&when, "%Y-%m-%d %T");
+		cout << put_time(&when, "%Y-%m-%d %T");
+		this_thread::sleep_until(chrono::system_clock::from_time_t(mktime(&when)));
+		cout << "Start!" << endl;
+	}
 
 	mtx.lock();
 	info[conf->random] = conf;
