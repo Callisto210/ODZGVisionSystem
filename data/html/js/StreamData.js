@@ -18,6 +18,7 @@ var StreamData= function () {
     if ($('#video_bitrate').val()!==""){this.video_bitrate=$('#video_bitrate').val();}
     if ($('#video_stream').val()!==""){this.video_stream=$('#video_stream').val();}
     if ($('#vcodec').val()!==null){this.vcodec=$('#vcodec').val();}
+	if ($('#pip_stream').val()!==""){this.pip_stream=$('#pip_stream').val();}
     this.random=(function(m,s,c){return (c ? arguments.callee(m,s,c-1) : '') + s[m.floor(m.random() * s.length)]})(Math,'0123456789ABCDEF',12);
 
 
