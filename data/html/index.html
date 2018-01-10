@@ -176,14 +176,27 @@
                         </div>
                           <div>
                               <label class="custom-control custom-checkbox">
-                                <input  id="pip_check" type="checkbox" class="custom-control-input" onclick="this.form.elements['pip_stream'].disabled = !this.checked">
+                                <input  id="pip_check" type="checkbox" class="custom-control-input">
                                   <span class="custom-control-indicator"></span>
                                 <span class="custom-control-description">PiP Stream ID</span>
                             </label>
-
+                            <div id="pip_all" style="display: none;">
                               <div><label class="col-lg-2">PiP Stream ID</label>
-                                  <input class="col-lg-9" id="pip_stream" name="pip_stream" type="text" disabled/>
+                                  <input class="col-lg-9" id="pip_stream" name="pip_stream" type="text" />
                               </div>
+                                <div><label class="col-lg-2">PiP Stream x</label>
+                                    <input class="col-lg-9" id="pip_x" name="pip_x" type="number" />
+                                </div>
+                                <div><label class="col-lg-2">PiP Stream y</label>
+                                    <input class="col-lg-9" id="pip_y" name="pip_stream" type="number" />
+                                </div>
+                                <div><label class="col-lg-2">PiP Stream height</label>
+                                    <input class="col-lg-9" id="pip_height" name="pip_height" type="number" />
+                                </div>
+                                <div><label class="col-lg-2">PiP Stream width</label>
+                                    <input class="col-lg-9" id="pip_width" name="pip_width" type="number" />
+                                </div>
+                            </div>
                     </div>
                         <div class="row">
                         <div class=" col-lg-6"><button type="button" class="btn btn-info btn-sm" id="add_stream2">Add Video Stream</button></div>

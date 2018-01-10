@@ -19,6 +19,10 @@ showVideo();
         requiredChange();
     showAudio()    })
 })
+$('#pip_check').on('change', function() {
+    showpip()
+    console.log("pip")
+});
 
 function requiredChange(){
     clear();
@@ -56,8 +60,13 @@ function clear() {
         $("#video_stream").val('');
         $("#height").val('');
         $("#width").val('');
-        if(!$('#pip_check').prop("checked"))
-        $("#pip_stream").val("");
+        if(!$('#pip_check').prop("checked")) {
+            $("#pip_stream").val("");
+            $("#pip_y").val("");
+            $("#pip_x").val("");
+            $("#pip_width").val("");
+            $("#pip_height").val("");
+        }
 
     }
     $("#video_check").prop('required',true)
@@ -86,5 +95,25 @@ if($('#audio_check').prop( "checked" )){
     $('#audio_div').hide()
 
 }
+}
+function showpip() {
+    if($('#pip_check').prop( "checked" )){
+
+        $('#pip_all').show()
+        $("#pip_stream").prop('required',true)
+        $("#pip_height").prop('required',true)
+        $("#pip_width").prop('required',true)
+        $("#pip_x").prop('required',true)
+        $("#pip_y").prop('required',true)
+
+    }else {
+        $('#pip_all').hide()
+        $("#pip_stream").prop('required',false)
+        $("#pip_height").prop('required',false)
+        $("#pip_width").prop('required',false)
+        $("#pip_x").prop('required',false)
+        $("#pip_y").prop('required',false)
+
+    }
 }
 

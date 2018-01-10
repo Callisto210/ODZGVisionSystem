@@ -8,8 +8,9 @@ handleCodec =$(document).ready(function () {
 
 handleAudio =$(document).ready(function () {
     $('#add_stream1').on('click', function(){
-        if(!jQuery.isEmptyObject(new audio_data())){
-            all_audio.push(new audio_data())
+        var data = new audio_data();
+        if(!jQuery.isEmptyObject(data) && data.hasOwnProperty("acodec")){
+            all_audio.push(data)
             claeraudio()
             requiredChange()
             showAudio()
@@ -24,11 +25,14 @@ handleShowAudio =$(document).ready(function () {
 
 handleVideo =$(document).ready(function () {
     $('#add_stream2').on('click', function(){
-        if (!jQuery.isEmptyObject(new video_data())){
-            all_video.push(new video_data())
+        var data = new video_data();
+        if (!jQuery.isEmptyObject(data) && data.hasOwnProperty("vcodec")){
+
+            all_video.push(data)
             clearvideo()
             requiredChange()
             showVideo()
+
         }
     })});
 
@@ -44,8 +48,12 @@ clearvideo = function () {
     $("#video_stream").val('');
     $("#height").val('');
     $("#width").val('');
-    if(!$('#pip_check').prop("checked"))
-        $("#pip_stream").val("");
+    $("#pip_stream").val("");
+    $("#pip_y").val("");
+    $("#pip_x").val("");
+    $("#pip_width").val("");
+    $("#pip_height").val("");
+
 }
 
 
@@ -62,6 +70,13 @@ video_data = function () {
     if ($('#fps').val()!==""){this.fps=$('#fps').val();}
     if($('#width').val()!==""){ this.width=$('#width').val();}
     if ($('#height').val()!==""){this.height=$('#height').val();}
+    if($('#pip_check').prop("checked")){
+        this.pip_stream=$("#pip_stream").val();
+        this.pip_height=$("#pip_height").val();
+        this.pip_width=$("#pip_width").val();
+        this.pip_x=$("#pip_x").val();
+        this.pip_y=$("#pip_y").val();
+    }
 }
 
 
