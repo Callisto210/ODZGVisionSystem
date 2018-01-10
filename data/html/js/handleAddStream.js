@@ -19,7 +19,7 @@ handleAudio =$(document).ready(function () {
 
 
 
-            mainList.append("<p class=\"list-group-item-text\">"+data.acodec+"</p>");
+            mainList.append("<p class=\"list-group-item-heading\">"+"Codec: "+ data.acodec+ ", Bitrate: "+ data.audio_bitrate+ ", ID: "+ data.audio_stream+"</p>");
 
         }
     })});
@@ -35,13 +35,11 @@ handleVideo =$(document).ready(function () {
             clearvideo()
             requiredChange()
             showVideo()
-            var mainList = document.getElementById("video_map");
+            var mainList = $("#video_map");
 
-            var elem = document.createElement("li");
-            elem.innerHTML= "vcodec:"+data.vcodec
+            mainList.append("<p class=\"list-group-item-heading\">"+"Codec: "+ data.vcodec+ ", Bitrate: "+ data.video_bitrate+ ", ID: "+ data.video_stream+", fps: "+ data.fps+", height: "+ data.height+", width "+data.width+ "</p>");
 
-            mainList.appendChild(elem);
-            }
+        }
 
 
     })});
@@ -54,6 +52,7 @@ claeraudio = function () {
 }
 clearvideo = function () {
     $("#video_bitrate").val('');
+    $("#fps").val('');
     $("#vcodec").val('');
     $("#video_stream").val('');
     $("#height").val('');
