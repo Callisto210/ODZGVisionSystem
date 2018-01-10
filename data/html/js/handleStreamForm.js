@@ -8,6 +8,7 @@ handleForm =$(document).ready(function () {
                 all_audio = []
                $("#video_map").html('');
                 $("#audio_map").html('');
+                requiredChange()
         return false;
 
     })
