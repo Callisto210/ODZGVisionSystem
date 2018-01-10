@@ -1,255 +1,275 @@
 <!DOCTYPE html>
 <html lang="pl" xmlns:display="http://www.w3.org/1999/xhtml">
-  <head>
+<head>
 
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
-    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css"
+          integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/index.css"/>
 
 
     <title>Homepage - ODZG Vision System</title>
 
-  </head>
-  <body>
-            <h1>ODZGVisionSystem</h1>
+</head>
+<body>
+<h1>ODZGVisionSystem</h1>
 <!--
               <div class="column-sm-4">
 
               </div>
 -->
-            <div class="btn-group col-sm-6">
-              <button type="button" class="btn btn-danger" id="mainListButton">STREAMS</button>
-              <button type="button" class="btn btn-danger dropdown-toggle" id ="smallButton" data-toggle="dropdown">
-              <span class="caret"></span>
-              </button>
-              <ul class="dropdown-menu" id="menuList" role="menu">
-                <li><a  id ="text1" href="#" data-toggle="modal"
-                        data-target="#input_stream">Add Streams Parameters</a></li>
-                  <li><a  id ="text2" href="#" data-toggle="modal"
-                          data-target="#info_stream">Information about stream</a></li>
-                  <li><a  id ="text3" href="#" data-toggle="modal"
-                          data-target="#transcoding">Currently transcoding</a></li>
-                <li class="divider"></li>
-              </ul>
+<div class="btn-group col-sm-6">
+    <button type="button" class="btn btn-danger" id="mainListButton">STREAMS</button>
+    <button type="button" class="btn btn-danger dropdown-toggle" id="smallButton" data-toggle="dropdown">
+        <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" id="menuList" role="menu">
+        <li><a id="text1" href="#" data-toggle="modal"
+               data-target="#input_stream">Add Streams Parameters</a></li>
+        <li><a id="text2" href="#" data-toggle="modal"
+               data-target="#info_stream">Information about stream</a></li>
+        <li><a id="text3" href="#" data-toggle="modal"
+               data-target="#transcoding">Currently transcoding</a></li>
+        <li class="divider"></li>
+    </ul>
+</div>
+<div class="modal" id="info_stream">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="outputform">
+                <h2 class="text-center">ODZGVision INFO</h2>
+                <div><label class="col-lg-2">URI</label>
+                    <input class="col-lg-9" id="infouri" name="infouri" type="text" required/></div>
+                <input type="submit" name="submit1" class="submit action-button" value="Submit"/>
+            </form>
+            <div class="container" id="message">
+                <div class="panel-group" id="accordion"></div>
             </div>
-            <div class="modal" id="info_stream">
-                <div class="modal-dialog">
-                <div class="modal-content">
-                    <form id="outputform">
-                        <h2 class="text-center">ODZGVision INFO</h2>
-                        <div><label class="col-lg-2">URI</label>
-                            <input class="col-lg-9" id="infouri" name="infouri" type="text" required /></div>
-                        <input type="submit" name="submit1" class="submit action-button" value="Submit" />
-                    </form>
-                    <div class="container" id="message">
-                        <div class="panel-group" id="accordion"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="transcoding">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <h2 class="text-center">ODZGVision Transcoding</h2>
+            <div class="container" id="transcontainer">
+                <div class="panel-group" id="accordion1"></div>
+            </div>
+        </div>
+        <button type="button" id="myButton" data-loading-text="Refreshing..." class="btn btn-primary"
+                autocomplete="off">
+            Refresh
+        </button>
+    </div>
+</div>
+
+
+<div class="modal" id="input_stream">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- multistep form -->
+            <form id="msform">
+                <h2 class="text-center">ODZGVision FORM</h2>
+                <div>
+                    <label class="col-lg-2">Date</label>
+                    <input class="col-lg-5" type="date" value="2018-01-06" id="date" name="date" required>
+                    <label class="col-lg-2">Time</label>
+                    <input class="col-lg-2" type="time" value="13:45:00" id="time" name="time" required>
+                </div>
+                <div><label class="col-lg-2">URI</label>
+                    <input class="col-lg-9" id="uri" name="uri" type="text" required/></div>
+                <div>
+                    <label class="col-lg-2">Sink</label>
+                    <select class="col-lg-9" id="sink" name="sink" required>
+                        <option value="" disabled selected style="display:none;">Choose SINK</option>
+                        <option value="file">File</option>
+                        <option value="udp">UDP</option>
+                        <option value="icecast">Icecast</option>
+                    </select>
+                </div>
+                <!-- fieldsets -->
+                <div id="file_div" style="display: none;">
+                    <label class="col-lg-2">PATH</label>
+                    <input class="col-lg-9" name="location" id="location"/>
+                </div>
+
+                <div id="udp_div" style="display: none;">
+                    <div>
+                        <label class="col-lg-2">HOST</label>
+                        <input class="col-lg-4" id="host" type="text">
+                    </div>
+                    <div>
+                        <label class="col-lg-2">PORT</label>
+                        <input class="col-lg-4" id="port" type="number" min="1">
                     </div>
                 </div>
+                <div id="icecast_udp" style="display: none;">
+                    <label class="col-lg-2">IP</label>
+                    <input class="col-lg-9" type="text" id="ip"/>
                 </div>
-            </div>
-
-          <div class="modal" id="transcoding">
-              <div class="modal-dialog">
-                  <div class="modal-content">
-                      <h2 class="text-center">ODZGVision Transcoding</h2>
-                      <div class="container" id="transcontainer">
-                          <div class="panel-group" id="accordion1"></div>
-                      </div>
-                  </div>
-                  <button type="button" id="myButton" data-loading-text="Refreshing..." class="btn btn-primary" autocomplete="off">
-                      Refresh
-                  </button>
-              </div>
-          </div>
-
-
-            <div class="modal" id="input_stream">
-              <div class="modal-dialog">
-              <div class="modal-content">
-                <!-- multistep form -->
-                <form id="msform">
-                    <h2 class="text-center">ODZGVision FORM</h2>
+                <div>
+                    <label class="col-lg-2">Choose Codecs</label>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" value="" id="audio_check" required>Audio
+                    </label>
+                    <label class="checkbox-inline">
+                        <input type="checkbox" value="" id="video_check" required>Video
+                    </label>
+                </div>
+                <div id="audio_div" style="display: none;">
                     <div>
-                        <label class="col-lg-2">Date</label>
-                        <input class="col-lg-5" type="date" value="2018-01-06" id="date" name="date" required>
-                        <label class="col-lg-2">Time</label>
-                        <input class="col-lg-2" type="time" value="13:45:00" id="time" name="time" required>
-                    </div>
-                    <div><label class="col-lg-2">URI</label>
-                        <input class="col-lg-9" id="uri" name="uri" type="text" required /></div>
-                    <div>
-                        <label class="col-lg-2">Sink</label>
-                        <select class="col-lg-9" id="sink" name="sink" required>
-                            <option value="" disabled selected style="display:none;">Choose SINK</option>
-                            <option value="file">File</option>
-                            <option value="udp">UDP</option>
-                            <option value="icecast">Icecast</option>
-                        </select>
-                    </div>
-                  <!-- fieldsets -->
-                    <div id="file_div" style="display: none;">
-                        <label class="col-lg-2">PATH</label>
-                      <input class="col-lg-9" name="location" id="location" />
-                    </div>
-
-                    <div id="udp_div" style="display: none;">
-                        <div>
-                            <label class="col-lg-2">HOST</label>
-                            <input class="col-lg-4" id="host" type="text"  >
-                        </div>
-                        <div>
-                            <label class="col-lg-2">PORT</label>
-                            <input class="col-lg-4" id="port" type="number" min="1" >
-                        </div></div>
-                    <div id="icecast_udp" style="display: none;">
-                        <label class="col-lg-2">IP</label>
-                        <input class="col-lg-9"  type="text" id="ip" />
-                    </div>
-                    <div>
-                        <label class="col-lg-2">Choose Codecs</label>
-                        <label class="checkbox-inline">
-                            <input type="checkbox" value="" id="audio_check" required>Audio
-                        </label>
-                        <label class="checkbox-inline">
-                            <input type="checkbox" value="" id="video_check" required>Video
-                        </label>
-                    </div>
-                    <div id="audio_div" style="display: none;">
-                        <div>
-                            <label class="col-lg-2">AUDIO bit rate</label>
-                            <input class="col-lg-4" id="audio_bitrate" type="number" min="1" >
-                        </div>
-
-                        <div>
-                            <label class="col-lg-2" >AUDIO codec</label>
-                            <select class="col-lg-4" id="acodec" required>
-                                <option value="" disabled selected style="display:none;">Choose audio codec</option>
-                                <option value="opus">opus</option>
-                                <option value="aac">aac</option>
-                                <option value="lame">lame</option>
-                                <option value="vorbis">vorbis</option>
-                            </select>
-                        </div>
-
-                        <div><label class="col-lg-2">AUDIO stream</label>
-                            <input class="col-lg-9" id="audio_stream" name="audio_stream" type="text" />
-                        </div>
-                        <div class="Col-lg-6 Col-lg-6"><button type="button" class="btn btn-info btn-sm" id="add_stream1">Add Audio Stream</button></div>
-
-                    </div>
-                    <div id="video_div" style="display: none;">
-                        <div>
-                            <label class="col-lg-2">VIDEO bit rate</label>
-                            <input class="col-lg-4" id="video_bitrate" type="number" min="1">
-                        </div>
-
-                        <div>
-                            <label class="col-lg-2">VIDEO codec</label>
-                            <select class="col-lg-4" id="vcodec" required>
-                                <option value="" disabled selected style="display:none;">Choose video codec</option>
-                                <option value="vp8">vp8</option>
-                                <option value="vp9">vp9</option>
-                                <option value="h264">h264</option>
-                                <option value="theora">theora</option>
-                            </select>
-                        </div>
-                        <div><label class="col-lg-2">VIDEO stream</label>
-                            <input class="col-lg-9" id="video_stream" name="video_stream" type="text" />
-                        </div>
-                        <div>
-                            <label class="col-lg-2">fps</label>
-                            <input class="col-lg-4" id="fps" type="number" min="1"  >
-                        </div>
-                        <div>
-                            <label class="col-lg-2">Width</label>
-                            <input class="col-lg-4" id="width" type="number" min="1"  >
-                        </div>
-                        <div>
-                            <label class="col-lg-2">Height</label>
-                            <input class="col-lg-4" id="height" type="number" min="1"  >
-                        </div>
-                          <div>
-                              <label class="custom-control custom-checkbox">
-                                <input  id="pip_check" type="checkbox" class="custom-control-input" onclick="this.form.elements['pip_stream'].disabled = !this.checked">
-                                  <span class="custom-control-indicator"></span>
-                                <span class="custom-control-description">PiP Stream ID</span>
-                            </label>
-
-                              <div><label class="col-lg-2">PiP Stream ID</label>
-                                  <input class="col-lg-9" id="pip_stream" name="pip_stream" type="text" disabled/>
-                              </div>
-                    </div>
-
-                        <div class=" Col-lg-6 Col-lg-6"><button type="button" class="btn btn-info btn-sm" id="add_stream2">Add Video Stream</button></div>
+                        <label class="col-lg-2">AUDIO bit rate</label>
+                        <input class="col-lg-4" id="audio_bitrate" type="number" min="1">
                     </div>
 
                     <div>
-                        <label class="col-lg-2">Muxer</label>
-                        <select class="col-lg-4" id="mux" required>
-                            <option value="" disabled selected style="display:none;">Choose muxer</option>
-                            <option value="mp4">mp4</option>
-                            <option value="mpegts">mpegts</option>
-                            <option value="ogg">ogg</option>
-                            <option value="webm">webm</option>
+                        <label class="col-lg-2">AUDIO codec</label>
+                        <select class="col-lg-4" id="acodec" required>
+                            <option value="" disabled selected style="display:none;">Choose audio codec</option>
+                            <option value="opus">opus</option>
+                            <option value="aac">aac</option>
+                            <option value="lame">lame</option>
+                            <option value="vorbis">vorbis</option>
                         </select>
                     </div>
 
-                    <input type="submit" name="submit" class="submit action-button" value="Submit"  />
+                    <div><label class="col-lg-2">AUDIO stream</label>
+                        <input class="col-lg-9" id="audio_stream" name="audio_stream" type="text"/>
+                    </div>
+                    <div>
+                        <div class="Col-lg-6 Col-lg-6">
+                            <button type="button" class="btn btn-info btn-sm" id="add_stream1">Add Audio Stream</button>
+                        </div>
+                        <div id="audio_stream_inner">
+                        </div>
+                    </div>
 
+                </div>
+                <div id="video_div" style="display: none;">
+                    <div>
+                        <label class="col-lg-2">VIDEO bit rate</label>
+                        <input class="col-lg-4" id="video_bitrate" type="number" min="1">
+                    </div>
 
-                </form>
+                    <div>
+                        <label class="col-lg-2">VIDEO codec</label>
+                        <select class="col-lg-4" id="vcodec" required>
+                            <option value="" disabled selected style="display:none;">Choose video codec</option>
+                            <option value="vp8">vp8</option>
+                            <option value="vp9">vp9</option>
+                            <option value="h264">h264</option>
+                            <option value="theora">theora</option>
+                        </select>
+                    </div>
+                    <div><label class="col-lg-2">VIDEO stream</label>
+                        <input class="col-lg-9" id="video_stream" name="video_stream" type="text"/>
+                    </div>
+                    <div>
+                        <label class="col-lg-2">fps</label>
+                        <input class="col-lg-4" id="fps" type="number" min="1">
+                    </div>
+                    <div>
+                        <label class="col-lg-2">Width</label>
+                        <input class="col-lg-4" id="width" type="number" min="1">
+                    </div>
+                    <div>
+                        <label class="col-lg-2">Height</label>
+                        <input class="col-lg-4" id="height" type="number" min="1">
+                    </div>
+                    <div>
+                        <label class="custom-control custom-checkbox">
+                            <input id="pip_check" type="checkbox" class="custom-control-input"
+                                   onclick="this.form.elements['pip_stream'].disabled = !this.checked">
+                            <span class="custom-control-indicator"></span>
+                            <span class="custom-control-description">PiP Stream ID</span>
+                        </label>
 
+                        <div><label class="col-lg-2">PiP Stream ID</label>
+                            <input class="col-lg-9" id="pip_stream" name="pip_stream" type="text" disabled/>
+                        </div>
+                    </div>
 
-
-
-              </div>
-              </div>
-
-            </div>
-
-              </div>
-
-            </div>
-               <!-- Modal -->
-                <div class="modal fade" id="myModal" role="dialog">
-                    <div class="modal-dialog">
-
-                        <!-- Modal content-->
-                        <div class="modal-content">
-                            <div class="modal-header text-center">
-                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title text-center"></h4>
-                            </div>
-                            <div class="modal-body">
-                                <video id="video" src="" type="video/ogg" controls autoplay></video>                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            </div>
+                    <div>
+                        <div class=" Col-lg-6 Col-lg-6">
+                            <button type="button" class="btn btn-info btn-sm" id="add_stream">Add Video Stream</button>
                         </div>
 
                     </div>
                 </div>
 
-            <div class="modal fade" id="modal_add_stream">
-
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <input type="checkbox">
-                    </div>
+                <div>
+                    <label class="col-lg-2">Muxer</label>
+                    <select class="col-lg-4" id="mux" required>
+                        <option value="" disabled selected style="display:none;">Choose muxer</option>
+                        <option value="mp4">mp4</option>
+                        <option value="mpegts">mpegts</option>
+                        <option value="ogg">ogg</option>
+                        <option value="webm">webm</option>
+                    </select>
                 </div>
+
+                <input type="submit" name="submit" class="submit action-button" value="Submit"/>
+
+
+            </form>
+
+
+        </div>
+    </div>
+
+</div>
+
+</div>
+
+</div>
+<!-- Modal -->
+<div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title text-center"></h4>
             </div>
+            <div class="modal-body">
+                <video id="video" src="" type="video/ogg" controls autoplay></video>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="modal_add_stream">
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <input type="checkbox">
+        </div>
+    </div>
+</div>
 
 
-            <script src="http://thecodeplayer.com/uploads/js/jquery-1.9.1.min.js" type="text/javascript"></script>
-            <!-- jQuery easing plugin -->
-            <script src="http://thecodeplayer.com/uploads/js/jquery.easing.min.js" type="text/javascript"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+<script src="http://thecodeplayer.com/uploads/js/jquery-1.9.1.min.js" type="text/javascript"></script>
+<!-- jQuery easing plugin -->
+<script src="http://thecodeplayer.com/uploads/js/jquery.easing.min.js" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"
+        integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"
+        integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1"
+        crossorigin="anonymous"></script>
 <script src="js/StreamData.js"></script>
+<script src="js/VideoStream.js"></script>
+<script src="js/AudioStream.js"></script>
 <script src="js/SendingStream.js"></script>
 <script src="js/handleStreamForm.js"></script>
 <script src="js/handleCodec.js"></script>
@@ -257,9 +277,11 @@
 <script src="js/InfoData.js"></script>
 <script src="js/InfoStream.js"></script>
 <script src="js/handleInfoForm.js"></script>
-<script src="js/handleAddStream.js"></script>
+<script src="js/handleAddStreamVideo.js"></script>
+<script src="js/handleAddStreamAudio.js"></script>
 
 
-  </body>
- 
+
+</body>
+
 </html>

@@ -54,7 +54,7 @@ function clear() {
         $("#video_stream").val('');
         $("#height").val('');
         $("#width").val('');
-        if(!$('#pip_check').pop("checked"))
+        if(!$('#pip_check').prop("checked"))
         $("#pip_stream").val("");
 
     }
