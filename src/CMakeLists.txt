@@ -11,13 +11,13 @@ message(STATUS "Rest files: ${REST}")
 include_directories(codecs)
 include_directories(rest)
 include_directories(${CMAKE_CURRENT_LIST_DIR})
-add_executable(Main ${MAIN} ${REST} ${CODECS_C} ${CODECS_CXX} app_config.cc app_config.hh)
+add_executable(odzg ${MAIN} ${REST} ${CODECS_C} ${CODECS_CXX} app_config.cc app_config.hh)
 
-target_link_libraries(Main
+target_link_libraries(odzg
         ${pistache}
         pthread 
         ${GST_PKG_LDFLAGS}
         ${jsmn}
 	gstpbutils-1.0
         )
-install(TARGETS Main RUNTIME DESTINATION bin)
+install(TARGETS odzg RUNTIME DESTINATION bin RENAME odzg)

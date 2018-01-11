@@ -44,6 +44,6 @@ find_package(RapidJSON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_SOURCE_FILE_EXTENSIONS cc;hh)
 
-
+install(DIRECTORY data/html DESTINATION /var/www/html/odzg)
 add_subdirectory(src)
 
