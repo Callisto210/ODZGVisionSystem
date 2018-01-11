@@ -37,6 +37,8 @@ struct video_config_struct {
 
 struct config_struct {
 	int port;
+	string date;
+	string time;
 	string random;
 	string uri;
 	string sink;
