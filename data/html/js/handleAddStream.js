@@ -11,6 +11,9 @@ handleAudio =$(document).ready(function () {
         var data = new audio_data();
         if(!jQuery.isEmptyObject(data) && data.hasOwnProperty("acodec")){
             all_audio.push(data)
+
+            $("#audio_stream :selected").prop("disabled",true);
+
             claeraudio()
             requiredChange()
             showAudio()
@@ -32,6 +35,10 @@ handleVideo =$(document).ready(function () {
         if (!jQuery.isEmptyObject(data) && data.hasOwnProperty("vcodec")){
 
             all_video.push(data)
+            var e = document.getElementById("video_stream");
+            var f = document.getElementById("pip_stream");
+            e.options[e.selectedIndex].disabled = true;
+            f.options[e.selectedIndex].disabled = true;
             clearvideo()
             requiredChange()
             showVideo()

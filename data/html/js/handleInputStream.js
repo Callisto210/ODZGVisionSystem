@@ -17,6 +17,7 @@ InputInfo = function (str) {
             for (i = 0; i < data["video"].length; i++) {
                 resultHtmls =(("<option value=\""+data["video"][i]["streamid"]+"\">" +data["video"][i]["streamid"]+"</option>"))
                 $( "#video_stream" ).append( resultHtmls );
+                $("#pip_stream").append(resultHtmls);
             }
 
 
