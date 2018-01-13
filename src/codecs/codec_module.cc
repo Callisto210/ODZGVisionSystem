@@ -71,8 +71,9 @@ int magic(Elements data, config_struct conf) {
 #endif
 
 
+    for (int i=0; i < data.n_decode; i++)
+    	g_signal_connect (data.decode[i], "pad-added", G_CALLBACK (pad_added_handler), &data);
 
-    g_signal_connect (data.decode, "pad-added", G_CALLBACK (pad_added_handler), &data);
     //g_signal_connect (data.decode, "autoplug-continue", G_CALLBACK (autoplug_continue_cb), &data);
 
 	/* Start playing */
@@ -206,9 +207,13 @@ int elements_has_null_field(Elements* data)
 {
     string reason;
 
-	if(data != NULL)
-	if(!data->decode)
-		reason = "decode";
+	if(data == NULL)
+		return (1);
+
+	for (int i=0; i < data->n_decode && reason.empty(); i++) {
+		if(!data->decode[i])
+			reason = "decode";
+	}
 	
 	for (int i=0; i < data->n_audio && reason.empty(); i++) {
 		if(!data->audio[i].aconvert) {

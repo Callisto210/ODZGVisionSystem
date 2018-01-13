@@ -245,10 +245,14 @@ void configure_pipeline(Elements &e, config_struct *conf)
     gst_plugin_feature_set_rank(vdp_decode, GST_RANK_NONE);
     gst_object_unref(vdp_decode);
 
-    e.decode = gst_element_factory_make("uridecodebin", "source");
-    gst_bin_add(GST_BIN(e.pipeline), e.decode);
-    
-    g_object_set (e.decode, "uri", conf->uri.c_str(), nullptr);
+    e.n_decode = 0;
+    for (int i=0; i < conf->n_uri; i++) {
+	    e.decode[i] = gst_element_factory_make("uridecodebin", NULL);
+	    gst_bin_add(GST_BIN(e.pipeline), e.decode[i]);
+	    
+	    g_object_set (e.decode[i], "uri", conf->uri[i].c_str(), nullptr);
+	    e.n_decode++;
+    }
 
     e.n_audio = 0;
     e.n_video = 0;

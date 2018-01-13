@@ -30,9 +30,11 @@ void streaming_handler::operator()() {
         		conf->time = doc["time"].GetString();
 	}
 
-	if(doc.HasMember("uri")) {
-		if(doc["uri"].IsString())
-        		conf->uri = doc["uri"].GetString();
+	const Value& uri = doc["uri"];
+	conf->n_uri = 0;
+	for (SizeType i=0; i < uri.Size(); i++) {
+		if(uri[i].IsString())
+			conf->uri[conf->n_uri++] = uri[i].GetString();
 	}
 
         if(doc.HasMember("port")) {
@@ -184,7 +186,7 @@ void streaming_handler::operator()() {
 	}
 
 	if (conf->random.empty()
-	    || conf->uri.empty()
+	    || conf->uri[0].empty() /* At least one uri */
 	    || conf->sink.empty()
 	    || conf->mux.empty()) {	
 		return;

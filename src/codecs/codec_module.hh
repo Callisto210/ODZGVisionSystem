@@ -40,7 +40,8 @@ struct config_struct {
 	string date;
 	string time;
 	string random;
-	string uri;
+	int n_uri;
+	string uri[100];
 	string sink;
 	string mux;
 	string host;
@@ -69,7 +70,8 @@ typedef struct _video_elements {
 
 typedef struct _elements {
     GstElement *pipeline;
-    GstElement *decode;
+    GstElement *decode[100];
+    int n_decode;
 
     int n_audio;
     int n_video;
