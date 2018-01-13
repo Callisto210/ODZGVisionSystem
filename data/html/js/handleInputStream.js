@@ -1,4 +1,4 @@
-InputInfo = function (str) {
+InputInfo = function (str, names) {
     console.log('ajax');
     datas = {"uri" : str}
     $.ajax({
@@ -9,13 +9,21 @@ InputInfo = function (str) {
         data: JSON.stringify(datas),
         success: function( data, textStatus, jQxhr ){
             console.log(data)
-            $( "#audio_stream" ).html( "" );
+            removeNames(names, "audio_stream");
+            // $("#audio_stream").append()
             for (i = 0; i < data["audio"].length; i++) {
-                resultHtmls =(("<option value=\""+data["audio"][i]["streamid"]+"\">" +data["audio"][i]["streamid"]+"</option>"))
+                resultHtmls =(("<option value=\""+data["audio"][i]["streamid"]+"\" name=\""+names+"\">" +data["audio"][i]["streamid"]+"</option>"))
                 $( "#audio_stream" ).append( resultHtmls );
             }
+
+            //$( "#video_stream" ).html( "" );
+            removeNames(names, "video_stream");
+            //$("#video_stream").append()
+            //$( "#pip_stream" ).html( "" );
+            removeNames(names, "pip_stream");
+            //$("#pip_stream").append("<option value=\"\" disabled selected style=\"display:none;\">Choose video stream</option>")
             for (i = 0; i < data["video"].length; i++) {
-                resultHtmls =(("<option value=\""+data["video"][i]["streamid"]+"\">" +data["video"][i]["streamid"]+"</option>"))
+                resultHtmls =(("<option value=\""+data["video"][i]["streamid"]+ "\" name=\""+names+"\">" +data["video"][i]["streamid"]+"</option>"))
                 $( "#video_stream" ).append( resultHtmls );
                 $("#pip_stream").append(resultHtmls);
             }
@@ -24,16 +32,58 @@ InputInfo = function (str) {
 
         },
         error: function( jqXhr, textStatus, errorThrown ){
-            $( "#audio_stream" ).html( "" );
-            $( "#video_stream" ).html( "" );
+            //$( "#audio_stream" ).html( "<option value=\"\" disabled selected style=\"display:none;\">Choose audio stream</option>" );
+            //$( "#video_stream" ).html( "<option value=\"\" disabled selected style=\"display:none;\">Choose video stream</option>" );
+            //$( "#pip_stream" ).html( "<option value=\"\" disabled selected style=\"display:none;\">Choose video stream</option>" );
+            console.log(errorThrown)
+
 
         }
     })
 
 }
 
-$( "#uri" ).change(function() {
-    if($("#uri").val().trim().length !=0){
-        InputInfo($("#uri").val())
-    }
+removeNames = function (names, stream) {
+    $( "#"+stream+" option[name=\""+names+"\"]" ).each(function () {
+        console.log(this)
+        $(this).remove();
+
+    });
+
+}
+
+$( "#uri-container" ).on('change','*',function() {
+    // $( "#audio_stream" ).html( "" );
+    // $( "#video_stream" ).html( "" );
+    // $( "#pip_stream" ).html( "" );
+    // $( "#uri-container :input" ).each(function () {
+    //     console.log(this)
+        if($(this).val().trim().length !=0){
+            InputInfo($(this).val(), $(this).attr('id')   )
+        }
+        else {
+            removeNames($(this).attr('id'), "video_stream");
+            removeNames($(this).attr('id'), "audio_stream");
+            removeNames($(this).attr('id'), "pip_stream");
+        }
+});
+
+$( document).on('change','#video_stream',function() {
+    console.log("video_change")
+    $("#pip_stream  option").each(function () {
+        $(this).prop('disabled',false)
+    });
+    var e = document.getElementById("video_stream");
+    var f = document.getElementById("pip_stream");
+    f.options[e.selectedIndex].disabled = true;
+});
+
+$(document).on('change','#pip_stream' , function() {
+    console.log("pip_change")
+    $("#video_stream  option").each(function () {
+        $(this).prop('disabled', false)
+    });
+    var e = document.getElementById("pip_stream");
+    var f = document.getElementById("video_stream");
+    f.options[e.selectedIndex].disabled = true;
 });

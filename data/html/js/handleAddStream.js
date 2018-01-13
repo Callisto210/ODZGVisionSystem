@@ -12,7 +12,7 @@ handleAudio =$(document).ready(function () {
         if(!jQuery.isEmptyObject(data) && data.hasOwnProperty("acodec")){
             all_audio.push(data)
 
-            $("#audio_stream :selected").prop("disabled",true);
+            $("#audio_stream :selected").remove()
 
             claeraudio()
             requiredChange()
@@ -35,10 +35,9 @@ handleVideo =$(document).ready(function () {
         if (!jQuery.isEmptyObject(data) && data.hasOwnProperty("vcodec")){
 
             all_video.push(data)
-            var e = document.getElementById("video_stream");
-            var f = document.getElementById("pip_stream");
-            e.options[e.selectedIndex].disabled = true;
-            f.options[e.selectedIndex].disabled = true;
+            var streams = [$("#pip_stream").val(), $("#pip_stream").val()]
+
+            //removeValue(streams)
             clearvideo()
             requiredChange()
             showVideo()
@@ -50,6 +49,15 @@ handleVideo =$(document).ready(function () {
 
 
     })});
+removeValue = function (stream, values) {
+
+    $( "#"+stream+" option[value=\""+values+"\"]" ).each(function () {
+        console.log(this)
+        $(this).remove();
+
+    });
+
+}
 
 claeraudio = function () {
 
@@ -61,10 +69,10 @@ clearvideo = function () {
     $("#video_bitrate").val('');
     $("#fps").val('');
     $("#vcodec").val('');
-    $("#video_stream").val('');
+    $("#video_stream").prop("selectedIndex",0)
     $("#height").val('');
     $("#width").val('');
-    $("#pip_stream").val("");
+    $("#pip_stream").prop('selectedIndex',0);
     $("#pip_y").val("");
     $("#pip_x").val("");
     $("#pip_width").val("");

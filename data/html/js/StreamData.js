@@ -2,7 +2,7 @@ var StreamData= function () {
 
     this.date=$('#date').val();
     this.time=$('#time').val();
-    this.uri=$('#uri').val();
+    this.uri=$('#uri-container input').map(function () { return $(this).val() }).toArray()
     this.sink=$('#sink').val();
     this.mux=$('#mux').val();
     if ( $('#location').val()!==""){this.location= $("#location").val()}

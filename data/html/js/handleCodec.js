@@ -19,7 +19,7 @@ handleCodec =$(document).ready(function () {
         requiredChange();
         showAudio()    })
 })
-$('#pip_check').on('change', function() {
+$('#pip_check').change( function() {
     showpip()
     console.log("pip")
 });
@@ -50,18 +50,18 @@ function clear() {
     if( !$('#audio_check').prop( "checked" )){
         $("#acodec").val('');
         $("#audio_bitrate").val('');
-        $("#audio_stream").val('');
+        $("#audio_stream").prop('selectedIndex',1);
 
 
     }
     if( !$('#video_check').prop( "checked" )){
         $("#video_bitrate").val('');
         $("#vcodec").val('');
-        $("#video_stream").val('');
+        $("#video_stream").prop('selectedIndex',1);
         $("#height").val('');
         $("#width").val('');
         if(!$('#pip_check').prop("checked")) {
-            $("#pip_stream").val("");
+            $("#pip_stream").prop("selectedIndex",1)
             $("#pip_y").val("");
             $("#pip_x").val("");
             $("#pip_width").val("");
@@ -99,20 +99,23 @@ function showAudio() {
 function showpip() {
     if($('#pip_check').prop( "checked" )){
 
-        $('#pip_all').show()
-        $("#pip_stream").prop('required',true)
-        $("#pip_height").prop('required',true)
-        $("#pip_width").prop('required',true)
-        $("#pip_x").prop('required',true)
-        $("#pip_y").prop('required',true)
+        $('#pip_all').show();
+        $("#pip_stream").prop('required',true);
+        $("#pip_height").prop('required',true);
+        $("#pip_width").prop('required',true);
+        $("#pip_x").prop('required',true);
+        $("#pip_y").prop('required',true);
+        $("#pip_stream").prop('selectedIndex',0);
 
     }else {
-        $('#pip_all').hide()
-        $("#pip_stream").prop('required',false)
-        $("#pip_height").prop('required',false)
-        $("#pip_width").prop('required',false)
-        $("#pip_x").prop('required',false)
-        $("#pip_y").prop('required',false)
+        $('#pip_all').hide();
+        $("#pip_stream").prop('required',false);
+        $("#pip_height").prop('required',false);
+        $("#pip_width").prop('required',false);
+        $("#pip_x").prop('required',false);
+        $("#pip_y").prop('required',false);
+        $("#pip_stream").prop('selectedIndex',1);
+        $("#video_stream  option").each(function () { $(this).prop('disabled',false) });
 
     }
 }

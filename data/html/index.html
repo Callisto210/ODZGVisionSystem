@@ -80,9 +80,13 @@
                                 <label class="col-lg-2">Time</label>
                                 <input class="col-lg-2" type="time" value="13:45:00" id="time" name="time" required>
                             </div>
+                            <div id="uri-container">
                             <div><label class="col-lg-2">URI</label>
-                                <input class="col-lg-9" id="uri" name="uri" type="text" required /></div>
-                            <div>
+                                <input class="col-lg-9" id="uri_0" name="uri" type="text" required /></div>
+
+                            </div>
+                                <div class="Col-lg-6 Col-lg-6 "><button type="button" class="btn btn-info btn-sm" id="add_uri">Add URI</button></div>
+
                                 <label class="col-lg-2">Sink</label>
                                 <select class="col-lg-9" id="sink" name="sink" required>
                                     <option value="" disabled selected style="display:none;">Choose SINK</option>
@@ -90,7 +94,7 @@
                                     <option value="udp">UDP</option>
                                     <option value="icecast">Icecast</option>
                                 </select>
-                            </div>
+
                             <!-- fieldsets -->
                             <div id="file_div" style="display: none;">
                                 <label class="col-lg-2">PATH</label>
@@ -138,6 +142,7 @@
 
                                 <div><label class="col-lg-2">AUDIO stream</label>
                                     <select class="col-lg-9" id="audio_stream" name="audio_stream" >
+                                        <option value="" disabled selected style="display:none;">Choose audio stream</option>
                                     </select>
                                 </div>
 
@@ -163,6 +168,7 @@
                                 </div>
                                 <div><label class="col-lg-2">VIDEO stream</label>
                                     <select class="col-lg-9" id="video_stream" name="video_stream" >
+                                        <option value="" disabled selected style="display:none;">Choose video stream</option>
                                     </select>
                                 </div>
                                 <div>
@@ -186,6 +192,7 @@
                                     <div id="pip_all" style="display: none;">
                                         <div><label class="col-lg-2">PiP Stream ID</label>
                                             <select class="col-lg-9" id="pip_stream" name="pip_stream" >
+                                                <option value="" disabled selected style="display:none;">Choose pip stream</option>
                                             </select>
                                         </div>
                                         <div><label class="col-lg-2">PiP x</label>
@@ -221,7 +228,7 @@
 
                             <input type="submit" name="submit" class="submit action-button" value="Submit"  />
 
-                    <div class="container" id="targetAddress">
+                            <div class="container" id="targetAddress"> </div>
 
                         </form>
 
@@ -281,6 +288,7 @@
 <script src="js/handleInfoForm.js"></script>
 <script src="js/handleAddStream.js"></script>
 <script src="js/handleInputStream.js"></script>
+<script src="js/handlemultiuri.js"></script>
   </body>
  
 </html>
