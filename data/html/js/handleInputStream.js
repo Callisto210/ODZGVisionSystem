@@ -10,8 +10,9 @@ InputInfo = function (str, names) {
         success: function( data, textStatus, jQxhr ){
             console.log(data);
             removeNames(names, "audio_stream");
+            removeAudioList(names);
             for (i = 0; i < data["audio"].length; i++) {
-                resultHtmls =(("<option value=\""+data["audio"][i]["streamid"]+"\" name=\""+names+"\">" +data["audio"][i]["streamid"]+"</option>"));
+                resultHtmls =(("<option value=\""+data["audio"][i]["streamid"]+"\" name=\""+names+"\">" +names +": Audio "+i+"</option>"));
                 $( "#audio_stream" ).append( resultHtmls );
             }
 
@@ -21,7 +22,7 @@ InputInfo = function (str, names) {
                 $(this).find("select option[name=\""+names+"\"]").remove()
             });
             for (i = 0; i < data["video"].length; i++) {
-                resultHtmls =(("<option value=\""+data["video"][i]["streamid"]+ "\" name=\""+names+"\">" +data["video"][i]["streamid"]+"</option>"));
+                resultHtmls =(("<option value=\""+data["video"][i]["streamid"]+ "\" name=\""+names+"\">" +names+": Video "+i+"</option>"));
                 $( "#video_stream" ).append( resultHtmls );
                 $("#pip_contained").find("select[name='pip_stream']").each(function () {
                     $(this).append(resultHtmls);
@@ -53,7 +54,7 @@ $( "#uri-container" ).on('change','*',function() {
             var names = $(this).attr('id');
             removeNames(names, "video_stream");
             removeNames(names, "audio_stream");
-
+            removeAudioList(names);
             $('#pip_contained').find('> div').each(function () {
                 $(this).find("select option[name=\""+names+"\"]").remove()
             })

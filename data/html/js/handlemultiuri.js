@@ -4,18 +4,20 @@ handleUri =$(document).ready(function () {
 
     $('#add_uri').on('click', function(){
         uri_i++;
-        $("#uri-container").append("<div><label class=\"col-lg-2\">URI</label><input class=\"col-lg-9\" id=\"uri_"+uri_i+"\" name=\"uri\" type=\"text\" /></div>")
+        $("#uri-container").append("<div><label class=\"col-lg-2\">URI</label><input class=\"col-lg-9\" id=\"URI "+uri_i+"\" name=\"uri\" type=\"text\" /></div>")
     })});
 
 handleUriRemove =$(document).on('click','#remove_uri', function () {
     if(!$('#uri-container').find('div:last input').prop('required')){
         var names = $('#uri-container').find('div:last input').attr('id');
+        removeAudioList(names);
         removeNames(names, "video_stream");
         removeNames(names, "audio_stream");
-        //removeNames($('#uri-container div:last input').attr('id'), "pip_stream");
         $('#pip_contained').find('> div').each(function () {
             $(this).find("select option[name=\""+names+"\"]").remove()
         });
+
+        console.log(all_audio)
         $('#uri-container').find('div:last').remove();
         uri_i--;
     }
@@ -46,3 +48,31 @@ handlepip = $(document).on('click', "#add_pip", function () {
         $("#pip_contained").find("div select[name='pip_stream']:last").prop('selectedIndex',0);
 }
 );
+
+removeAudioList = function (names) {
+    $('#audio_map').find("p[name=\""+names+"\"]").each(function (index, value) {
+        console.log(value)
+        var audio_in = all_audio.findIndex(function (element) {
+            return element.value === value.value
+        });
+        if (audio_in > -1) {
+            all_audio.splice(audio_in, 1);
+        }
+        $(value).remove()
+    })
+
+};
+
+// removeVideoList = function (names) {
+//     $('#audio_map').find("p[name=\""+names+"\"]").each(function (index, value) {
+//         console.log(value)
+//         var audio_in = all_audio.findIndex(function (element) {
+//             return element.value === value.value
+//         });
+//         if (audio_in > -1) {
+//             all_audio.splice(audio_in, 1);
+//         }
+//         $(value).remove()
+//     })
+//
+// }

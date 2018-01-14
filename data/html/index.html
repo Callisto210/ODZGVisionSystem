@@ -82,17 +82,17 @@
                             </div>
                             <div id="uri-container">
                             <div><label class="col-lg-2">URI</label>
-                                <input class="col-lg-9" id="uri_0" name="uri" type="text" required /></div>
+                                <input class="col-lg-9" id="URI 0" name="uri" type="text" required /></div>
 
                             </div>
                                 <div id="contained">
-                                    <button type="button" class="btn btn-warning btn-sm" id="add_uri">Add URI</button>
-                                    <button type="button" class="btn btn-warning btn-sm" id="remove_uri">Remove last URI</button>
+                                    <button type="button" class="btn btn-info btn-sm" id="add_uri">Add URI</button>
+                                    <button type="button" class="btn btn-info btn-sm" id="remove_uri">Remove last URI</button>
                                 </div>
 
                                 <label class="col-lg-2">Sink</label>
                                 <select class="col-lg-9" id="sink" name="sink" required>
-                                    <option value="" disabled selected style="display:none;">Choose SINK</option>
+                                    <option value="" disabled selected style="display:none;"><b>Choose SINK</b></option>
                                     <option value="file">File</option>
                                     <option value="udp">UDP</option>
                                     <option value="icecast">Icecast</option>
@@ -120,10 +120,10 @@
                             <div>
                                 <label class="col-lg-2">Choose Codecs</label>
                                 <label class="checkbox-inline">
-                                    <input type="checkbox" value="" id="audio_check" required>Audio
+                                    <input type="checkbox" value="" id="audio_check" required><b>Audio</b>
                                 </label>
                                 <label class="checkbox-inline">
-                                    <input type="checkbox" value="" id="video_check" required>Video
+                                    <input type="checkbox" value="" id="video_check" required><b>Video</b>
                                 </label>
                             </div>
                             <div id="audio_div" style="display: none;">
@@ -194,7 +194,7 @@
                                     </label>
 
                                     <div id="pip_all" style="display: none;">
-                                        <div class="Col-lg-6"><button type="button" class="btn btn-warning btn-sm" id="add_pip">Add MultiVideo</button></div>
+                                        <div class="Col-lg-6"><button type="button" class="btn btn-info btn-sm" id="add_pip">Add MultiVideo</button></div>
                                         <div id="pip_contained">
                                             <div id="pip0">
                                         <div><label class="col-lg-2">MultiVideo Stream ID</label>
@@ -228,7 +228,7 @@
                             <div>
                                 <label class="col-lg-2">Muxer</label>
                                 <select class="col-lg-4" id="mux" required>
-                                    <option value="" disabled selected style="display:none;">Choose muxer</option>
+                                    <option value="" disabled selected style="display:none;"><b>Choose muxer</b></option>
                                     <option value="mp4">mp4</option>
                                     <option value="mpegts">mpegts</option>
                                     <option value="ogg">ogg</option>

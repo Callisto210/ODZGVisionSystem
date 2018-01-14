@@ -11,7 +11,7 @@ handleAudio =$(document).ready(function () {
         var data = new audio_data();
         if(!jQuery.isEmptyObject(data) && data.hasOwnProperty("acodec")){
             all_audio.push(data);
-
+            var names = $("#audio_stream").find(":selected").attr('name');
             $("#audio_stream").find(":selected").remove();
 
             claeraudio();
@@ -22,7 +22,7 @@ handleAudio =$(document).ready(function () {
 
 
 
-            mainList.append("<p class=\"list-group-item-heading\">"+"Codec: "+ data.acodec+ ", Bitrate: "+ data.audio_bitrate+ ", ID: "+ data.audio_stream+"</p>");
+            mainList.append("<p class=\"list-group-item-heading\" name=\""+names+"\" id=\""+data.audio_stream+"\" >"+"Codec: "+ data.acodec+ ", Bitrate: "+ data.audio_bitrate+ ", ID: "+ data.audio_stream+"</p>");
 
         }
     })});
@@ -58,7 +58,7 @@ handleVideo =$(document).ready(function () {
             showVideo();
             var mainList = $("#video_map");
 
-            mainList.append("<p class=\"list-group-item-heading\">"+"Codec: "+ data.vcodec+ ", Bitrate: "+ data.video_bitrate+ ", ID: "+ data.video_stream+", fps: "+ data.fps+", height: "+ data.height+", width "+data.width+ "</p>");
+            mainList.append("<p class=\"list-group-item-heading\" id=\""+data.video_stream+"\" >"+"Codec: "+ data.vcodec+ ", Bitrate: "+ data.video_bitrate+ ", ID: "+ data.video_stream+", fps: "+ data.fps+", height: "+ data.height+", width "+data.width+ "</p>");
 
         }
 
