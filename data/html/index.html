@@ -85,7 +85,10 @@
                                 <input class="col-lg-9" id="uri_0" name="uri" type="text" required /></div>
 
                             </div>
-                                <div class="Col-lg-6 Col-lg-6 "><button type="button" class="btn btn-info btn-sm" id="add_uri">Add URI</button></div>
+                                <div id="contained">
+                                    <button type="button" class="btn btn-info btn-sm" id="add_uri">Add URI</button>
+                                    <button type="button" class="btn btn-info btn-sm" id="remove_uri">Remove last URI</button>
+                                </div>
 
                                 <label class="col-lg-2">Sink</label>
                                 <select class="col-lg-9" id="sink" name="sink" required>
@@ -187,26 +190,31 @@
                                     <label class="custom-control custom-checkbox">
                                         <input  id="pip_check" type="checkbox" class="custom-control-input">
                                         <span class="custom-control-indicator"></span>
-                                        <span class="custom-control-description">PiP Stream ID</span>
+                                        <span class="custom-control-description">MultiVideo Box</span>
                                     </label>
                                     <div id="pip_all" style="display: none;">
-                                        <div><label class="col-lg-2">PiP Stream ID</label>
-                                            <select class="col-lg-9" id="pip_stream" name="pip_stream" >
+                                        <div id="pip_contained">
+                                            <div id="pip0">
+                                        <div><label class="col-lg-2">MultiVideo Stream ID</label>
+                                            <select class="col-lg-9" id="pip_stream0" name="pip_stream" >
                                                 <option value="" disabled selected style="display:none;">Choose pip stream</option>
                                             </select>
                                         </div>
-                                        <div><label class="col-lg-2">PiP x</label>
-                                            <input class="col-lg-4" id="pip_x" name="pip_x" type="number" min="1"/>
+                                        <div><label class="col-lg-2">MultiVideo x</label>
+                                            <input class="col-lg-4" id="pip_x0" name="pip_x" type="number" min="1"/>
                                         </div>
-                                        <div><label class="col-lg-2">PiP y</label>
-                                            <input class="col-lg-4" id="pip_y" name="pip_stream" type="number"min="1" />
+                                        <div><label class="col-lg-2">MultiVideo y</label>
+                                            <input class="col-lg-4" id="pip_y0" name="pip_stream" type="number"min="1" />
                                         </div>
-                                        <div><label class="col-lg-2">PiP height</label>
-                                            <input class="col-lg-4" id="pip_height" name="pip_height" type="number" min="1"/>
+                                        <div><label class="col-lg-2">MultiVideo height</label>
+                                            <input class="col-lg-4" id="pip_height0" name="pip_height" type="number" min="1"/>
                                         </div>
-                                        <div><label class="col-lg-2">PiP width</label>
-                                            <input class="col-lg-4" id="pip_width" name="pip_width" type="number" min="1"/>
+                                        <div><label class="col-lg-2">MultiVideo width</label>
+                                            <input class="col-lg-4" id="pip_width0" name="pip_width" type="number" min="1"/>
                                         </div>
+                                        </div>
+                                        </div>
+                                        <div class="Col-lg-6"><button type="button" class="btn btn-info btn-sm" id="add_pip">Add MultiVideo</button></div>
                                     </div>
                                 </div>
 

@@ -20,12 +20,16 @@ InputInfo = function (str, names) {
             removeNames(names, "video_stream");
             //$("#video_stream").append()
             //$( "#pip_stream" ).html( "" );
+            //TODO
             removeNames(names, "pip_stream");
             //$("#pip_stream").append("<option value=\"\" disabled selected style=\"display:none;\">Choose video stream</option>")
             for (i = 0; i < data["video"].length; i++) {
                 resultHtmls =(("<option value=\""+data["video"][i]["streamid"]+ "\" name=\""+names+"\">" +data["video"][i]["streamid"]+"</option>"))
                 $( "#video_stream" ).append( resultHtmls );
-                $("#pip_stream").append(resultHtmls);
+                $("#pip_contained select[name='pip_stream']").each(function () {
+                    //console.log($(this))
+                    $(this).append(resultHtmls);
+                })
             }
 
 
@@ -53,37 +57,92 @@ removeNames = function (names, stream) {
 }
 
 $( "#uri-container" ).on('change','*',function() {
-    // $( "#audio_stream" ).html( "" );
-    // $( "#video_stream" ).html( "" );
-    // $( "#pip_stream" ).html( "" );
-    // $( "#uri-container :input" ).each(function () {
-    //     console.log(this)
         if($(this).val().trim().length !=0){
             InputInfo($(this).val(), $(this).attr('id')   )
         }
         else {
             removeNames($(this).attr('id'), "video_stream");
             removeNames($(this).attr('id'), "audio_stream");
+
+            //TODO
             removeNames($(this).attr('id'), "pip_stream");
         }
 });
 
 $( document).on('change','#video_stream',function() {
     console.log("video_change")
-    $("#pip_stream  option").each(function () {
-        $(this).prop('disabled',false)
+    var e = $("#video_stream :selected")[0]
+    $("#pip_contained option:not(:selected)").each(function (subindex, subvalue) {
+        var flag =true
+        $("#pip_contained  option:selected").each(function (index,values){
+
+            if(values.value.length != 0 && subvalue.value.length!=0){
+                if (values.value == subvalue.value) {
+
+                    $(subvalue).prop('disabled', true)
+                    flag = false
+                }
+            }
+        })
+        if(flag){
+            if(subvalue.value == e.value) {
+                $(subvalue).prop('disabled', true)
+            }
+            else {
+                $(subvalue).prop('disabled', false)
+            }
+        }
+
     });
-    var e = document.getElementById("video_stream");
-    var f = document.getElementById("pip_stream");
-    f.options[e.selectedIndex].disabled = true;
+
+    //var f = document.getElementById("pip_stream");
+    //f.options[e.selectedIndex].disabled = true;
 });
 
-$(document).on('change','#pip_stream' , function() {
+$(document).on('change','#pip_contained' , function() {
     console.log("pip_change")
-    $("#video_stream  option").each(function () {
-        $(this).prop('disabled', false)
+
+
+
+    $("#video_stream option").each(function (subindex, subvalue) {
+        //console.log(subvalue)
+        var flag =true
+        $("#pip_contained  option:selected").each(function (index,values) {
+        if (values.value == subvalue.value) {
+            console.log(subvalue)
+            $(subvalue).prop('disabled', true)
+            flag = false
+
+        }
+
+
+        })
+        if(flag){
+            console.log(subvalue)
+            $(subvalue).prop('disabled', false)
+        }
     });
-    var e = document.getElementById("pip_stream");
-    var f = document.getElementById("video_stream");
-    f.options[e.selectedIndex].disabled = true;
+    var e = $("#video_stream :selected")[0]
+    $("#pip_contained option:not(:selected)").each(function (subindex, subvalue) {
+        var flag =true
+        $("#pip_contained  option:selected").each(function (index,values){
+
+        if(values.value.length != 0 && subvalue.value.length!=0){
+            if (values.value == subvalue.value) {
+
+                $(subvalue).prop('disabled', true)
+                flag = false
+            }
+        }
+        })
+        if(flag){
+            if(subvalue.value == e.value) {
+                $(subvalue).prop('disabled', true)
+            }
+            else {
+                $(subvalue).prop('disabled', false)
+            }
+        }
+
+    });
 });

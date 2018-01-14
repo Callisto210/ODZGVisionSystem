@@ -1,5 +1,6 @@
 all_audio = []
 all_video = []
+all_pip = []
 
 handleCodec =$(document).ready(function () {
     $('#add_stream').on('click', function(){($('#modal_add_stream').modal())
@@ -35,8 +36,14 @@ handleVideo =$(document).ready(function () {
         if (!jQuery.isEmptyObject(data) && data.hasOwnProperty("vcodec")){
 
             all_video.push(data)
-            var streams = [$("#pip_stream").val(), $("#pip_stream").val()]
-
+            var video_streams = $("#video_stream :selected").val();
+            var pip_streams = $("#pip_stream :selected").val();
+            removeValue('video_stream', video_streams);
+            removeValue('pip_stream', video_streams)
+            if($('#pip_check').prop('checked')) {
+                removeValue('pip_stream', pip_streams);
+                removeValue('video_stream', pip_streams);
+            }
             //removeValue(streams)
             clearvideo()
             requiredChange()
@@ -63,7 +70,7 @@ claeraudio = function () {
 
         $("#acodec").val('');
         $("#audio_bitrate").val('');
-        $("#audio_stream").val('');
+        $("#audio_stream").prop('selectedIndex',0);
 }
 clearvideo = function () {
     $("#video_bitrate").val('');
@@ -95,14 +102,17 @@ video_data = function () {
     if($('#width').val()!==""){ this.width=$('#width').val();}
     if ($('#height').val()!==""){this.height=$('#height').val();}
     if($('#pip_check').prop("checked")){
-        this.pip_stream=$("#pip_stream").val();
-        this.pip_height=$("#pip_height").val();
-        this.pip_width=$("#pip_width").val();
-        this.x=$("#pip_x").val();
-        this.y=$("#pip_y").val();
+
     }
 }
+pip_data = function () {
+    this.pip_stream=$("#pip_stream").val();
+    this.pip_height=$("#pip_height").val();
+    this.pip_width=$("#pip_width").val();
+    this.x=$("#pip_x").val();
+    this.y=$("#pip_y").val();
 
+}
 
 
 

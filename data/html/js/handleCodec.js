@@ -50,18 +50,19 @@ function clear() {
     if( !$('#audio_check').prop( "checked" )){
         $("#acodec").val('');
         $("#audio_bitrate").val('');
-        $("#audio_stream").prop('selectedIndex',1);
+        $("#audio_stream").prop('selectedIndex',0);
 
 
     }
     if( !$('#video_check').prop( "checked" )){
         $("#video_bitrate").val('');
         $("#vcodec").val('');
-        $("#video_stream").prop('selectedIndex',1);
+        $("#video_stream").prop('selectedIndex',0);
         $("#height").val('');
         $("#width").val('');
+        //TODO
         if(!$('#pip_check').prop("checked")) {
-            $("#pip_stream").prop("selectedIndex",1)
+            $("#pip_stream").prop("selectedIndex",0)
             $("#pip_y").val("");
             $("#pip_x").val("");
             $("#pip_width").val("");
@@ -96,6 +97,7 @@ function showAudio() {
 
     }
 }
+//TODO
 function showpip() {
     if($('#pip_check').prop( "checked" )){
 
@@ -114,7 +116,7 @@ function showpip() {
         $("#pip_width").prop('required',false);
         $("#pip_x").prop('required',false);
         $("#pip_y").prop('required',false);
-        $("#pip_stream").prop('selectedIndex',1);
+        $("#pip_stream").prop('selectedIndex',0);
         $("#video_stream  option").each(function () { $(this).prop('disabled',false) });
 
     }
