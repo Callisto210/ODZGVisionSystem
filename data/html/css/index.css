@@ -240,3 +240,14 @@ h1 {
     margin-left: 2px;
 
 }
+#contained{
+    margin-top: 7px;
+    margin-bottom: 15px;
+}
+#remove_uri{
+    margin-left: 35px;
+}
+
+#add_pip {
+    margin-bottom: 15px;
+}
