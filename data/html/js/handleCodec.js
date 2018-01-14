@@ -1,13 +1,4 @@
 handleCodec =$(document).ready(function () {
-
-    // $('#vcodec').on('change', function() {
-    //     requiredChange()
-    // });
-    //
-    //
-    // $('#acodec').on('change', function() {
-    //     requiredChange()
-    // })
     $('#video_check').on('change', function() {
         requiredChange();
         showVideo();
@@ -18,28 +9,37 @@ handleCodec =$(document).ready(function () {
     $('#audio_check').on('change', function() {
         requiredChange();
         showAudio()    })
-})
-$('#pip_check').change( function() {
-    showpip()
+});
+$(document).on('change','#pip_check', function() {
+    showpip();
     console.log("pip")
 });
 
 function requiredChange(){
     clear();
     if( $('#video_check').prop( "checked" )){
-        if(all_video.length==0)$("#vcodec").prop('required',true);
+        if(all_video.length===0){
+            $("#vcodec").prop('required',true);
+            $('#video_stream').prop('required',true);
+        }
         $("#audio_check").prop('required',false);
+        $('#audio_stream').prop('required',false);
+        $('#acodec').prop('required',false);
 
 
     }
     if($('#audio_check').prop( "checked" )){
-        if(all_audio.length==0)$("#acodec").prop('required',true);
+        if(all_audio.length===0){
+            $("#acodec").prop('required',true);
+            $('#video_stream').prop('required',true);
+        }
         $("#video_check").prop('required',false);
-
+        $('#video_stream').prop('required',false);
+        $('#vcodec').prop('required',false);
     }
     if (!($('#audio_check').prop( "checked" )||$('#video_check').prop( "checked" ))){
-        if(all_audio.length==0 && all_video.length==0) {
-            $("#video_check").prop('required', true)
+        if(all_audio.length===0 && all_video.length===0) {
+            $("#video_check").prop('required', true);
             $("#audio_check").prop('required', true)
         }
 
@@ -60,21 +60,24 @@ function clear() {
         $("#video_stream").prop('selectedIndex',0);
         $("#height").val('');
         $("#width").val('');
-        //TODO
         if(!$('#pip_check').prop("checked")) {
-            $("#pip_stream").prop("selectedIndex",0)
-            $("#pip_y").val("");
-            $("#pip_x").val("");
-            $("#pip_width").val("");
-            $("#pip_height").val("");
+            $('#pip_contained').find('>  div').each(function () {
+                $(this).find("select").prop("selectedIndex",0);
+                $(this).find("input[name='pip_height']").val('');
+                $(this).find("input[name='pip_width']").val('');
+                $(this).find("input[name='pip_x']").val('');
+                $(this).find("input[name='pip_y']").val('');
+            })
         }
 
     }
-    $("#video_check").prop('required',true)
-    $("#audio_check").prop('required',true)
+    $("#video_check").prop('required',true);
+    $("#audio_check").prop('required',true);
     $("#acodec").prop('required',false);
     $("#vcodec").prop('required',false);
     $("#pip_check").prop('required',false);
+    $('#video_stream').prop('required',false);
+    $('#audio_stream').prop('required',false);
 
 }
 
@@ -85,39 +88,51 @@ function showVideo() {
 
     }else {
         $('#video_div').hide()
-
     }
 }
 function showAudio() {
     if($('#audio_check').prop( "checked" )){
-
         $('#audio_div').show()
     }else {
         $('#audio_div').hide()
 
     }
 }
-//TODO
+
 function showpip() {
     if($('#pip_check').prop( "checked" )){
 
         $('#pip_all').show();
-        $("#pip_stream").prop('required',true);
-        $("#pip_height").prop('required',true);
-        $("#pip_width").prop('required',true);
-        $("#pip_x").prop('required',true);
-        $("#pip_y").prop('required',true);
-        $("#pip_stream").prop('selectedIndex',0);
+        $('#pip_contained').find('> div').each(function () {
+            $(this).find("select").prop("selectedIndex",0);
+            $(this).find("select").prop('required',true);
+            $(this).find("input").each(function (i, val) {
+
+                val.required = true
+            });
+            video_change()
+        })
 
     }else {
         $('#pip_all').hide();
-        $("#pip_stream").prop('required',false);
-        $("#pip_height").prop('required',false);
-        $("#pip_width").prop('required',false);
-        $("#pip_x").prop('required',false);
-        $("#pip_y").prop('required',false);
-        $("#pip_stream").prop('selectedIndex',0);
-        $("#video_stream  option").each(function () { $(this).prop('disabled',false) });
+        $('#pip_contained').find('> div').each(function () {
+            $(this).find("select option").each(function (i,val) {
+
+                $(val).prop('disabled', false)
+            });
+            $(this).find("select").prop("selectedIndex",0);
+            $(this).find("select").prop('required',false);
+            $(this).find("input[name='pip_height']").prop('required',false);
+            $(this).find("input[name='pip_width']").prop('required',false);
+            $(this).find("input[name='pip_x']").prop('required',false);
+            $(this).find("input[name='pip_y']").prop('required',false);
+        });
+        $('#pip_contained').find('> div:not(:first)').each(function () {
+            $(this).remove()
+        });
+        pip_i = 0;
+
+        $("#video_stream").find("option").each(function () { $(this).prop('disabled',false) });
 
     }
 }
