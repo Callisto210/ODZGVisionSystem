@@ -36,6 +36,7 @@ handleVideo =$(document).ready(function () {
         if (!jQuery.isEmptyObject(data) && data.hasOwnProperty("vcodec")){
 
             all_video.push(data)
+            console.log(data)
             var video_streams = $("#video_stream :selected").val();
             var pip_streams = $("#pip_stream :selected").val();
             removeValue('video_stream', video_streams);
@@ -59,7 +60,7 @@ handleVideo =$(document).ready(function () {
 removeValue = function (stream, values) {
 
     $( "#"+stream+" option[value=\""+values+"\"]" ).each(function () {
-        console.log(this)
+        //console.log(this)
         $(this).remove();
 
     });
@@ -102,15 +103,19 @@ video_data = function () {
     if($('#width').val()!==""){ this.width=$('#width').val();}
     if ($('#height').val()!==""){this.height=$('#height').val();}
     if($('#pip_check').prop("checked")){
+        this.pip = $('#pip_contained >  div').map(function () {
+            return new pip_data(this);
+        }).toArray()
 
     }
 }
-pip_data = function () {
-    this.pip_stream=$("#pip_stream").val();
-    this.pip_height=$("#pip_height").val();
-    this.pip_width=$("#pip_width").val();
-    this.x=$("#pip_x").val();
-    this.y=$("#pip_y").val();
+pip_data = function (data) {
+    //console.log($(data).find('option:selected'))
+    this.pip_stream=$(data).find("option:selected").val();
+    this.pip_height=$(data).find("input[name='pip_height']").val();
+    this.pip_width=$(data).find("input[name='pip_width']").val();
+    this.x=$(data).find("input[name='pip_x']").val();
+    this.y=$(data).find("input[name='pip_y']").val();
 
 }
 

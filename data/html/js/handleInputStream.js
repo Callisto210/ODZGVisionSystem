@@ -49,7 +49,7 @@ InputInfo = function (str, names) {
 
 removeNames = function (names, stream) {
     $( "#"+stream+" option[name=\""+names+"\"]" ).each(function () {
-        console.log(this)
+        //console.log(this)
         $(this).remove();
 
     });
@@ -118,7 +118,7 @@ $(document).on('change','#pip_contained' , function() {
 
         })
         if(flag){
-            console.log(subvalue)
+            //console.log(subvalue)
             $(subvalue).prop('disabled', false)
         }
     });

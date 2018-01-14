@@ -28,7 +28,7 @@ handlepip = $(document).on('click', "#add_pip", function () {
         "                                            <input class=\"col-lg-4\" id=\"pip_x"+pip_i+"\" name=\"pip_x\" type=\"number\" min=\"1\"/>\n" +
         "                                        </div>\n" +
         "                                        <div><label class=\"col-lg-2\">MultiVideo y</label>\n" +
-        "                                            <input class=\"col-lg-4\" id=\"pip_y"+pip_i+"\" name=\"pip_stream\" type=\"number\"min=\"1\" />\n" +
+        "                                            <input class=\"col-lg-4\" id=\"pip_y"+pip_i+"\" name=\"pip_y\" type=\"number\"min=\"1\" />\n" +
         "                                        </div>\n" +
         "                                        <div><label class=\"col-lg-2\">MultiVideo height</label>\n" +
         "                                            <input class=\"col-lg-4\" id=\"pip_height"+pip_i+"\" name=\"pip_height\" type=\"number\" min=\"1\"/>\n" +
@@ -39,5 +39,6 @@ handlepip = $(document).on('click', "#add_pip", function () {
     $("#pip_contained div:first select[name='pip_stream'] option").each(function () {
         $("#pip_contained div select[name='pip_stream']:last").append($(this).clone());
     })
+        $("#pip_contained div select[name='pip_stream']:last").prop('selectedIndex',0);
 }
 )
