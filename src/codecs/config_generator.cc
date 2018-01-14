@@ -143,9 +143,7 @@ static int configure_video(Elements &e, video_config_struct *conf) {
 	    }
 	
 	/* Handle PIP */
-	if (conf->x != -1 && conf->y != -1 &&
-	    conf->pip_width != -1 && conf->pip_height != -1 &&
-	    !conf->pip_stream.empty()) {
+	if (conf->n_pip > 0) {
 		GstPad *comp_m_in, *comp_p_in;
 		GstPad *main_out, *pip_out;
 		optional = gst_element_factory_make("compositor", NULL);
@@ -158,27 +156,31 @@ static int configure_video(Elements &e, video_config_struct *conf) {
 				g_printerr ("PIP, Main image, failed\n");
 
 			/* Add Pip image */
-			video_config_struct *pip_conf_str = new video_config_struct;
-			pip_conf_str->video_stream = conf->pip_stream;
-			pip_conf_str->fps = -1;
-			pip_conf_str->width = -1;
-			pip_conf_str->height = -1;
-			pip_conf_str->x = -1;
-			pip_conf_str->y = -1;
-			pip_conf_str->pip_width = -1;
-			int pip_idx = configure_video(e, pip_conf_str);
-			comp_p_in = gst_element_get_request_pad(optional, "sink_%u");
-			pip_out = gst_element_get_static_pad(e.video[pip_idx].vconvert, "src");
+			for (int i=0; i < conf->n_pip; i++) {
+				if (conf->pip[i].x != -1 && conf->pip[i].y != -1 &&
+				    conf->pip[i].pip_width != -1 && conf->pip[i].pip_height != -1 &&
+				    !conf->pip[i].pip_stream.empty()) {
+					video_config_struct *pip_conf_str = new video_config_struct;
+					pip_conf_str->video_stream = conf->pip[i].pip_stream;
+					pip_conf_str->fps = -1;
+					pip_conf_str->width = -1;
+					pip_conf_str->height = -1;
+					pip_conf_str->n_pip = 0;
+					int pip_idx = configure_video(e, pip_conf_str);
+					comp_p_in = gst_element_get_request_pad(optional, "sink_%u");
+					pip_out = gst_element_get_static_pad(e.video[pip_idx].vconvert, "src");
 
-			/* Set parameters */
-			g_object_set(comp_p_in, "xpos", conf->x, NULL);
-			g_object_set(comp_p_in, "ypos", conf->y, NULL);
-			g_object_set(comp_p_in, "width", conf->pip_width, NULL);
-			g_object_set(comp_p_in, "height", conf->pip_height, NULL);
-			
-			/* And pray it will work */
-			if (gst_pad_link (pip_out, comp_p_in) != GST_PAD_LINK_OK)
-				g_printerr ("PIP, PIP image, failed\n");
+					/* Set parameters */
+					g_object_set(comp_p_in, "xpos", conf->pip[i].x, NULL);
+					g_object_set(comp_p_in, "ypos", conf->pip[i].y, NULL);
+					g_object_set(comp_p_in, "width", conf->pip[i].pip_width, NULL);
+					g_object_set(comp_p_in, "height", conf->pip[i].pip_height, NULL);
+
+					/* And pray it will work */
+					if (gst_pad_link (pip_out, comp_p_in) != GST_PAD_LINK_OK)
+						g_printerr ("PIP, PIP image, failed\n");
+				}
+			}
 
 			video_last = optional;
 		}
@@ -245,10 +247,14 @@ void configure_pipeline(Elements &e, config_struct *conf)
     gst_plugin_feature_set_rank(vdp_decode, GST_RANK_NONE);
     gst_object_unref(vdp_decode);
 
-    e.decode = gst_element_factory_make("uridecodebin", "source");
-    gst_bin_add(GST_BIN(e.pipeline), e.decode);
-    
-    g_object_set (e.decode, "uri", conf->uri.c_str(), nullptr);
+    e.n_decode = 0;
+    for (int i=0; i < conf->n_uri; i++) {
+	    e.decode[i] = gst_element_factory_make("uridecodebin", NULL);
+	    gst_bin_add(GST_BIN(e.pipeline), e.decode[i]);
+	    
+	    g_object_set (e.decode[i], "uri", conf->uri[i].c_str(), nullptr);
+	    e.n_decode++;
+    }
 
     e.n_audio = 0;
     e.n_video = 0;

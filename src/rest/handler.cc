@@ -30,9 +30,11 @@ void streaming_handler::operator()() {
         		conf->time = doc["time"].GetString();
 	}
 
-	if(doc.HasMember("uri")) {
-		if(doc["uri"].IsString())
-        		conf->uri = doc["uri"].GetString();
+	const Value& uri = doc["uri"];
+	conf->n_uri = 0;
+	for (SizeType i=0; i < uri.Size(); i++) {
+		if(uri[i].IsString())
+			conf->uri[conf->n_uri++] = uri[i].GetString();
 	}
 
         if(doc.HasMember("port")) {
@@ -104,10 +106,6 @@ void streaming_handler::operator()() {
 		conf->video[conf->n_video].video_bitrate = -1;
 		conf->video[conf->n_video].width = -1;
 		conf->video[conf->n_video].height = -1;
-		conf->video[conf->n_video].pip_width = -1;
-		conf->video[conf->n_video].pip_height = -1;
-		conf->video[conf->n_video].x = -1;
-		conf->video[conf->n_video].y = -1;
 
 		if(doc.HasMember("fps")) {
 			if(doc["fps"].IsInt())
@@ -147,44 +145,54 @@ void streaming_handler::operator()() {
 				conf->video[conf->n_video].height = std::atoi(doc["height"].GetString());
 		}
 
-		if(doc.HasMember("pip_width")) {
-			if(doc["pip_width"].IsInt())
-				conf->video[conf->n_video].pip_width = doc["pip_width"].GetInt();
-			else
-				conf->video[conf->n_video].pip_width = std::atoi(doc["pip_width"].GetString());
-		}
+		const Value& pip = doc["pip"];
+		conf->video[conf->n_video].n_pip = 0;
+		for (SizeType i=0; i < pip.Size(); i++) {
+			const Value& doc = pip[i];
+			conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].pip_width = -1;
+			conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].pip_height = -1;
+			conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].x = -1;
+			conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].y = -1;
+			if(doc.HasMember("pip_width")) {
+				if(doc["pip_width"].IsInt())
+					conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].pip_width = doc["pip_width"].GetInt();
+				else
+					conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].pip_width = std::atoi(doc["pip_width"].GetString());
+			}
 
-		if(doc.HasMember("pip_height")) {
-			if(doc["pip_height"].IsInt())
-				conf->video[conf->n_video].pip_height = doc["pip_height"].GetInt();
-			else
-				conf->video[conf->n_video].pip_height = std::atoi(doc["pip_height"].GetString());
-		}
+			if(doc.HasMember("pip_height")) {
+				if(doc["pip_height"].IsInt())
+					conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].pip_height = doc["pip_height"].GetInt();
+				else
+					conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].pip_height = std::atoi(doc["pip_height"].GetString());
+			}
 
-		if(doc.HasMember("x")) {
-			if(doc["x"].IsInt())
-				conf->video[conf->n_video].x = doc["x"].GetInt();
-			else
-				conf->video[conf->n_video].x = std::atoi(doc["x"].GetString());
-		}
+			if(doc.HasMember("x")) {
+				if(doc["x"].IsInt())
+					conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].x = doc["x"].GetInt();
+				else
+					conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].x = std::atoi(doc["x"].GetString());
+			}
 
-		if(doc.HasMember("y")) {
-			if(doc["y"].IsInt())
-				conf->video[conf->n_video].y = doc["y"].GetInt();
-			else
-				conf->video[conf->n_video].y = std::atoi(doc["y"].GetString());
-		}
+			if(doc.HasMember("y")) {
+				if(doc["y"].IsInt())
+					conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].y = doc["y"].GetInt();
+				else
+					conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].y = std::atoi(doc["y"].GetString());
+			}
 
-		if(doc.HasMember("pip_stream")) {
-			if(doc["pip_stream"].IsString())
-				conf->video[conf->n_video].pip_stream = doc["pip_stream"].GetString();
+			if(doc.HasMember("pip_stream")) {
+				if(doc["pip_stream"].IsString())
+					conf->video[conf->n_video].pip[conf->video[conf->n_video].n_pip].pip_stream = doc["pip_stream"].GetString();
+			}
+			conf->video[conf->n_video].n_pip++;
 		}
 		conf->n_video++;
 
 	}
 
 	if (conf->random.empty()
-	    || conf->uri.empty()
+	    || conf->uri[0].empty() /* At least one uri */
 	    || conf->sink.empty()
 	    || conf->mux.empty()) {	
 		return;

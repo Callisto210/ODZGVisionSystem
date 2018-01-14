@@ -251,11 +251,15 @@ void Endpoints::transcoding(const Rest::Request& request, Http::ResponseWriter r
 			obj.AddMember("location", str, alloc);
 		}
 
-		if (!it->second->uri.empty()) {
-			Value str(kObjectType);
-			str.SetString(it->second->uri.c_str(), alloc);
-			obj.AddMember("uri", str, alloc);
+		Value u_array(kArrayType);
+		for (int i=0; i < it->second->n_uri; i++) {
+			if (!it->second->uri[i].empty()) {
+				Value str(kObjectType);
+				str.SetString(it->second->uri[i].c_str(), alloc);
+				u_array.PushBack(str, alloc);
+			}
 		}
+		obj.AddMember("uri", u_array, alloc);
 		
 		if (it->second->port != -1) {
 			Value str(kObjectType);
